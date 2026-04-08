@@ -16,6 +16,9 @@ class AuthController {
       }
 
       const { firstName, lastName, email, password, phoneNumber, role, profileImage } = req.body;
+      const uploadedProfileImage = req.file
+        ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
+        : undefined;
 
       const result = await authService.registerUser({
         firstName,
@@ -24,7 +27,7 @@ class AuthController {
         password,
         phoneNumber,
         role,
-        profileImage,
+        profileImage: uploadedProfileImage || profileImage,
       });
 
       res.status(201).json({

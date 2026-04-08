@@ -17,6 +17,13 @@ build/
 .env.test
 .env.production
 
+# runtime uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/profiles/
+backend/uploads/profiles/*
+!backend/uploads/profiles/.gitkeep
+
 # mac/windows specific
 .DS_Store
 Thumbs.db

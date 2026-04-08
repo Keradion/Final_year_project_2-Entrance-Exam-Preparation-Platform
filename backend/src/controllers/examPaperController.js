@@ -1,7 +1,7 @@
-const ExamPaper = require('@/models/ExamPaper');
-const Subject = require('@/models/Subject');
-const asyncHandler = require('@/middleware/async');
-const ErrorResponse = require('@/utils/errors');
+const ExamPaper = require('../models/ExamPaper');
+const Subject = require('../models/Subject');
+const asyncHandler = require('../middleware/async');
+const ErrorResponse = require('../utils/errors');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),

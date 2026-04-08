@@ -1,8 +1,8 @@
-const Answer = require('@/models/Answer');
-const QuizProblem = require('@/models/QuizProblem');
-const ExerciseProblem = require('@/models/ExerciseProblem');
-const ExamQuestion = require('@/models/ExamQuestion');
-const QuizScore = require('@/models/QuizScore');
+const Answer = require('../models/Answer');
+const QuizProblem = require('../models/QuizProblem');
+const ExerciseProblem = require('../models/ExerciseProblem');
+const ExamQuestion = require('../models/ExamQuestion');
+const QuizScore = require('../models/QuizScore');
 
 const questionModels = {
     QuizProblem,

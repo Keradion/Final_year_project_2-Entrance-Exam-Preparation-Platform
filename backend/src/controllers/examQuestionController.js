@@ -1,10 +1,10 @@
-const ExamQuestion = require('@/models/ExamQuestion');
-const ExamPaper = require('@/models/ExamPaper');
-const Topic = require('@/models/Topic');
-const Answer = require('@/models/Answer');
+const ExamQuestion = require('../models/ExamQuestion');
+const ExamPaper = require('../models/ExamPaper');
+const Topic = require('../models/Topic');
+const Answer = require('../models/Answer');
 const mongoose = require('mongoose');
-const asyncHandler = require('@/middleware/async');
-const ErrorResponse = require('@/utils/errors');
+const asyncHandler = require('../middleware/async');
+const ErrorResponse = require('../utils/errors');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),

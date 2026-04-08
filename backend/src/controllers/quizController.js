@@ -1,9 +1,9 @@
-const Quiz = require('@/models/Quiz');
-const QuizProblem = require('@/models/QuizProblem');
-const QuizScore = require('@/models/QuizScore');
-const Topic = require('@/models/Topic');
-const asyncHandler = require('@/middleware/async');
-const ErrorResponse = require('@/utils/errors');
+const Quiz = require('../models/Quiz');
+const QuizProblem = require('../models/QuizProblem');
+const QuizScore = require('../models/QuizScore');
+const Topic = require('../models/Topic');
+const asyncHandler = require('../middleware/async');
+const ErrorResponse = require('../utils/errors');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),

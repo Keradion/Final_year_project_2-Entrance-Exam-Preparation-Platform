@@ -10,11 +10,11 @@ services:
     volumes:
       # Mount the local backend directory to the container's working directory
       # This enables hot-reloading with nodemon
-      - .:/usr/src/app
+      - ./backend:/usr/src/app
       # Exclude node_modules from being overwritten by the local volume
       - /usr/src/app/node_modules
     env_file:
-      - ./.env # Load environment variables from the .env file
+      - ./backend/.env # Load environment variables from the .env file
     depends_on:
       - mongodb # Ensure mongodb is started before the backend
       - redis   # Ensure redis is started before the backend

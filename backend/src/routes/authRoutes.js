@@ -9,6 +9,7 @@ const {
   updateProfileValidation,
   changePasswordValidation,
 } = require('../middleware/authValidation');
+const { profileImageUpload } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ const router = express.Router();
  *   }
  * }
  */
-router.post('/register', registerValidation, authController.register);
+router.post('/register', profileImageUpload.single('profileImageFile'), registerValidation, authController.register);
 
 /**
  * POST /api/auth/login

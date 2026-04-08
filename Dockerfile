@@ -13,17 +13,14 @@ FROM node:18-alpine
 #    All subsequent commands will be run from this directory.
 WORKDIR /usr/src/app
 
-# 3. Copy package files: Copy the package.json and package-lock.json files.
-#    We copy these first to leverage Docker's layer caching. If these files haven't changed,
-#    Docker will reuse the cached 'npm install' layer, speeding up subsequent builds.
-COPY package*.json ./
+# 3. Copy package files: Copy the package.json and package-lock.json files from the backend directory.
+COPY backend/package*.json ./
 
 # 4. Install Dependencies: Install the application's npm dependencies.
 RUN npm install
 
 # 5. Copy Application Code: Copy the rest of the backend source code into the container.
-#    Files listed in .dockerignore will be excluded.
-COPY . .
+COPY backend/ ./
 
 # 6. Expose Port: Inform Docker that the container listens on port 5000 at runtime.
 EXPOSE 5000
