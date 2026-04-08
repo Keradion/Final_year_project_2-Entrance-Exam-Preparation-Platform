@@ -85,15 +85,129 @@ backend/
 
 ## API Endpoints
 
-### Health Check
-- `GET /health` - Server health status
+Here are some sample API calls and their expected responses. This reflects the current API functionality in the system.
 
-### Authentication (Coming Soon)
-- `POST /api/v1/auth/register` - Create new account
-- `POST /api/v1/auth/login` - Login user
-- `POST /api/v1/auth/logout` - Logout user
-- `POST /api/v1/auth/refresh` - Refresh JWT token
-- `POST /api/v1/auth/reset-password` - Reset password
+### Health Check
+```bash
+curl -X GET http://localhost:5000/health
+```
+**Response:**
+```json
+{
+  "status": "up",
+  "port": 5000,
+  "env": "development"
+}
+```
+
+### Authentication
+
+#### 1. Register User
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "johndoe@example.com",
+    "password": "Password123!",
+    "role": "student"
+  }'
+```
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": "60d0fe4f5311236168a109ca",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "johndoe@example.com",
+      "role": "student"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+  }
+}
+```
+
+#### 2. Login User
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "johndoe@example.com",
+    "password": "Password123!"
+  }'
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "60d0fe4f5311236168a109ca",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "johndoe@example.com",
+      "role": "student"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR..."
+  }
+}
+```
+
+### Quizzes & Assessments
+
+*(Note: Requires a valid JWT token in the `Authorization: Bearer <token>` header)*
+
+#### 1. Create a Quiz (Teacher/Admin)
+```bash
+curl -X POST http://localhost:5000/api/v1/quizzes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "title": "Algebra Basics",
+    "description": "A preliminary quiz on basic algebra concepts.",
+    "topic": "60d21b4667d0d8992e610c85"
+  }'
+```
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "60d22f1867d0d8992e610c86",
+    "title": "Algebra Basics",
+    "description": "A preliminary quiz on basic algebra concepts.",
+    "topic": "60d21b4667d0d8992e610c85",
+    "problems": [],
+    "createdAt": "2026-04-08T10:00:00.000Z"
+  }
+}
+```
+
+#### 2. Get Quizzes by Topic
+```bash
+curl -X GET http://localhost:5000/api/v1/quizzes/topics/60d21b4667d0d8992e610c85/quizzes \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d22f1867d0d8992e610c86",
+      "title": "Algebra Basics",
+      "description": "A preliminary quiz on basic algebra concepts."
+    }
+  ]
+}
+```
 
 ## Features (In Development)
 
