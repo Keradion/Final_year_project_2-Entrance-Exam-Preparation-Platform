@@ -1,0 +1,230 @@
+const { validationResult } = require('express-validator');
+const authService = require('../services/authService');
+
+class AuthController {
+  /**
+   * POST /api/auth/register
+   * Register a new user (student, teacher, or admin)
+   * FR-01: System shall allow students, teachers, and administrators to create user accounts
+   */
+  async register(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const { firstName, lastName, email, password, phoneNumber, role, profileImage } = req.body;
+
+      const result = await authService.registerUser({
+        firstName,
+        lastName,
+        email,
+        password,
+        phoneNumber,
+        role,
+        profileImage,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/login
+   * Login user with email and password
+   * FR-04: System shall allow users to log in
+   */
+  async login(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const { email, password } = req.body;
+
+      const result = await authService.loginUser(email, password);
+
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/request-password-reset
+   * Request password reset
+   * FR-05: System shall allow users to reset passwords
+   */
+  async requestPasswordReset(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const { email } = req.body;
+
+      const result = await authService.requestPasswordReset(email);
+
+      res.status(200).json({
+        success: true,
+        message: 'Password reset request processed',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/reset-password
+   * Reset password with token
+   */
+  async resetPassword(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const { resetToken, newPassword } = req.body;
+
+      const result = await authService.resetPassword(resetToken, newPassword);
+
+      res.status(200).json({
+        success: true,
+        message: 'Password reset successful',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/auth/profile
+   * Get current user profile (requires authentication)
+   */
+  async getProfile(req, res, next) {
+    try {
+      const userId = req.user.id;
+
+      const user = await authService.getUserById(userId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile retrieved successfully',
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PUT /api/auth/profile
+   * Update user profile (requires authentication)
+   */
+  async updateProfile(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const userId = req.user.id;
+      const { firstName, lastName, phoneNumber, profileImage } = req.body;
+
+      const user = await authService.updateProfile(userId, {
+        firstName,
+        lastName,
+        phoneNumber,
+        profileImage,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/change-password
+   * Change password (requires authentication)
+   * FR-05: System shall allow users to reset/change passwords
+   */
+  async changePassword(req, res, next) {
+    try {
+      // Check for validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const userId = req.user.id;
+      const { oldPassword, newPassword } = req.body;
+
+      const result = await authService.changePassword(userId, oldPassword, newPassword);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/auth/logout
+   * Logout user and blacklist token
+   * FR-04: System shall provide a logout option
+   */
+  async logout(req, res, next) {
+    try {
+      const authHeader = req.headers.authorization;
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authorization token is missing',
+        });
+      }
+
+      const token = authHeader.substring(7); // Remove "Bearer " prefix
+      const result = await authService.logoutUser(token);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+module.exports = new AuthController();

@@ -1,0 +1,23 @@
+// Central model exporter
+module.exports = {
+  User: require('./User'),
+  Subject: require('./Subject'),
+  Chapter: require('./Chapter'),
+  Topic: require('./Topic'),
+  Concept: require('./Concept'),
+  Video: require('./Video'),
+  Exercise: require('./Exercise'),
+  ExerciseProblem: require('./ExerciseProblem'),
+  Quiz: require('./Quiz'),
+  QuizProblem: require('./QuizProblem'),
+  QuizScore: require('./QuizScore'),
+  ExamPaper: require('./ExamPaper'),
+  ExamQuestion: require('./ExamQuestion'),
+  Progress: require('./Progress'),
+  Question: require('./Question'),
+  Answer: require('./Answer'),
+  Bookmark: require('./Bookmark'),
+  Issue: require('./Issue'),
+  Notification: require('./Notification'),
+  PasswordResetToken: require('./PasswordResetToken'),
+};

@@ -1,0 +1,48 @@
+# docker-compose.yml
+services:
+  # Backend Node.js Application Service
+  backend:
+    build:
+      context: . # Build the image from the Dockerfile in the 'backend' directory
+    container_name: backend-app
+    ports:
+      - "5000:5000" # Map the host's port 5000 to the container's port 5000
+    volumes:
+      # Mount the local backend directory to the container's working directory
+      # This enables hot-reloading with nodemon
+      - .:/usr/src/app
+      # Exclude node_modules from being overwritten by the local volume
+      - /usr/src/app/node_modules
+    env_file:
+      - ./.env # Load environment variables from the .env file
+    depends_on:
+      - mongodb # Ensure mongodb is started before the backend
+      - redis   # Ensure redis is started before the backend
+    restart: unless-stopped
+
+  # MongoDB Service Definition
+  mongodb:
+    image: mongo:latest # Use the latest official MongoDB image
+    container_name: mongodb-local
+    ports:
+      - "27017:27017" # Map the container's port 27017 to the host's port 27017
+    environment:
+      # These variables are used by the mongo image to initialize the database
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db # Mount a named volume to persist database files
+
+  # Redis Service Definition
+  redis:
+    image: redis:latest # Use the latest official Redis image
+    container_name: redis-local
+    ports:
+      - "6379:6379" # Map the container's port 6379 to the host's port 6379
+    volumes:
+      - redis-data:/data # Mount a named volume to persist Redis data
+
+volumes:
+  # Define the named volumes for data persistence
+  mongo-data:
+  redis-data:

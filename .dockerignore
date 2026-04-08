@@ -1,0 +1,17 @@
+# backend/.dockerignore
+# What: This file specifies which files and directories should be excluded when building the Docker image.
+# Why: To keep the Docker image small, secure, and to avoid overwriting files inside the container.
+# How: It works just like a .gitignore file.
+
+# Exclude local node_modules. The container will install its own.
+node_modules
+
+# Exclude npm debug logs.
+npm-debug.log
+
+# Exclude the Dockerfile itself and this .dockerignore file.
+Dockerfile
+.dockerignore
+
+# Exclude the local environment file. Environment variables will be passed in via Docker Compose.
+.env
