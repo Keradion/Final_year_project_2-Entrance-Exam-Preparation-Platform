@@ -85,6 +85,8 @@ backend/
 
 ## API Endpoints
 
+[Get a detailed list of ALL available endpoint examples across the 8 subsystems here in API_DOCS.md](./API_DOCS.md).
+
 Here are some sample API calls and their expected responses. This reflects the current API functionality in the system.
 
 ### Health Check
