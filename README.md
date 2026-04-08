@@ -211,6 +211,181 @@ curl -X GET http://localhost:5000/api/v1/quizzes/topics/60d21b4667d0d8992e610c85
 }
 ```
 
+
+### Subject Subsystem
+
+#### 1. Get All Subjects
+```bash
+curl -X GET http://localhost:5000/api/v1/subjects
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "id": "60d0fe4f5311236168a109ca",
+      "name": "Mathematics",
+      "description": "High school math",
+      "grade": 12
+    }
+  ]
+}
+```
+
+#### 2. Create Subject (Admin/Teacher)
+```bash
+curl -X POST http://localhost:5000/api/v1/subjects \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Physics", "description": "Mechanics", "grade": 11}'
+```
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "60d0fe4f5311236168a109cb",
+    "name": "Physics",
+    "description": "Mechanics",
+    "grade": 11
+  }
+}
+```
+
+### Content Subsystem
+
+#### 1. Get Chapters by Subject
+```bash
+curl -X GET http://localhost:5000/api/v1/content/subjects/60d0fe4f5311236168a109ca/chapters
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d22f1867d0d8992e610c86",
+      "title": "Algebra",
+      "order": 1
+    }
+  ]
+}
+```
+
+#### 2. Add Concept
+```bash
+curl -X POST http://localhost:5000/api/v1/content/topics/60d0fe4f5311236168a109cc/concepts \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Linear Equations", "content": "Variables represent unknowns..."}'
+```
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "60d22f1867d0d8992e610c87",
+    "title": "Linear Equations",
+    "content": "Variables represent unknowns..."
+  }
+}
+```
+
+### Exercises Subsystem
+
+#### 1. Get Exercises by Topic
+```bash
+curl -X GET http://localhost:5000/api/v1/exercises/topics/60d0fe4f5311236168a109cc/exercises \
+  -H "Authorization: Bearer <token>"
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d22f1867d0d8992e610c88",
+      "title": "Practice: Linear Equations",
+      "difficulty": "medium"
+    }
+  ]
+}
+```
+
+### Exams Subsystem
+
+#### 1. Search Exam Papers
+```bash
+curl -X GET 'http://localhost:5000/api/v1/exams/papers/search?year=2023&subject=60d0fe4f5311236168a109ca' \
+  -H "Authorization: Bearer <token>"
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d22f1867d0d8992e610c89",
+      "title": "EUEE 2023 Math",
+      "year": 2023,
+      "duration": 120
+    }
+  ]
+}
+```
+
+### Notifications Subsystem
+
+#### 1. Get All Notifications
+```bash
+curl -X GET http://localhost:5000/api/v1/notifications \
+  -H "Authorization: Bearer <token>"
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d22f1867d0d8992e610c90",
+      "message": "Welcome to the LMS!",
+      "isRead": false,
+      "createdAt": "2026-04-08T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Admin Subsystem
+
+#### 1. Get All Users
+```bash
+curl -X GET http://localhost:5000/api/v1/admin/users \
+  -H "Authorization: Bearer <admin_token>"
+```
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "id": "60d0fe4f5311236168a109ca",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "johndoe@example.com",
+      "role": "student"
+    }
+  ]
+}
+```
+
 ## Features (In Development)
 
 ### Subsystem 1: Identity & Accounts
