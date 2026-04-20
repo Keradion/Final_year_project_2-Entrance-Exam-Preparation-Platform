@@ -5,13 +5,29 @@ import { registerUser } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 
+const FIELD_NAME_MAP = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  email: 'Email',
+  password: 'Password',
+  phoneNumber: 'Phone number',
+  role: 'Role',
+  profileImage: 'Profile image',
+};
+
 const Register = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    setError: setFormError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm({
     defaultValues: {
       role: 'student'
     }
@@ -20,6 +36,7 @@ const Register = () => {
   const onSubmit = async (data) => {
     try {
       setError(null);
+      clearErrors();
       const formData = new FormData();
       formData.append('firstName', data.firstName);
       formData.append('lastName', data.lastName);
@@ -44,12 +61,39 @@ const Register = () => {
         navigate('/login');
       }
     } catch (err) {
-      const serverErrors = err.response?.data?.errors;
+      const serverErrors = err?.response?.data?.errors;
+
       if (Array.isArray(serverErrors) && serverErrors.length > 0) {
-        setError(serverErrors.map((item) => item.msg).join(' | '));
-      } else {
-        setError(err.response?.data?.message || 'Registration failed. Please check your inputs.');
+        const formatted = serverErrors
+          .filter((item) => item?.msg)
+          .map((item) => {
+            const field = item.path || item.param;
+            if (!field) return item.msg;
+            const label = FIELD_NAME_MAP[field] || field;
+            return `${label}: ${item.msg}`;
+          });
+
+        serverErrors.forEach((item) => {
+          const field = item.path || item.param;
+          if (!field || !(field in FIELD_NAME_MAP)) return;
+          setFormError(field, { type: 'server', message: item.msg });
+        });
+
+        setError(formatted[0] || 'Please correct the highlighted fields and try again.');
+        return;
       }
+
+      if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+        return;
+      }
+
+      if (err?.request) {
+        setError('Could not reach the server. Please make sure the backend is running and try again.');
+        return;
+      }
+
+      setError('Registration failed due to an unexpected error. Please try again.');
     }
   };
 

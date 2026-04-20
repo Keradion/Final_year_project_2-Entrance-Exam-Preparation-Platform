@@ -1,3 +1,4 @@
+
 const subjectService = require('../services/subjectService');
 const mongoose = require('mongoose');
 
@@ -22,6 +23,25 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
  * ==================================================================================
  */
 class SubjectController {
+
+    /**
+     * Handles inviting and assigning a teacher to a subject by email.
+     * If the teacher does not exist, creates the user and sends an invite email.
+     * If the teacher exists, assigns and notifies them.
+     */
+    async inviteAndAssignTeacherByEmail(req, res, next) {
+      try {
+        const { subjectId } = req.params;
+        const { email, firstName, lastName } = req.body;
+        if (!email) {
+          return res.status(400).json({ success: false, message: 'Email is required.' });
+        }
+        const result = await subjectService.inviteAndAssignTeacherByEmail(subjectId, email, firstName, lastName);
+        res.status(200).json(result);
+      } catch (error) {
+        next(error);
+      }
+    }
   /**
    * Handles the request to create a new subject.
    * Expected to be used by an administrator.

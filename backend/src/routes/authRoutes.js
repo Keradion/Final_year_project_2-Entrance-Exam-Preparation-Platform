@@ -156,7 +156,7 @@ router.get('/profile', authenticate, authController.getProfile);
  *   "data": { ... updated user ... }
  * }
  */
-router.put('/profile', authenticate, updateProfileValidation, authController.updateProfile);
+router.put('/profile', authenticate, profileImageUpload.single('profileImageFile'), updateProfileValidation, authController.updateProfile);
 
 /**
  * POST /api/auth/change-password

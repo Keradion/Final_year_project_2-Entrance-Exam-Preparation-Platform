@@ -1,5 +1,6 @@
 // backend/src/workers/emailWorker.js
 const { Worker } = require('bullmq');
+const nodemailer = require('nodemailer');
 const { connection } = require('../config/bullmq');
 
 /**
@@ -16,17 +17,45 @@ const { connection } = require('../config/bullmq');
  *      We also add event listeners to log the worker's status, which is helpful for debugging.
  */
 
+const getTransporter = () => {
+  const host = process.env.EMAIL_HOST;
+  const port = Number(process.env.EMAIL_PORT || 587);
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+
+  if (!host || !user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
 const emailWorker = new Worker(
   'email',
   async (job) => {
-    const { to, subject, body } = job.data;
-    console.log('--- Sending Email ---');
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${body}`);
-    console.log('--- Email Sent (Simulated) ---');
-    // In a real implementation, you would use a service like Nodemailer to send the email.
-    // For example: await emailService.send(to, subject, body);
+    const { to, subject, body, html } = job.data;
+    const transporter = getTransporter();
+
+    if (!transporter) {
+      console.warn('Email transport is not configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASSWORD.');
+      return;
+    }
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to,
+      subject,
+      text: body,
+      html,
+    });
   },
   { connection }
 );

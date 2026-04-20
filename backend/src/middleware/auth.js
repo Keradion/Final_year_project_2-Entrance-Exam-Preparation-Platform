@@ -48,7 +48,10 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    req.user = user; // Now req.user contains the full user profile
+    req.user = {
+      ...user,
+      id: user._id?.toString(),
+    }; // Keep both _id and normalized id for downstream handlers
 
     next();
   } catch (error) {

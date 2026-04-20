@@ -15,7 +15,15 @@ class AuthController {
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const { firstName, lastName, email, password, phoneNumber, role, profileImage } = req.body;
+      const {
+        firstName,
+        lastName,
+        email,
+        password,
+        phoneNumber,
+        role,
+        profileImage,
+      } = req.body || {};
       const uploadedProfileImage = req.file
         ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
         : undefined;
@@ -86,7 +94,7 @@ class AuthController {
 
       res.status(200).json({
         success: true,
-        message: 'Password reset request processed',
+        message: 'If any account exists for this email, a reset link will be sent.',
         data: result,
       });
     } catch (error) {
@@ -126,9 +134,7 @@ class AuthController {
    */
   async getProfile(req, res, next) {
     try {
-      const userId = req.user.id;
-
-      const user = await authService.getUserById(userId);
+      const user = authService.formatUserResponse(req.user);
 
       res.status(200).json({
         success: true,
@@ -152,14 +158,17 @@ class AuthController {
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const userId = req.user.id;
-      const { firstName, lastName, phoneNumber, profileImage } = req.body;
+      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
+      const { firstName, lastName, phoneNumber, profileImage } = req.body || {};
+      const uploadedProfileImage = req.file
+        ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
+        : undefined;
 
       const user = await authService.updateProfile(userId, {
         firstName,
         lastName,
         phoneNumber,
-        profileImage,
+        profileImage: uploadedProfileImage || profileImage,
       });
 
       res.status(200).json({
@@ -185,7 +194,7 @@ class AuthController {
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const userId = req.user.id;
+      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
       const { oldPassword, newPassword } = req.body;
 
       const result = await authService.changePassword(userId, oldPassword, newPassword);

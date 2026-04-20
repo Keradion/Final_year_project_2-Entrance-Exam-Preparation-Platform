@@ -15,10 +15,10 @@ const emailQueue = require('../queues/emailQueue');
  *      processed multiple times.
  */
 class EmailService {
-  async sendEmail(to, subject, body) {
+  async sendEmail(to, subject, body, html) {
     await emailQueue.add(
       'send-email',
-      { to, subject, body },
+      { to, subject, body, html },
       {
         // Attempt each job up to 3 times if it fails
         attempts: 3,

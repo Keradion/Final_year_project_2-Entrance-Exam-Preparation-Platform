@@ -1,8 +1,17 @@
+
 const express = require('express');
 const subjectController = require('../controllers/subjectController');
 const { authenticate, isAdmin, isTeacherOrAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ADMIN: Invite and assign teacher by email
+router.post(
+  '/:subjectId/invite-assign-teacher',
+  authenticate,
+  isAdmin,
+  subjectController.inviteAndAssignTeacherByEmail
+);
 
 /**
  * ==================================================================================
@@ -52,5 +61,6 @@ router.put(
   isAdmin,
   subjectController.assignTeacherToSubject
 );
+module.exports = router;
 
 module.exports = router;

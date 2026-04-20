@@ -115,8 +115,8 @@ class AuthService {
     const user = await User.findOne({ email });
 
     if (!user) {
-      // Don't reveal if email exists (security best practice)
-      return { message: 'If email exists, reset link will be sent' };
+      // Always return a generic response to avoid account enumeration.
+      return { message: 'If any account exists for this email, a reset link will be sent.' };
     }
 
     // Generate reset token
@@ -139,12 +139,21 @@ class AuthService {
       logger.warn('Redis not available, password reset token not stored', { userId: user._id });
     }
 
-    // In production, send email with reset link containing resetToken
-    // For now, return the token for testing
+    const frontendBase = process.env.RESET_PASSWORD_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendBase.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(resetToken)}`;
+
+    await emailService.sendEmail(
+      user.email,
+      'Reset your password',
+      `Hi ${user.firstName},\n\nUse the link below to reset your password:\n${resetLink}\n\nThis link will expire in 10 minutes.`,
+      `<p>Hi ${user.firstName},</p>
+       <p>Use the link below to reset your password:</p>
+       <p><a href="${resetLink}">${resetLink}</a></p>
+       <p>This link will expire in 10 minutes.</p>`
+    );
+
     return {
-      message: 'Password reset token generated',
-      resetToken, // Only for development/testing
-      expiresIn: redis ? '10 minutes' : 'No expiration (Redis unavailable)',
+      message: 'If any account exists for this email, a reset link will be sent.',
     };
   }
 

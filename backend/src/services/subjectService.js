@@ -1,3 +1,4 @@
+
 const { Subject, User } = require('../models');
 
 /**
@@ -20,6 +21,53 @@ const { Subject, User } = require('../models');
  * ==================================================================================
  */
 class SubjectService {
+  /**
+   * Invite and assign a teacher to a subject by email.
+   * If the teacher does not exist, create them and send invite email.
+   * If exists, assign and notify.
+   */
+  async inviteAndAssignTeacherByEmail(subjectId, email, firstName, lastName) {
+    // Try to find teacher by email
+    let teacher = await User.findOne({ email });
+    let isNew = false;
+    if (!teacher) {
+      // Create teacher with random password
+      const randomPassword = Math.random().toString(36).slice(-8);
+      teacher = new User({
+        firstName: firstName || 'Teacher',
+        lastName: lastName || '',
+        email,
+        password: randomPassword,
+        role: 'teacher',
+        status: 'active',
+      });
+      await teacher.save();
+      isNew = true;
+    } else if (teacher.role !== 'teacher') {
+      throw { status: 400, message: 'User exists but is not a teacher.' };
+    }
+
+    // Assign teacher to subject
+    const subject = await this.getSubjectById(subjectId);
+    if (!subject) throw { status: 404, message: 'Subject not found.' };
+    subject.teacher = teacher._id;
+    await subject.save();
+
+    // Send email with login/register link
+    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+    let emailBody;
+    if (isNew) {
+      emailBody = `Hello,\n\nYou have been invited to be a teacher for the subject: ${subject.subjectName}.\n\nPlease log in using your email and this temporary password: ${teacher.password}\nLogin here: ${loginUrl}\n\nYou can change your password after logging in.`;
+    } else {
+      emailBody = `Hello,\n\nYou have been assigned as a teacher for the subject: ${subject.subjectName}.\n\nLogin here: ${loginUrl}`;
+    }
+    await require('./emailService').sendEmail(
+      teacher.email,
+      'You have been assigned as a teacher',
+      emailBody
+    );
+    return { success: true, teacherId: teacher._id, subjectId: subject._id, isNew };
+  }
   /**
    * Creates a new subject.
    * FR-20: The system shall allow the administrator to create a subject.

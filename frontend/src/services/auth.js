@@ -17,3 +17,26 @@ export const getProfile = async () => {
   const response = await api.get('/auth/profile');
   return response.data;
 };
+
+export const updateProfile = async (payload) => {
+  const isFormData = typeof FormData !== 'undefined' && payload instanceof FormData;
+  const response = await api.put('/auth/profile', payload, isFormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } }
+    : undefined);
+  return response.data;
+};
+
+export const changePassword = async (payload) => {
+  const response = await api.post('/auth/change-password', payload);
+  return response.data;
+};
+
+export const requestPasswordReset = async (payload) => {
+  const response = await api.post('/auth/request-password-reset', payload);
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await api.post('/auth/reset-password', payload);
+  return response.data;
+};
