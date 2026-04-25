@@ -20,4 +20,5 @@ module.exports = {
   Issue: require('./Issue'),
   Notification: require('./Notification'),
   PasswordResetToken: require('./PasswordResetToken'),
+  PendingUser: require('./PendingUser'),
 };

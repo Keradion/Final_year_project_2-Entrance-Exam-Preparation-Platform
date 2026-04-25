@@ -111,6 +111,12 @@ router.post('/request-password-reset', requestPasswordResetValidation, authContr
 router.post('/reset-password', resetPasswordValidation, authController.resetPassword);
 
 /**
+ * POST /api/auth/verify-email
+ * Verify email with token
+ */
+router.post('/verify-email', authController.verifyEmail);
+
+/**
  * Protected Routes (Authentication Required)
  */
 

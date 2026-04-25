@@ -18,7 +18,7 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
  * ==================================================================================
  */
 class ContentController {
-  async notifyStudentsOfSubjectUpdate(subjectId, title, message) {
+  notifyStudentsOfSubjectUpdate = async (subjectId, title, message) => {
     const subject = await Subject.findById(subjectId).select('subjectName');
     if (!subject) {
       return;
@@ -61,7 +61,7 @@ class ContentController {
         }
       })
     );
-  }
+  };
 
   // ==================================================================================
   // Chapter Handlers
@@ -71,7 +71,7 @@ class ContentController {
    * Handles the request to create a new chapter.
    * The subject ID is expected in the request body.
    */
-  async createChapter(req, res, next) {
+  createChapter = async (req, res, next) => {
     try {
       const { subjectId, subject, ...chapterData } = req.body;
       const resolvedSubjectId = subjectId || subject;
@@ -98,13 +98,13 @@ class ContentController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
   /**
    * Handles the request to get all chapters for a specific subject.
    * The subject ID is expected as a URL parameter.
    */
-  async getChaptersBySubject(req, res, next) {
+  getChaptersBySubject = async (req, res, next) => {
     try {
       const { subjectId } = req.params;
 
@@ -127,7 +127,7 @@ class ContentController {
    * Handles the request to create a new topic.
    * The chapter ID is expected in the request body.
    */
-  async createTopic(req, res, next) {
+  createTopic = async (req, res, next) => {
     try {
       const { chapterId, chapter, ...topicData } = req.body;
       const resolvedChapterId = chapterId || chapter;
@@ -157,13 +157,59 @@ class ContentController {
     } catch (error) {
       next(error);
     }
-  }
+  };
+
+  /**
+   * Handles the request to update a chapter by ID.
+   */
+  updateChapter = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: 'Invalid chapter id format.' });
+      }
+
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ message: 'Request body is required for update.' });
+      }
+
+      const chapter = await contentService.updateChapter(id, req.body);
+      if (!chapter) {
+        return res.status(404).json({ message: 'Chapter not found.' });
+      }
+      res.status(200).json(chapter);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Handles the request to delete a chapter by ID.
+   */
+  deleteChapter = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      if (!isValidObjectId(id)) {
+        return res.status(400).json({ message: 'Invalid chapter id format.' });
+      }
+
+      const chapter = await contentService.deleteChapter(id);
+      if (!chapter) {
+        return res.status(404).json({ message: 'Chapter not found.' });
+      }
+      res.status(200).json({ message: 'Chapter deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   /**
    * Handles the request to get all topics for a specific chapter.
    * The chapter ID is expected as a URL parameter.
    */
-  async getTopicsByChapter(req, res, next) {
+  getTopicsByChapter = async (req, res, next) => {
     try {
       const { chapterId } = req.params;
 
@@ -181,7 +227,7 @@ class ContentController {
   /**
    * Handles the request to get a single topic by ID.
    */
-  async getTopicById(req, res, next) {
+  getTopicById = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -202,7 +248,7 @@ class ContentController {
   /**
    * Handles the request to update a topic by ID.
    */
-  async updateTopic(req, res, next) {
+  updateTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -235,7 +281,7 @@ class ContentController {
   /**
    * Handles the request to delete a topic by ID.
    */
-  async deleteTopic(req, res, next) {
+  deleteTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -262,13 +308,13 @@ class ContentController {
     } catch (error) {
       next(error);
     }
-  }
+  };
 
   /**
    * Handles the request to search for topics by title.
    * The search query is expected in the query string (e.g., /topics/search?q=algebra).
    */
-  async searchTopics(req, res, next) {
+  searchTopics = async (req, res, next) => {
     try {
       const { q } = req.query;
       if (!q) {
@@ -289,7 +335,7 @@ class ContentController {
    * Handles the request to add a concept to a topic.
    * The topic ID is expected as a URL parameter.
    */
-  async addConceptToTopic(req, res, next) {
+  addConceptToTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -297,11 +343,20 @@ class ContentController {
         return res.status(400).json({ message: 'Invalid topic id format.' });
       }
 
-      if (!req.body?.content) {
-        return res.status(400).json({ message: 'content is required.' });
+      if (!req.body?.content || !req.body?.title) {
+        return res.status(400).json({ message: 'Title and content are required.' });
       }
 
-      const concept = await contentService.addConceptToTopic(req.body, topicId);
+      const conceptData = {
+        title: req.body.title,
+        content: req.body.content,
+      };
+
+      if (req.file) {
+        conceptData.contentImageUrl = `/uploads/concepts/${req.file.filename}`;
+      }
+
+      const concept = await contentService.addConceptToTopic(conceptData, topicId);
       const topicDoc = await Topic.findById(topicId).select('chapter');
       if (topicDoc?.chapter) {
         const chapterDoc = await Chapter.findById(topicDoc.chapter).select('subject');
@@ -309,7 +364,7 @@ class ContentController {
           await this.notifyStudentsOfSubjectUpdate(
             chapterDoc.subject,
             'Subject content updated',
-            'A new concept page was added under a topic.'
+            `A new concept page "${concept.title}" was added.`
           );
         }
       }
@@ -323,7 +378,7 @@ class ContentController {
    * Handles the request to add a video to a topic.
    * The topic ID is expected as a URL parameter.
    */
-  async addVideoToTopic(req, res, next) {
+  addVideoToTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -356,7 +411,7 @@ class ContentController {
   /**
    * Handles the request to get all concepts for a topic.
    */
-  async getConceptsByTopic(req, res, next) {
+  getConceptsByTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -374,7 +429,7 @@ class ContentController {
   /**
    * Handles the request to get a concept by ID.
    */
-  async getConceptById(req, res, next) {
+  getConceptById = async (req, res, next) => {
     try {
       const { conceptId } = req.params;
 
@@ -395,7 +450,7 @@ class ContentController {
   /**
    * Handles the request to update a concept by ID.
    */
-  async updateConcept(req, res, next) {
+  updateConcept = async (req, res, next) => {
     try {
       const { conceptId } = req.params;
 
@@ -403,11 +458,12 @@ class ContentController {
         return res.status(400).json({ message: 'Invalid concept id format.' });
       }
 
-      if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ message: 'Request body is required for update.' });
+      const updateData = { ...req.body };
+      if (req.file) {
+        updateData.contentImageUrl = `/uploads/concepts/${req.file.filename}`;
       }
 
-      const concept = await contentService.updateConcept(conceptId, req.body);
+      const concept = await contentService.updateConcept(conceptId, updateData);
       if (!concept) {
         return res.status(404).json({ message: 'Concept not found.' });
       }
@@ -418,7 +474,7 @@ class ContentController {
           await this.notifyStudentsOfSubjectUpdate(
             chapterDoc.subject,
             'Subject content updated',
-            'A concept page was updated.'
+            `Concept page "${concept.title}" was updated.`
           );
         }
       }
@@ -431,7 +487,7 @@ class ContentController {
   /**
    * Handles the request to delete a concept by ID.
    */
-  async deleteConcept(req, res, next) {
+  deleteConcept = async (req, res, next) => {
     try {
       const { conceptId } = req.params;
 
@@ -466,7 +522,7 @@ class ContentController {
   /**
    * Handles the request to get all videos for a topic.
    */
-  async getVideosByTopic(req, res, next) {
+  getVideosByTopic = async (req, res, next) => {
     try {
       const { topicId } = req.params;
 
@@ -484,7 +540,7 @@ class ContentController {
   /**
    * Handles the request to get a video by ID.
    */
-  async getVideoById(req, res, next) {
+  getVideoById = async (req, res, next) => {
     try {
       const { videoId } = req.params;
 
@@ -505,7 +561,7 @@ class ContentController {
   /**
    * Handles the request to update a video by ID.
    */
-  async updateVideo(req, res, next) {
+  updateVideo = async (req, res, next) => {
     try {
       const { videoId } = req.params;
 
@@ -541,7 +597,7 @@ class ContentController {
   /**
    * Handles the request to delete a video by ID.
    */
-  async deleteVideo(req, res, next) {
+  deleteVideo = async (req, res, next) => {
     try {
       const { videoId } = req.params;
 

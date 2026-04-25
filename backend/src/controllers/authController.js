@@ -23,6 +23,7 @@ class AuthController {
         phoneNumber,
         role,
         profileImage,
+        stream,
       } = req.body || {};
       const uploadedProfileImage = req.file
         ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
@@ -35,6 +36,7 @@ class AuthController {
         password,
         phoneNumber,
         role,
+        stream,
         profileImage: uploadedProfileImage || profileImage,
       });
 
@@ -129,6 +131,34 @@ class AuthController {
   }
 
   /**
+   * POST /api/auth/verify-email
+   * Complete registration after verifying 6-digit code
+   */
+  async verifyEmail(req, res, next) {
+    try {
+      const { email, code } = req.body;
+
+      if (!email || !code) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email and verification code are required',
+        });
+      }
+
+      const result = await authService.completeRegistration(email, code);
+
+      res.status(200).json({
+        success: true,
+        message: 'Registration completed successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+  /**
    * GET /api/auth/profile
    * Get current user profile (requires authentication)
    */
@@ -159,7 +189,7 @@ class AuthController {
       }
 
       const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
-      const { firstName, lastName, phoneNumber, profileImage } = req.body || {};
+      const { firstName, lastName, phoneNumber, profileImage, stream } = req.body || {};
       const uploadedProfileImage = req.file
         ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
         : undefined;
@@ -168,6 +198,7 @@ class AuthController {
         firstName,
         lastName,
         phoneNumber,
+        stream,
         profileImage: uploadedProfileImage || profileImage,
       });
 

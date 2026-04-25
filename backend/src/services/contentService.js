@@ -1,4 +1,4 @@
-const { Chapter, Topic, Concept, Video, Subject } = require('../models');
+const { Chapter, Topic, Concept, Video, Subject, Exercise, ExamQuestion } = require('../models');
 
 /**
  * ==================================================================================
@@ -57,6 +57,35 @@ class ContentService {
    */
   async getChaptersBySubject(subjectId) {
     return await Chapter.find({ subject: subjectId }).sort({ created_at: 1 });
+  }
+
+  /**
+   * Updates a chapter by its ID.
+   *
+   * @param {string} chapterId - The chapter ID.
+   * @param {object} updateData - Fields to update.
+   * @returns {Promise<object|null>} Updated chapter document or null.
+   */
+  async updateChapter(chapterId, updateData) {
+    return await Chapter.findByIdAndUpdate(chapterId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+  }
+
+  /**
+   * Deletes a chapter by its ID.
+   * Also deletes all topics and their content under this chapter.
+   *
+   * @param {string} chapterId - The chapter ID.
+   * @returns {Promise<object|null>} Deleted chapter document or null.
+   */
+  async deleteChapter(chapterId) {
+    const topics = await Topic.find({ chapter: chapterId });
+    for (const topic of topics) {
+      await this.deleteTopic(topic._id);
+    }
+    return await Chapter.findByIdAndDelete(chapterId);
   }
 
   // ==================================================================================
@@ -124,11 +153,20 @@ class ContentService {
 
   /**
    * Deletes a topic by its ID.
+   * Also deletes all associated concepts and videos.
    *
    * @param {string} topicId - The topic ID.
    * @returns {Promise<object|null>} Deleted topic document or null.
    */
   async deleteTopic(topicId) {
+    // Delete associated content across all models
+    await Promise.all([
+      Concept.deleteMany({ topic: topicId }),
+      Video.deleteMany({ topic: topicId }),
+      Exercise.deleteMany({ topic: topicId }),
+      ExamQuestion.deleteMany({ topic: topicId })
+    ]);
+    
     return await Topic.findByIdAndDelete(topicId);
   }
 

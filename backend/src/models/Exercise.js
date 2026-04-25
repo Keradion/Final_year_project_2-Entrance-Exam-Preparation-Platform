@@ -11,6 +11,28 @@ const exerciseSchema = new Schema({
     type: String,
     required: true
   },
+  question: {
+    type: String,
+    required: true
+  },
+  options: [
+    {
+      type: String,
+      required: true
+    }
+  ],
+  correctAnswer: {
+    type: Number, // Index of the correct option (0-3)
+    required: true
+  },
+  hint: {
+    type: String
+  },
+  difficulty: {
+    type: String,
+    enum: ['Easy', 'Medium', 'Hard'],
+    default: 'Medium'
+  },
   description: {
     type: String
   },

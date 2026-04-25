@@ -1,6 +1,7 @@
 const express = require('express');
 const contentController = require('../controllers/contentController');
 const { authenticate, isTeacherOrAdmin } = require('../middleware/auth');
+const { conceptImageUpload } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -55,6 +56,12 @@ router.use(authenticate, isTeacherOrAdmin);
 // Create a new chapter
 router.post('/chapters', contentController.createChapter);
 
+// Update a chapter
+router.put('/chapters/:id', contentController.updateChapter);
+
+// Delete a chapter
+router.delete('/chapters/:id', contentController.deleteChapter);
+
 // Create a new topic
 router.post('/topics', contentController.createTopic);
 
@@ -65,10 +72,10 @@ router.put('/topics/:topicId', contentController.updateTopic);
 router.delete('/topics/:topicId', contentController.deleteTopic);
 
 // Add a concept to a topic
-router.post('/topics/:topicId/concepts', contentController.addConceptToTopic);
+router.post('/topics/:topicId/concepts', conceptImageUpload.single('contentImage'), contentController.addConceptToTopic);
 
 // Update a concept
-router.put('/concepts/:conceptId', contentController.updateConcept);
+router.put('/concepts/:conceptId', conceptImageUpload.single('contentImage'), contentController.updateConcept);
 
 // Delete a concept
 router.delete('/concepts/:conceptId', contentController.deleteConcept);

@@ -1,7 +1,7 @@
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { User } = require('../models');
+const { User, PendingUser } = require('../models');
 const { getRedisClient } = require('../config/redis');
 const notificationService = require('./notificationService');
 const emailService = require('./emailService');
@@ -13,47 +13,89 @@ class AuthService {
    * FR-01: System shall allow users to create accounts
    */
   async registerUser(userData) {
-    const { firstName, lastName, email, password, phoneNumber, role, profileImage } = userData;
+    const { firstName, lastName, email, password, phoneNumber, role, profileImage, stream } = userData;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw {
-        status: 409,
-        message: 'Email already registered',
-      };
+      throw { status: 409, message: 'Email already registered' };
     }
 
-    // Create new user
-    const user = new User({
-      firstName,
-      lastName,
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // If teacher, register immediately (per requirement: only non-teachers go through verification stage)
+    if (role === 'teacher') {
+      const user = new User({
+        firstName, lastName, email, password, phoneNumber, profileImage,
+        role: 'teacher', status: 'active', isEmailVerified: true
+      });
+      await user.save();
+      const token = this.generateToken(user._id);
+      return { user: this.formatUserResponse(user), token, verificationRequired: false };
+    }
+
+    // For students/others, create pending registration
+    await PendingUser.findOneAndDelete({ email }); // Clear any previous attempt
+    const pendingUser = new PendingUser({
+      firstName, lastName, email, password, phoneNumber, profileImage,
+      role: role || 'student', stream, verificationCode
+    });
+    await pendingUser.save();
+
+    // Send verification email
+    await emailService.sendEmail(
       email,
-      password,
-      phoneNumber,
-      profileImage,
-      role: role || 'student', // Default to student
+      'Verify your registration',
+      `Your verification code is: ${verificationCode}`,
+      `<div style="font-family: sans-serif; text-align: center; padding: 20px;">
+        <h2>Verify your account</h2>
+        <p>Enter the code below to complete your registration:</p>
+        <div style="font-size: 32px; font-weight: bold; background: #f1f5f9; padding: 20px; border-radius: 8px; display: inline-block;">
+          ${verificationCode}
+        </div>
+      </div>`
+    );
+
+    logger.info(`Verification code for ${email}: ${verificationCode}`);
+
+    return { 
+      email,
+      verificationRequired: true,
+      message: 'Verification code sent to email'
+    };
+  }
+
+  /**
+   * Complete registration after verification
+   */
+  async completeRegistration(email, code) {
+    const pending = await PendingUser.findOne({ email });
+
+    if (!pending) {
+      throw { status: 404, message: 'Registration session expired or not found' };
+    }
+
+    if (pending.verificationCode !== code) {
+      throw { status: 400, message: 'Invalid verification code' };
+    }
+
+    // Create the actual user
+    const user = new User({
+      firstName: pending.firstName,
+      lastName: pending.lastName,
+      email: pending.email,
+      password: pending.password,
+      phoneNumber: pending.phoneNumber,
+      profileImage: pending.profileImage,
+      role: pending.role,
+      stream: pending.stream,
       status: 'active',
+      isEmailVerified: true,
     });
 
-    // Save user (password will be hashed by pre-save middleware)
     await user.save();
+    await PendingUser.deleteOne({ _id: pending._id });
 
-    // Send welcome notification
-    await notificationService.sendNotification(
-      user._id,
-      'Welcome!',
-      'Your account has been successfully created.'
-    );
-
-    // Send welcome email asynchronously
-    await emailService.sendEmail(
-      user.email,
-      'Welcome to the Platform!',
-      `Hi ${user.firstName},\n\nThank you for registering. We're excited to have you on board.`
-    );
-
-    // Generate JWT token
     const token = this.generateToken(user._id);
 
     return {
@@ -61,6 +103,7 @@ class AuthService {
       token,
     };
   }
+
 
   /**
    * Login user with email and password
@@ -146,10 +189,57 @@ class AuthService {
       user.email,
       'Reset your password',
       `Hi ${user.firstName},\n\nUse the link below to reset your password:\n${resetLink}\n\nThis link will expire in 10 minutes.`,
-      `<p>Hi ${user.firstName},</p>
-       <p>Use the link below to reset your password:</p>
-       <p><a href="${resetLink}">${resetLink}</a></p>
-       <p>This link will expire in 10 minutes.</p>`
+      `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Your Password</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #0f172a;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f8fafc; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); overflow: hidden;">
+          <tr>
+            <td style="padding: 40px 48px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em;">Lumina Academy</h1>
+              <p style="margin: 8px 0 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Academic Portal Support</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 48px;">
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 24px; color: #334155;">Hello <strong style="color: #0f172a;">${user.firstName}</strong>,</p>
+              <p style="margin: 0 0 32px; font-size: 16px; line-height: 24px; color: #334155;">We received a request to reset the password for your Lumina Academy account. If you made this request, please click the button below to securely set a new password.</p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td align="center" style="padding-bottom: 32px;">
+                    <a href="${resetLink}" style="display: inline-block; padding: 16px 32px; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Reset Password</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 0 0 16px; font-size: 14px; line-height: 24px; color: #64748b;">Or copy and paste this link into your browser:</p>
+              <p style="margin: 0 0 32px; font-size: 14px; line-height: 24px; color: #2563eb; word-break: break-all;"><a href="${resetLink}" style="color: #2563eb; text-decoration: underline;">${resetLink}</a></p>
+              
+              <div style="background-color: #fff8f1; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 32px; border-radius: 4px 8px 8px 4px;">
+                <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: 500;"><strong>Security Notice:</strong> This link will expire in 10 minutes. If you did not request a password reset, you can safely ignore this email. Your account remains secure.</p>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 48px; background-color: #f8fafc; text-align: center; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8;">&copy; ${new Date().getFullYear()} Lumina Academy. All rights reserved.</p>
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated message. Please do not reply directly to this email.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
     );
 
     return {
@@ -250,7 +340,7 @@ class AuthService {
    * Update user profile
    */
   async updateProfile(userId, updateData) {
-    const allowedFields = ['firstName', 'lastName', 'phoneNumber', 'profileImage'];
+    const allowedFields = ['firstName', 'lastName', 'phoneNumber', 'profileImage', 'stream'];
     const update = {};
 
     allowedFields.forEach((field) => {
@@ -378,7 +468,9 @@ class AuthService {
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
       role: user.role,
+      stream: user.stream,
       status: user.status,
+      isEmailVerified: user.isEmailVerified,
       created_at: user.created_at,
       updated_at: user.updated_at,
     };

@@ -1,16 +1,42 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --color-primary-container: #0056D2;
+  --color-on-primary: #FFFFFF;
+  --color-surface: #F9F9F9;
+  --color-on-surface: #1A1C1C;
+  --color-surface-variant: #E2E2E2;
+  --color-on-surface-variant: #424654;
+  --color-outline: #737785;
+  --color-outline-variant: #C3C6D6;
+  --color-error: #BA1A1A;
+  --color-error-container: #FFDAD6;
+  --color-on-error-container: #93000A;
+  --color-background: #F9F9F9;
+
+  --spacing-gutter: 24px;
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-lg: 48px;
+}
+
 :root {
-  font-family: Roboto, "Segoe UI", Arial, sans-serif;
-  line-height: 1.5;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
   font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #ffffff;
-  color: #202124;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
 }

@@ -1,14 +1,16 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { loginUser } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, ShieldCheck, Mail, Lock, ArrowRight, BookOpen, CheckCircle } from 'lucide-react';
 
 const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState(null);
+  const successMessage = location.state?.message;
   const [showPassword, setShowPassword] = useState(false);
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
@@ -19,7 +21,7 @@ const Login = () => {
       const response = await loginUser(data);
       if (response && response.data && response.data.token) {
         login(response.data.token, response.data.user);
-        navigate('/dashboard'); // or redirect based on location state
+        navigate('/dashboard'); 
       } else {
         setError('Login failed parsing response.');
       }
@@ -29,99 +31,128 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border border-[#dadce0] bg-white shadow-sm lg:grid-cols-2">
-        <section className="relative flex flex-col items-center justify-center border-b-2 border-black bg-black p-8 text-center text-white lg:border-b-0 lg:border-r-2 lg:p-10">
-          <div className="space-y-6">
-            <h1 className="text-4xl font-black leading-tight">
-              Welcome Back.
-            </h1>
-            <p className="mx-auto max-w-sm text-sm leading-6 text-white/90">
-              Sign in to continue your learning streak, track practice performance, and access your personalized dashboard.
-            </p>
-          </div>
-        </section>
-
-        <section className="bg-white p-8 lg:p-10">
-          <div>
-            <div className="mb-5 inline-flex h-12 w-12 items-center justify-center border-2 border-black">
-              <LogIn className="h-5 w-5 text-black" />
+    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
+      <main className="flex-grow flex items-center justify-center py-12 px-6">
+        {/* Asymmetric Bento Layout for Login */}
+        <div className="w-full max-w-[1000px] grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
+          
+          {/* Branding/Visual Section */}
+          <div className="lg:col-span-7 hidden lg:flex flex-col justify-between p-stack-lg bg-primary-container rounded-lg text-on-primary relative overflow-hidden min-h-[560px]">
+            <div className="relative z-10">
+              <h2 className="text-5xl font-bold mb-stack-md leading-tight">Ethiopia Entrance Exam Preparation</h2>
+              <p className="text-lg opacity-90 max-w-md">Your comprehensive platform for mastering subjects, practicing past exams, and tracking your progress toward success.</p>
             </div>
-            <h2 className="text-3xl font-black leading-tight text-black">Sign in</h2>
-            <p className="mt-2 text-sm font-medium text-black/80">
-              New here?{' '}
-              <Link to="/register" className="font-bold underline decoration-2 underline-offset-4 hover:text-[#1a73e8]">
-                Sign up
-              </Link>
-            </p>
-          </div>
-
-          {error && (
-            <div className="mt-5 border-2 border-black bg-black p-3">
-              <p className="text-sm font-semibold text-white">{error}</p>
-            </div>
-          )}
-
-          <form className="mt-6 space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            <div>
-              <label className="mb-1 block text-sm font-bold text-black" htmlFor="email">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...register('email', { required: 'Email is required' })}
-                className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                placeholder="you@example.com"
-              />
-              {errors.email && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.email.message}</p>}
-            </div>
-
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="block text-sm font-bold text-black" htmlFor="password">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-bold underline decoration-2 underline-offset-4 hover:text-[#1a73e8]"
-                >
-                  Forgot password?
-                </Link>
+            
+            {/* Decorative Graphic */}
+            <div className="relative z-10 grid grid-cols-2 gap-4 mt-8">
+              <div className="bg-white/10 backdrop-blur-md p-4 rounded border border-white/20">
+                <BookOpen className="text-white mb-2" size={32} />
+                <p className="font-medium text-sm">1,200+ Courses</p>
               </div>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  {...register('password', { required: 'Password is required' })}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 pr-12 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                  placeholder="Enter your password"
-                />
+              <div className="bg-white/10 backdrop-blur-md p-4 rounded border border-white/20">
+                <CheckCircle className="text-white mb-2" size={32} />
+                <p className="font-medium text-sm">Accredited Content</p>
+              </div>
+            </div>
+
+            {/* Abstract background pattern */}
+            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+              <img 
+                className="w-full h-full object-cover" 
+                alt="Modern library architecture" 
+                src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=1000" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-container via-primary-container/80 to-transparent"></div>
+            </div>
+          </div>
+
+          {/* Form Section */}
+          <div className="lg:col-span-5 bg-white rounded-lg border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col justify-center">
+            <div className="mb-stack-lg">
+              <h3 className="text-2xl font-semibold text-on-surface mb-2">Sign In</h3>
+              <p className="text-body-md text-on-surface-variant">Access your dashboard.</p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3">
+                <ShieldCheck size={20} />
+                {error}
+              </div>
+            )}
+
+            {successMessage && !error && (
+              <div className="mb-6 p-4 bg-primary-container/10 text-primary-container rounded-lg text-sm flex items-center gap-3">
+                <CheckCircle size={20} />
+                {successMessage}
+              </div>
+            )}
+
+
+            {/* Manual Form */}
+            <form className="space-y-stack-md" onSubmit={handleSubmit(onSubmit)}>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="email">Email</label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    {...register('email', { required: 'Email is required' })}
+                    className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                    placeholder="you@example.com"
+                  />
+                  <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                </div>
+                {errors.email && <p className="mt-1 text-xs text-error">{errors.email.message}</p>}
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-on-surface" htmlFor="password">Password</label>
+                  <Link to="/forgot-password" size="sm" className="text-xs text-primary-container hover:underline">Forgot Password?</Link>
+                </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password', { required: 'Password is required' })}
+                    className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                    placeholder="••••••••"
+                  />
+                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errors.password && <p className="mt-1 text-xs text-error">{errors.password.message}</p>}
+              </div>
+
+              <div className="pt-2">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-[#dadce0] bg-white p-1 text-[#5f6368] hover:border-[#1a73e8] hover:text-[#1a73e8]"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary-container text-on-primary py-3 px-6 rounded-lg font-semibold text-lg hover:brightness-110 active:opacity-80 transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {isSubmitting ? 'Authenticating...' : 'Log In'}
+                  {!isSubmitting && <ArrowRight size={20} />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.password.message}</p>}
+            </form>
+
+            <div className="mt-stack-lg text-center">
+              <p className="text-sm text-on-surface-variant">
+                Don't have an account? 
+                <Link to="/register" className="text-primary-container font-semibold hover:underline ml-1">Sign Up</Link>
+              </p>
             </div>
+          </div>
+        </div>
+      </main>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center rounded-lg border border-[#1a73e8] bg-[#1a73e8] px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#1765cc] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
-            </button>
 
-          </form>
-        </section>
-      </div>
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { registerUser } from '../services/auth';
+import { registerUser, verifyEmail } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, ShieldCheck, Mail, Lock, Phone, User, ArrowRight, ArrowLeft, BookOpen, CheckCircle, FlaskConical, Globe } from 'lucide-react';
 
 const FIELD_NAME_MAP = {
   firstName: 'First name',
@@ -20,18 +20,49 @@ const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const {
     register,
     handleSubmit,
     setError: setFormError,
     clearErrors,
+    trigger,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      role: 'student'
+      role: 'student',
+      firstName: '',
+      lastName: '',
+      email: '',
+      confirmEmail: '',
+      password: '',
+      confirmPassword: '',
+      phoneNumber: ''
     }
   });
+
+  const [step, setStep] = useState(1);
+  const [registrationData, setRegistrationData] = useState(null);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const password = watch('password');
+  const email = watch('email');
+
+  const onBasicInfoSubmit = async (data) => {
+    const isValid = await trigger(['firstName', 'lastName', 'email', 'confirmEmail', 'password', 'confirmPassword', 'phoneNumber']);
+    if (isValid) {
+      setRegistrationData(data);
+      setStep(2);
+    }
+  };
+
+  const onStreamSelect = (stream) => {
+    onSubmit({ ...registrationData, stream });
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -42,7 +73,8 @@ const Register = () => {
       formData.append('lastName', data.lastName);
       formData.append('email', data.email);
       formData.append('password', data.password);
-      formData.append('role', data.role || 'student');
+      formData.append('role', 'student');
+      if (data.stream) formData.append('stream', data.stream);
 
       if (data.phoneNumber?.trim()) {
         formData.append('phoneNumber', data.phoneNumber.trim());
@@ -53,219 +85,348 @@ const Register = () => {
       }
 
       const response = await registerUser(formData);
-      // Auto-login upon successful registration
-      if (response && response.data && response.data.token) {
-        login(response.data.token, response.data.user);
-        navigate('/dashboard');
-      } else {
-        navigate('/login');
-      }
+      setVerificationEmail(data.email);
+      setStep(3);
     } catch (err) {
       const serverErrors = err?.response?.data?.errors;
-
       if (Array.isArray(serverErrors) && serverErrors.length > 0) {
-        const formatted = serverErrors
-          .filter((item) => item?.msg)
-          .map((item) => {
-            const field = item.path || item.param;
-            if (!field) return item.msg;
-            const label = FIELD_NAME_MAP[field] || field;
-            return `${label}: ${item.msg}`;
-          });
-
         serverErrors.forEach((item) => {
           const field = item.path || item.param;
           if (!field || !(field in FIELD_NAME_MAP)) return;
           setFormError(field, { type: 'server', message: item.msg });
         });
-
-        setError(formatted[0] || 'Please correct the highlighted fields and try again.');
+        setError(serverErrors[0]?.msg || 'Validation failed.');
+        setStep(1);
         return;
       }
-
-      if (err?.response?.data?.message) {
-        setError(err.response.data.message);
-        return;
-      }
-
-      if (err?.request) {
-        setError('Could not reach the server. Please make sure the backend is running and try again.');
-        return;
-      }
-
-      setError('Registration failed due to an unexpected error. Please try again.');
+      setError(err?.response?.data?.message || 'Registration failed.');
+      setStep(1);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 overflow-hidden rounded-2xl border border-[#dadce0] bg-white shadow-sm lg:grid-cols-2">
-        <section className="relative flex flex-col items-center justify-center border-b-2 border-black bg-black p-8 text-center text-white lg:border-b-0 lg:border-r-2 lg:p-10">
-          <div className="space-y-6">
-            <h1 className="text-4xl font-black leading-tight">
-              Create Your Account.
-            </h1>
-            <p className="mx-auto max-w-sm text-sm leading-6 text-white/90">
-              Start preparing smarter with guided quizzes, exercises, and a progress dashboard tailored to your role.
-            </p>
+    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
+      <main className="flex-grow flex items-center justify-center py-12 px-6">
+        {step === 1 ? (
+          /* Step 1: Account Information */
+          <div className="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
+            {/* Branding Panel */}
+            <div className="lg:col-span-5 hidden lg:flex flex-col justify-between p-stack-lg bg-primary-container rounded-lg text-on-primary relative overflow-hidden min-h-[650px]">
+               <div className="relative z-10">
+                <h2 className="text-4xl font-bold mb-stack-md leading-tight">Start Your Exam Prep Journey</h2>
+                <p className="opacity-90 max-w-sm mb-stack-lg text-lg">Create your account and begin preparing for the Ethiopian university entrance examination.</p>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg border border-white/20">
+                    <CheckCircle className="text-white" size={24} />
+                    <span className="text-sm font-medium">Verify your credentials</span>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg border border-white/20">
+                    <BookOpen className="text-white" size={24} />
+                    <span className="text-sm font-medium">Select your stream</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Footer removed */}
+
+              <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
+                <img 
+                  className="w-full h-full object-cover" 
+                  alt="Modern university campus" 
+                  src="https://images.unsplash.com/photo-1541339907198-e08756eaa589?auto=format&fit=crop&q=80&w=1000" 
+                />
+              </div>
+            </div>
+
+            {/* Form Panel */}
+            <div className="lg:col-span-7 bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+              <div className="mb-stack-lg flex justify-between items-end">
+                <div>
+                  <h3 className="text-2xl font-semibold text-on-surface mb-2">Create Account</h3>
+                  <p className="text-body-md text-on-surface-variant">Step 1: Your Details</p>
+                </div>
+                <div className="text-right hidden sm:block">
+                  <p className="text-[10px] font-black text-primary-container uppercase tracking-widest">Progress</p>
+                  <div className="flex gap-1 mt-1">
+                    <div className="w-8 h-1.5 rounded-full bg-primary-container"></div>
+                    <div className="w-8 h-1.5 rounded-full bg-slate-100"></div>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3">
+                  <ShieldCheck size={20} />
+                  {error}
+                </div>
+              )}
+
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-stack-sm" onSubmit={handleSubmit(onBasicInfoSubmit)}>
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="firstName">First Name</label>
+                  <div className="relative">
+                    <input
+                      id="firstName"
+                      {...register('firstName', { required: 'Required' })}
+                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                      placeholder="John"
+                    />
+                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                  </div>
+                  {errors.firstName && <p className="mt-1 text-xs text-error">{errors.firstName.message}</p>}
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="lastName">Last Name</label>
+                  <input
+                    id="lastName"
+                    {...register('lastName', { required: 'Required' })}
+                    className="w-full px-4 py-3 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                    placeholder="Doe"
+                  />
+                  {errors.lastName && <p className="mt-1 text-xs text-error">{errors.lastName.message}</p>}
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="email">Email</label>
+                  <div className="relative">
+                    <input
+                      id="email"
+                      type="email"
+                      {...register('email', { required: 'Email is required' })}
+                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                      placeholder="you@example.com"
+                    />
+                    <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                  </div>
+                  {errors.email && <p className="mt-1 text-xs text-error">{errors.email.message}</p>}
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="confirmEmail">Confirm Email</label>
+                  <input
+                    id="confirmEmail"
+                    type="email"
+                    {...register('confirmEmail', { 
+                      required: 'Required',
+                      validate: val => val === email || 'Emails must match'
+                    })}
+                    className="w-full px-4 py-3 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                    placeholder="you@example.com"
+                  />
+                  {errors.confirmEmail && <p className="mt-1 text-xs text-error">{errors.confirmEmail.message}</p>}
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="password">Password</label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      {...register('password', { required: 'Password required', minLength: { value: 6, message: 'Min 6 chars' } })}
+                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-outline">
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="mt-1 text-xs text-error">{errors.password.message}</p>}
+                </div>
+
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="confirmPassword">Confirm Password</label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      {...register('confirmPassword', { 
+                        required: 'Required',
+                        validate: val => val === password || 'Passwords must match'
+                      })}
+                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                    <ShieldCheck size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-outline">
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="mt-1 text-xs text-error">{errors.confirmPassword.message}</p>}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="phoneNumber">Phone Number</label>
+                  <div className="relative">
+                    <input
+                      id="phoneNumber"
+                      {...register('phoneNumber', { required: 'Required' })}
+                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                      placeholder="+251 9XX XXX XXXX"
+                    />
+                    <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                  </div>
+                  {errors.phoneNumber && <p className="mt-1 text-xs text-error">{errors.phoneNumber.message}</p>}
+                </div>
+
+                <div className="md:col-span-2 pt-4">
+                  <button
+                    type="submit"
+                    className="w-full bg-primary-container text-on-primary py-4 px-6 rounded-lg font-semibold text-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                  >
+                    Continue to Stream Selection
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-stack-lg text-center">
+                <p className="text-sm text-on-surface-variant">
+                  Already registered? 
+                  <Link to="/login" className="text-primary-container font-semibold hover:underline ml-1">Sign In</Link>
+                </p>
+              </div>
+            </div>
           </div>
-        </section>
-
-        <section className="bg-white p-8 lg:p-10">
-          <div>
-            <div className="mb-5 inline-flex h-12 w-12 items-center justify-center border-2 border-black">
-              <UserPlus className="h-5 w-5 text-black" />
+        ) : step === 2 ? (
+          /* Step 2: Stream Selection ... (kept existing code) */
+          <div className="w-full max-w-[900px]">
+            {/* ... contents of step 2 ... */}
+            <div className="text-center mb-12">
+               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                  Step 02: Specialization
+               </div>
+               <h2 className="text-4xl font-bold text-on-surface mb-3">Select Your Academic Stream</h2>
+               <p className="text-on-surface-variant">Choose your primary area of focus for customized learning paths.</p>
             </div>
-            <h2 className="text-3xl font-black leading-tight text-black">Create account</h2>
-            <p className="mt-2 text-sm font-medium text-black/80">
-              Already have an account?{' '}
-              <Link to="/login" className="font-bold underline decoration-2 underline-offset-4 hover:text-[#d41929]">
-                Sign in
-              </Link>
-            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Natural Science */}
+              <button 
+                onClick={() => onStreamSelect('Natural')}
+                className="group p-stack-lg bg-white border-2 border-outline-variant rounded-xl text-left hover:border-primary-container hover:shadow-xl transition-all relative overflow-hidden"
+              >
+                <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
+                  <FlaskConical size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-on-surface mb-2">Preparatory Academic - Natural</h3>
+                <p className="text-on-surface-variant mb-6">Physics, Chemistry, and Advanced Mathematics. Focused on logical reasoning and experimental discovery.</p>
+                <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
+                  Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+              {/* Social Science */}
+              <button 
+                onClick={() => onStreamSelect('Social')}
+                className="group p-stack-lg bg-white border-2 border-outline-variant rounded-xl text-left hover:border-primary-container hover:shadow-xl transition-all relative overflow-hidden"
+              >
+                <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
+                  <Globe size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-on-surface mb-2">Preparatory Academic - Social</h3>
+                <p className="text-on-surface-variant mb-6">Economics, History, and Global Systems. Focused on human behavior and societal structures.</p>
+                <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
+                  Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            </div>
+
+            <div className="mt-12 text-center">
+              <button onClick={() => setStep(1)} className="text-on-surface-variant hover:text-on-surface font-semibold flex items-center gap-2 mx-auto transition-colors">
+                <ArrowLeft size={18} /> Back to Account Details
+              </button>
+            </div>
           </div>
-
-          {error && (
-            <div className="mt-5 border-2 border-black bg-black p-3">
-              <p className="text-sm font-semibold text-white">{error}</p>
-            </div>
-          )}
-
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-bold text-black" htmlFor="firstName">First Name</label>
-                <input
-                  id="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  {...register('firstName', {
-                    required: 'First name is required',
-                    minLength: { value: 2, message: 'First name must be at least 2 characters' },
-                  })}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                />
-                {errors.firstName && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.firstName.message}</p>}
+        ) : (
+          /* Step 3: Verification */
+          <div className="w-full max-w-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-2xl border border-outline-variant p-stack-lg shadow-xl text-center">
+              <div className="w-20 h-20 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container mx-auto mb-8">
+                <ShieldCheck size={40} />
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-bold text-black" htmlFor="lastName">Last Name</label>
-                <input
-                  id="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  {...register('lastName', {
-                    required: 'Last name is required',
-                    minLength: { value: 2, message: 'Last name must be at least 2 characters' },
-                  })}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                />
-                {errors.lastName && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.lastName.message}</p>}
+              <h2 className="text-3xl font-bold text-on-surface mb-3">Verify Your Identity</h2>
+              <p className="text-on-surface-variant mb-8">
+                We've sent a 6-digit verification code to <span className="font-bold text-on-surface">{verificationEmail}</span>. Please enter it below to activate your account.
+              </p>
+
+              {error && (
+                <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3 text-left">
+                  <ShieldCheck size={20} />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between gap-2 mb-8">
+                {verificationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`code-${index}`}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d?$/.test(val)) {
+                        const newCode = [...verificationCode];
+                        newCode[index] = val;
+                        setVerificationCode(newCode);
+                        if (val && index < 5) {
+                          document.getElementById(`code-${index + 1}`).focus();
+                        }
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+                        document.getElementById(`code-${index - 1}`).focus();
+                      }
+                    }}
+                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-outline-variant rounded-lg focus:border-primary-container outline-none transition-all"
+                  />
+                ))}
               </div>
+
+              <button
+                disabled={isVerifying || verificationCode.some(d => !d)}
+                onClick={async () => {
+                  try {
+                    setIsVerifying(true);
+                    setError(null);
+                    const code = verificationCode.join('');
+                    const response = await verifyEmail({ email: verificationEmail, code });
+                    
+                    if (response && response.data && response.data.token) {
+                      login(response.data.token, response.data.user);
+                      navigate('/dashboard');
+                    } else {
+                      navigate('/login', { state: { message: 'Registration completed. Please sign in.' } });
+                    }
+                  } catch (err) {
+                    setError(err.response?.data?.message || 'Verification failed. Please check the code.');
+                  } finally {
+                    setIsVerifying(false);
+                  }
+                }}
+                className="w-full bg-primary-container text-on-primary py-4 rounded-lg font-bold text-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6"
+              >
+                {isVerifying ? 'Verifying...' : 'Validate Code'}
+              </button>
+
+              <button 
+                onClick={() => setStep(1)}
+                className="text-sm font-semibold text-primary-container hover:underline"
+              >
+                Back to Registration
+              </button>
             </div>
+          </div>
+        )}
 
-            <div>
-              <label className="mb-1 block text-sm font-bold text-black" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email address' },
-                })}
-                className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-              />
-              {errors.email && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.email.message}</p>}
-            </div>
+      </main>
 
-            <div>
-              <label className="mb-1 block text-sm font-bold text-black" htmlFor="password">Password</label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                    pattern: {
-                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-                      message: 'Password must include uppercase, lowercase, and number',
-                    },
-                  })}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 pr-12 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-[#dadce0] bg-white p-1 text-[#5f6368] hover:border-[#1a73e8] hover:text-[#1a73e8]"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.password.message}</p>}
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm font-bold text-black" htmlFor="role">Role</label>
-                <select
-                  id="role"
-                  {...register('role')}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-bold text-black" htmlFor="phoneNumber">Phone (optional)</label>
-                <input
-                  id="phoneNumber"
-                  type="tel"
-                  autoComplete="tel"
-                  {...register('phoneNumber', {
-                    pattern: {
-                      value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/,
-                      message: 'Invalid phone number format',
-                    },
-                  })}
-                  className="block w-full rounded-lg border border-[#dadce0] bg-white px-3 py-3 text-[#202124] placeholder:text-[#5f6368] focus:border-[#1a73e8] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20"
-                  placeholder="+2519XXXXXXXX"
-                />
-                {errors.phoneNumber && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.phoneNumber.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-bold text-black" htmlFor="profileImageFile">Profile image (optional)</label>
-              <input
-                id="profileImageFile"
-                type="file"
-                accept="image/*"
-                {...register('profileImageFile', {
-                  validate: (files) => {
-                    if (!files || files.length === 0) return true;
-                    return files[0].size <= 5 * 1024 * 1024 || 'Image size must be 5MB or less';
-                  },
-                })}
-                className="block w-full rounded-lg border border-[#dadce0] px-3 py-2 text-[#202124] file:mr-4 file:rounded-md file:border-0 file:bg-[#1a73e8] file:px-4 file:py-2 file:font-semibold file:text-white hover:file:bg-[#1765cc]"
-              />
-              {errors.profileImageFile && <p className="mt-1 text-xs font-bold text-[#d41929]">{errors.profileImageFile.message}</p>}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center rounded-lg border border-[#1a73e8] bg-[#1a73e8] px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-[#1765cc] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSubmitting ? 'Signing up...' : 'Sign up'}
-            </button>
-
-          </form>
-        </section>
-      </div>
     </div>
   );
 };

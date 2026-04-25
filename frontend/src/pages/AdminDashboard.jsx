@@ -1,17 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Users, BookOpen, MessageCircle } from 'lucide-react';
+import { Users, BookOpen, MessageCircle, ShieldCheck, Zap, LogOut, GraduationCap, Layout, User, CircleUserRound } from 'lucide-react';
 import { listManagedUsers, updateManagedUserStatus } from '../services/admin';
+import { useAuth } from '../context/AuthContext';
 import ManageUsers from '../components/ManageUsers';
 import ManageCourses from '../components/ManageCourses';
 import ManageDiscussionChannels from '../components/ManageDiscussionChannels';
+import { Link } from 'react-router-dom';
 
 const SIDEBAR_ITEMS = [
-  { key: 'users', label: 'Manage Users', icon: <Users className="w-5 h-5 mr-2" /> },
-  { key: 'courses', label: 'Manage Courses', icon: <BookOpen className="w-5 h-5 mr-2" /> },
-  { key: 'discussions', label: 'Manage Discussion Channels', icon: <MessageCircle className="w-5 h-5 mr-2" /> },
+  { key: 'users', label: 'Identity Governance', icon: <Users size={20} /> },
+  { key: 'courses', label: 'Curriculum Assets', icon: <BookOpen size={20} /> },
+  { key: 'discussions', label: 'Communication Hub', icon: <MessageCircle size={20} /> },
 ];
 
 const AdminDashboard = () => {
+  const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('users');
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
@@ -79,59 +82,112 @@ const AdminDashboard = () => {
 
   const statusClassName = useMemo(
     () => ({
-      active: 'border-[#0f9d58] bg-[#e8f5ee] text-[#0f9d58]',
-      inactive: 'border-[#d41929] bg-[#feecee] text-[#d41929]',
-      suspended: 'border-[#b26a00] bg-[#fff3e0] text-[#b26a00]',
+      active: 'border-primary-container bg-primary-container/10 text-primary-container',
+      inactive: 'border-error bg-error/10 text-error',
+      suspended: 'border-on-surface-variant bg-surface-variant/20 text-on-surface-variant',
     }),
     []
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-[#e3e6ea] flex flex-col py-8 px-4">
-        <h2 className="text-xl font-black text-[#202124] mb-8">Admin Panel</h2>
-        <nav className="flex flex-col gap-2">
+    <div className="min-h-screen bg-surface text-on-surface font-sans flex overflow-hidden">
+      {/* Institutional Sidebar */}
+      <aside className="w-[280px] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shadow-[4px_0_12px_rgba(0,0,0,0.02)] shrink-0 h-screen sticky top-0">
+        <div className="p-gutter h-20 flex items-center gap-3 border-b border-outline/5">
+          <div className="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
+            <ShieldCheck className="text-on-primary" size={20} />
+          </div>
+          <span className="text-xl font-bold tracking-tight">Governance OS</span>
+        </div>
+        
+        <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant px-4 mb-4 mt-2">Core Operations</p>
+          
           {SIDEBAR_ITEMS.map((item) => (
             <button
               key={item.key}
-              className={`flex items-center px-4 py-2 rounded-lg text-left font-semibold transition-colors ${activeSection === item.key ? 'bg-[#1a73e8] text-white' : 'text-[#202124] hover:bg-[#f1f3f6]'}`}
               onClick={() => setActiveSection(item.key)}
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded transition-all font-medium ${activeSection === item.key ? 'bg-primary-container text-on-primary' : 'text-on-surface-variant hover:bg-surface'}`}
             >
               {item.icon}
               {item.label}
             </button>
           ))}
+
+          <div className="h-[1px] bg-outline/5 my-6 mx-4"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant px-4 mb-4">Identity</p>
+          
+          <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface transition-all font-medium">
+            <Layout size={20} />
+            Landing Portal
+          </Link>
+          <Link to="/profile" className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:bg-surface transition-all font-medium">
+            <User size={20} />
+            My Account
+          </Link>
         </nav>
+
+        <div className="p-4 border-t border-outline/5">
+          <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 rounded text-error hover:bg-error/5 transition-all font-medium">
+            <LogOut size={20} />
+            Terminate Access
+          </button>
+        </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        {activeSection === 'users' && (
-          <ManageUsers
-            users={users}
-                    query={query}
-                    setQuery={setQuery}
-                    roleFilter={roleFilter}
-                    setRoleFilter={setRoleFilter}
-                    statusFilter={statusFilter}
-                    setStatusFilter={setStatusFilter}
-                    page={page}
-                    setPage={setPage}
-                    pages={pages}
-                    total={total}
-                    isLoading={isLoading}
-                    error={error}
-                    successMessage={successMessage}
-                    fetchUsers={fetchUsers}
-                    handleToggleStatus={handleToggleStatus}
-                    updatingUserId={updatingUserId}
-                    statusClassName={statusClassName}
-                  />
+      <div className="flex-grow flex flex-col min-w-0">
+        {/* Top Header */}
+        <header className="h-20 bg-white border-b border-outline/5 px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
+           <div>
+             <h2 className="text-lg font-bold text-on-surface">Institutional Governance Console</h2>
+             <p className="text-xs text-on-surface-variant uppercase tracking-widest font-black">Admin Level 4 Authorization</p>
+           </div>
+           
+           <div className="flex items-center gap-4">
+             <div className="text-right hidden sm:block">
+               <p className="text-sm font-bold">{user?.firstName || 'Admin'}</p>
+               <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">Root Authority</p>
+             </div>
+             <div className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden">
+                {user?.profileImage ? (
+                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <ShieldCheck size={24} />
                 )}
-                {activeSection === 'courses' && <ManageCourses />}
-                {activeSection === 'discussions' && <ManageDiscussionChannels />}
-              </main>
+             </div>
+           </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-grow p-gutter overflow-y-auto bg-surface/50">
+          <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {activeSection === 'users' && (
+              <ManageUsers
+                users={users}
+                query={query}
+                setQuery={setQuery}
+                roleFilter={roleFilter}
+                setRoleFilter={setRoleFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                page={page}
+                setPage={setPage}
+                pages={pages}
+                total={total}
+                isLoading={isLoading}
+                error={error}
+                successMessage={successMessage}
+                fetchUsers={fetchUsers}
+                handleToggleStatus={handleToggleStatus}
+                updatingUserId={updatingUserId}
+                statusClassName={statusClassName}
+              />
+            )}
+            {activeSection === 'courses' && <ManageCourses />}
+            {activeSection === 'discussions' && <ManageDiscussionChannels />}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

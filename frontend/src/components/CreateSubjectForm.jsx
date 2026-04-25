@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { getSubjects } from '../services/subject';
 import api from '../services/api';
+import { Plus } from 'lucide-react';
 
 const gradeLevels = [9, 10, 11, 12];
 
@@ -32,37 +32,42 @@ const CreateSubjectForm = ({ onCreate }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-      <div>
-        <label className="block mb-1 font-semibold">Grade Level</label>
-        <select
-          value={grade}
-          onChange={e => setGrade(e.target.value)}
-          className="w-full rounded border px-3 py-2"
-        >
-          <option value="">Select grade</option>
-          {gradeLevels.map(g => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
+      <div className="space-y-6">
+        <div>
+          <label className="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-3">Institutional Grade Level</label>
+          <select
+            value={grade}
+            onChange={e => setGrade(e.target.value)}
+            className="w-full bg-white border border-outline/10 rounded-lg px-5 py-4 font-bold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm"
+          >
+            <option value="">Select Grade</option>
+            {gradeLevels.map(g => (
+              <option key={g} value={g}>Grade {g}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-3">Academic Subject Title</label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="w-full bg-white border border-outline/10 rounded-lg px-5 py-4 font-bold text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary-container outline-none transition-all shadow-sm"
+            placeholder="e.g. Theoretical Physics"
+          />
+        </div>
       </div>
-      <div>
-        <label className="block mb-1 font-semibold">Subject Name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          className="w-full rounded border px-3 py-2"
-          placeholder="e.g. Mathematics"
-        />
-      </div>
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+
+      {error && <p className="text-error text-[10px] font-black uppercase tracking-widest bg-error/5 p-3 rounded-md border border-error/10">{error}</p>}
+
       <button
         type="submit"
-        className="bg-[#1a73e8] text-white px-4 py-2 rounded font-bold hover:bg-[#1765cc]"
         disabled={loading}
+        className="w-full bg-primary-container text-on-primary py-4 rounded-lg font-black uppercase tracking-widest text-xs hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary-container/20"
       >
-        {loading ? 'Creating...' : 'Create Subject'}
+        {loading ? <div className="w-4 h-4 border-2 border-on-primary/20 border-t-on-primary rounded-full animate-spin"></div> : <Plus size={18} strokeWidth={3} />}
+        {loading ? 'Processing...' : 'Register Subject'}
       </button>
     </form>
   );

@@ -45,6 +45,19 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'inactive', 'suspended'],
       default: 'active',
     },
+    stream: {
+      type: String,
+      enum: ['Natural', 'Social'],
+      default: null,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationCode: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

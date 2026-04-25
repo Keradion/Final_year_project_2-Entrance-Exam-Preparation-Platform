@@ -14,7 +14,7 @@ const getRequester = (req) => ({
 // @route   POST /api/exercises
 // @access  Private (Teacher)
 exports.createExercise = asyncHandler(async (req, res, next) => {
-  const { topic: topicId, title, description } = req.body;
+  const { topic: topicId, title, description, question, options, correctAnswer, hint, difficulty } = req.body;
 
   const topic = await Topic.findById(topicId);
   if (!topic) {
@@ -25,6 +25,11 @@ exports.createExercise = asyncHandler(async (req, res, next) => {
     topic: topicId,
     title,
     description,
+    question,
+    options,
+    correctAnswer,
+    hint,
+    difficulty,
     createdBy: req.user.id,
   });
 
@@ -82,7 +87,13 @@ exports.updateExercise = asyncHandler(async (req, res, next) => {
     }
   }
 
-  Object.assign(exercise, req.body);
+  const allowedUpdates = ['title', 'description', 'question', 'options', 'correctAnswer', 'hint', 'difficulty', 'topic'];
+  allowedUpdates.forEach(update => {
+    if (req.body[update] !== undefined) {
+      exercise[update] = req.body[update];
+    }
+  });
+  
   await exercise.save();
 
   res.status(200).json({

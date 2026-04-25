@@ -36,6 +36,11 @@ const { Schema } = mongoose;
  */
 const conceptSchema = new Schema(
   {
+    title: {
+      type: String,
+      required: [true, 'Concept title is required.'],
+      trim: true,
+    },
     content: {
       type: String,
       required: [true, 'Concept content is required.'],
