@@ -66,7 +66,9 @@ router.post('/register', profileImageUpload.single('profileImageFile'), register
  *   }
  * }
  */
-router.post('/login', loginValidation, authController.login);
+const loginRateLimiter = require('../middleware/loginRateLimiter');
+
+router.post('/login', loginValidation, loginRateLimiter, authController.login);
 
 /**
  * POST /api/auth/request-password-reset

@@ -47,7 +47,10 @@ async function connectRedis() {
 }
 
 function getRedisClient() {
-  return redisClient;
+  if (redisClient && redisClient.isOpen) {
+    return redisClient;
+  }
+  return null;
 }
 
 async function disconnectRedis() {

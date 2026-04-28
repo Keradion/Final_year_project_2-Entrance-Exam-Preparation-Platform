@@ -1,6 +1,6 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const mongoose = require('mongoose');
-const { connectDB } = require('../src/config/database');
+const { connectDB } = require('../../src/config/database');
 const {
   User,
   Subject,
@@ -8,7 +8,7 @@ const {
   Topic,
   Concept,
   Video,
-} = require('../src/models');
+} = require('../../src/models');
 
 /**
  * ==================================================================================
@@ -44,6 +44,7 @@ const seedDatabase = async () => {
 
     // 3. Create or find users
     console.log('Creating or finding users...');
+    // Default admin
     const admin = await User.findOneAndUpdate(
       { email: 'admin@example.com' },
       {
@@ -51,6 +52,20 @@ const seedDatabase = async () => {
         lastName: 'User',
         email: 'admin@example.com',
         password: 'password123', // The pre-save hook will hash this
+        role: 'admin',
+        status: 'active',
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Custom admin for entranceadmin@gmail.com
+    const customAdmin = await User.findOneAndUpdate(
+      { email: 'entranceadmin@gmail.com' },
+      {
+        firstName: 'Entrance',
+        lastName: 'Admin',
+        email: 'entranceadmin@gmail.com',
+        password: '12345Qwert@', // The pre-save hook will hash this
         role: 'admin',
         status: 'active',
       },
@@ -82,7 +97,7 @@ const seedDatabase = async () => {
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    console.log(`Users found or created: ${admin.email}, ${teacher.email}, ${student.email}`);
+    console.log(`Users found or created: ${admin.email}, ${customAdmin.email}, ${teacher.email}, ${student.email}`);
 
     // 4. Create the Subject
     console.log('Creating "Mathematics" subject...');

@@ -45,27 +45,34 @@ const emailWorker = new Worker(
     const transporter = getTransporter();
 
     if (!transporter) {
-      console.warn('Email transport is not configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASSWORD.');
+      console.warn('❌ Email transport is not configured. Set EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASSWORD.');
       return;
     }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-      to,
-      subject,
-      text: body,
-      html,
-    });
+    try {
+      console.log(`✉️ Sending email to: ${to} (Subject: ${subject})`);
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to,
+        subject,
+        text: body,
+        html,
+      });
+      console.log(`✅ Email sent successfully to: ${to}`);
+    } catch (err) {
+      console.error(`❌ Failed to send email to ${to}:`, err.message);
+      throw err; // Re-throw to trigger BullMQ retry
+    }
   },
   { connection }
 );
 
 emailWorker.on('completed', (job) => {
-  console.log(`Job ${job.id} has completed!`);
+  console.log(`🏁 Job ${job.id} has completed!`);
 });
 
 emailWorker.on('failed', (job, err) => {
-  console.log(`Job ${job.id} has failed with ${err.message}`);
+  console.error(`💥 Job ${job.id} has failed with ${err.message}`);
 });
 
 module.exports = emailWorker;

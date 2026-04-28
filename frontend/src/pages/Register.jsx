@@ -109,38 +109,9 @@ const Register = () => {
       <main className="flex-grow flex items-center justify-center py-12 px-6">
         {step === 1 ? (
           /* Step 1: Account Information */
-          <div className="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
-            {/* Branding Panel */}
-            <div className="lg:col-span-5 hidden lg:flex flex-col justify-between p-stack-lg bg-primary-container rounded-lg text-on-primary relative overflow-hidden min-h-[650px]">
-               <div className="relative z-10">
-                <h2 className="text-4xl font-bold mb-stack-md leading-tight">Start Your Exam Prep Journey</h2>
-                <p className="opacity-90 max-w-sm mb-stack-lg text-lg">Create your account and begin preparing for the Ethiopian university entrance examination.</p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg border border-white/20">
-                    <CheckCircle className="text-white" size={24} />
-                    <span className="text-sm font-medium">Verify your credentials</span>
-                  </div>
-                  <div className="flex items-center gap-4 bg-white/10 p-4 rounded-lg border border-white/20">
-                    <BookOpen className="text-white" size={24} />
-                    <span className="text-sm font-medium">Select your stream</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Footer removed */}
-
-              <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-                <img 
-                  className="w-full h-full object-cover" 
-                  alt="Modern university campus" 
-                  src="https://images.unsplash.com/photo-1541339907198-e08756eaa589?auto=format&fit=crop&q=80&w=1000" 
-                />
-              </div>
-            </div>
-
+          <div className="w-full max-w-[800px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Form Panel */}
-            <div className="lg:col-span-7 bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+            <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
               <div className="mb-stack-lg flex justify-between items-end">
                 <div>
                   <h3 className="text-2xl font-semibold text-on-surface mb-2">Create Account</h3>
@@ -296,7 +267,7 @@ const Register = () => {
             {/* ... contents of step 2 ... */}
             <div className="text-center mb-12">
                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-                  Step 02: Specialization
+                  Step 02: Stream Selection
                </div>
                <h2 className="text-4xl font-bold text-on-surface mb-3">Select Your Academic Stream</h2>
                <p className="text-on-surface-variant">Choose your primary area of focus for customized learning paths.</p>
@@ -311,8 +282,8 @@ const Register = () => {
                 <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
                   <FlaskConical size={32} />
                 </div>
-                <h3 className="text-2xl font-bold text-on-surface mb-2">Preparatory Academic - Natural</h3>
-                <p className="text-on-surface-variant mb-6">Physics, Chemistry, and Advanced Mathematics. Focused on logical reasoning and experimental discovery.</p>
+                <h3 className="text-2xl font-bold text-on-surface mb-2">Natural Science</h3>
+                <p className="text-on-surface-variant mb-6">Mathematics, Physics, Biology, and Chemistry. Focused on logical reasoning and experimental discovery.</p>
                 <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
                   Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -326,8 +297,8 @@ const Register = () => {
                 <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
                   <Globe size={32} />
                 </div>
-                <h3 className="text-2xl font-bold text-on-surface mb-2">Preparatory Academic - Social</h3>
-                <p className="text-on-surface-variant mb-6">Economics, History, and Global Systems. Focused on human behavior and societal structures.</p>
+                <h3 className="text-2xl font-bold text-on-surface mb-2">Social Science</h3>
+                <p className="text-on-surface-variant mb-6">Economics, Business Mathematics, and Geography. Focused on human behavior and societal structures.</p>
                 <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
                   Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </div>

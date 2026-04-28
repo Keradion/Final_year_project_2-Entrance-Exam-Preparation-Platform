@@ -48,19 +48,23 @@ class SubjectController {
    */
   async createSubject(req, res, next) {
     try {
+      console.log('--- Creating Subject ---');
+      console.log('Body:', req.body);
+      
       if (!req.body?.subjectName || !req.body?.gradeLevel) {
+        console.warn('Missing required fields:', { name: req.body?.subjectName, grade: req.body?.gradeLevel });
         return res.status(400).json({
           success: false,
           message: 'subjectName and gradeLevel are required.',
         });
       }
 
-      // The request body (req.body) contains the data sent from the client.
+      // Ensure gradeLevel is a string if the model expects it, though Mongoose handles this
       const subject = await subjectService.createSubject(req.body);
-      // Send a 201 Created status code, which is the standard for a successful creation.
+      console.log('Subject created successfully:', subject._id);
       res.status(201).json(subject);
     } catch (error) {
-      // If anything goes wrong, pass the error to the global error handler.
+      console.error('Error creating subject:', error);
       next(error);
     }
   }

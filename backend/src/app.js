@@ -111,6 +111,10 @@ app.use((err, req, res, next) => {
     stack: err.stack,
   });
 
+  const fs = require('fs');
+  const logPath = 'C:/Users/atutor/.gemini/antigravity/scratch/validation_error.log';
+  fs.appendFileSync(logPath, `[${new Date().toISOString()}] GLOBAL ERROR: ${err.name} - ${err.message}\n${JSON.stringify(err.errors || {}, null, 2)}\n`);
+
   // Mongoose/ObjectId casting issues (e.g., invalid :id in URL)
   if (err.name === 'CastError') {
     return res.status(400).json({

@@ -80,120 +80,97 @@ const ResetPassword = () => {
       </header>
 
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-6">
-        <div className="w-full max-w-[1000px] grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
-          
-          {/* Branding/Visual Section */}
-          <div className="lg:col-span-7 hidden lg:flex flex-col justify-between p-stack-lg bg-primary-container rounded-lg text-on-primary relative overflow-hidden min-h-[500px]">
-            <div className="relative z-10">
-              <h2 className="text-5xl font-bold mb-stack-md leading-tight">Restore Your Portal Access</h2>
-              <p className="text-lg opacity-90 max-w-md">Update your credentials to resume your journey on the Ethiopian University Entrance Exam Preparation Platform.</p>
-            </div>
-            
-            {/* Security cards removed */}
-
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-              <img 
-                className="w-full h-full object-cover" 
-                alt="Secure terminal" 
-                src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=1000" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-container via-primary-container/80 to-transparent"></div>
-            </div>
+        <div className="w-full max-w-lg bg-white rounded-lg border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col justify-center">
+          <div className="mb-stack-lg">
+            <h3 className="text-2xl font-semibold text-on-surface mb-2">Reset Password</h3>
+            <p className="text-body-md text-on-surface-variant">Define your new secure portal password.</p>
           </div>
 
-          {/* Form Section */}
-          <div className="lg:col-span-5 bg-white rounded-lg border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col justify-center">
-            <div className="mb-stack-lg">
-              <h3 className="text-2xl font-semibold text-on-surface mb-2">Reset Password</h3>
-              <p className="text-body-md text-on-surface-variant">Define your new secure portal password.</p>
+          {message && (
+            <div className="mb-6 p-4 bg-primary-container/10 text-primary-container rounded-lg text-sm flex items-center gap-3">
+              <CheckCircle size={20} />
+              {message}
             </div>
+          )}
 
-            {message && (
-              <div className="mb-6 p-4 bg-primary-container/10 text-primary-container rounded-lg text-sm flex items-center gap-3">
-                <CheckCircle size={20} />
-                {message}
-              </div>
-            )}
+          {error && (
+            <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3">
+              <ShieldCheck size={20} />
+              {error}
+            </div>
+          )}
 
-            {error && (
-              <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3">
-                <ShieldCheck size={20} />
-                {error}
-              </div>
-            )}
-
-            <form className="space-y-stack-md" onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="newPassword">New Password</label>
-                <div className="relative">
-                  <input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    {...register('newPassword', {
-                      required: 'New password is required',
-                      minLength: { value: 6, message: 'Minimum 6 characters' },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-                        message: 'Must include uppercase, lowercase, and number',
-                      },
-                    })}
-                    className="w-full px-4 py-3 pl-11 pr-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
-                    placeholder="••••••••"
-                  />
-                  <LockKeyhole size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.newPassword && <p className="mt-1 text-xs text-error">{errors.newPassword.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="confirmPassword">Confirm Password</label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    {...register('confirmPassword', {
-                      required: 'Please confirm password',
-                      validate: (value) => value === newPassword || 'Passwords do not match',
-                    })}
-                    className="w-full px-4 py-3 pl-11 pr-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
-                    placeholder="••••••••"
-                  />
-                  <LockKeyhole size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="mt-1 text-xs text-error">{errors.confirmPassword.message}</p>}
-              </div>
-
-              <div className="pt-2">
+          <form className="space-y-stack-md" onSubmit={handleSubmit(onSubmit)}>
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="newPassword">New Password</label>
+              <div className="relative">
+                <input
+                  id="newPassword"
+                  type={showNewPassword ? 'text' : 'password'}
+                  {...register('newPassword', {
+                    required: 'New password is required',
+                    minLength: { value: 6, message: 'Minimum 6 characters' },
+                    pattern: {
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+                      message: 'Must include uppercase, lowercase, and number',
+                    },
+                  })}
+                  className="w-full px-4 py-3 pl-11 pr-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                  placeholder="••••••••"
+                />
+                <LockKeyhole size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-primary-container text-on-primary py-3 px-6 rounded-lg font-semibold text-lg hover:brightness-110 active:opacity-80 transition-all duration-200 flex items-center justify-center gap-2"
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
                 >
-                  {isSubmitting ? 'Updating...' : 'Update Password'}
-                  {!isSubmitting && <ArrowRight size={20} />}
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </form>
-
-            <div className="mt-stack-lg text-center">
-              <Link to="/login" className="text-sm text-primary-container font-semibold hover:underline flex items-center justify-center gap-2">
-                 Back to Sign In
-              </Link>
+              {errors.newPassword && <p className="mt-1 text-xs text-error">{errors.newPassword.message}</p>}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-2" htmlFor="confirmPassword">Confirm Password</label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  {...register('confirmPassword', {
+                    required: 'Please confirm password',
+                    validate: (value) => value === newPassword || 'Passwords do not match',
+                  })}
+                  className="w-full px-4 py-3 pl-11 pr-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
+                  placeholder="••••••••"
+                />
+                <LockKeyhole size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="mt-1 text-xs text-error">{errors.confirmPassword.message}</p>}
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary-container text-on-primary py-3 px-6 rounded-lg font-semibold text-lg hover:brightness-110 active:opacity-80 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? 'Updating...' : 'Update Password'}
+                {!isSubmitting && <ArrowRight size={20} />}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-stack-lg text-center">
+            <Link to="/login" className="text-sm text-primary-container font-semibold hover:underline flex items-center justify-center gap-2">
+               Back to Sign In
+            </Link>
           </div>
         </div>
       </main>

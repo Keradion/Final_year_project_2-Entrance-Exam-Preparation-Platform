@@ -45,12 +45,12 @@ class AuthService {
     // Send verification email
     await emailService.sendEmail(
       email,
-      'Verify your registration',
-      `Your verification code is: ${verificationCode}`,
-      `<div style="font-family: sans-serif; text-align: center; padding: 20px;">
-        <h2>Verify your account</h2>
-        <p>Enter the code below to complete your registration:</p>
-        <div style="font-size: 32px; font-weight: bold; background: #f1f5f9; padding: 20px; border-radius: 8px; display: inline-block;">
+      'Registration Verification',
+      `Your verification code: ${verificationCode}`,
+      `<div style="font-family: sans-serif; text-align: center; padding: 40px; color: #0f172a;">
+        <h1 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">Entrance Exam Prep</h1>
+        <p style="color: #64748b; margin-bottom: 24px;">Verification code for your account registration:</p>
+        <div style="font-size: 32px; font-weight: bold; background: #f8fafc; padding: 24px; border-radius: 12px; display: inline-block; border: 1px solid #f1f5f9; letter-spacing: 0.1em;">
           ${verificationCode}
         </div>
       </div>`
@@ -155,12 +155,16 @@ class AuthService {
    * Stores reset token in Redis for 10 minutes (if Redis available)
    */
   async requestPasswordReset(email) {
+    logger.info(`Password reset requested for: ${email}`);
     const user = await User.findOne({ email });
 
     if (!user) {
+      logger.warn(`Password reset attempt for non-existent email: ${email}`);
       // Always return a generic response to avoid account enumeration.
       return { message: 'If any account exists for this email, a reset link will be sent.' };
     }
+
+    logger.info(`User found for reset: ${user._id} (${user.email})`);
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -203,14 +207,13 @@ class AuthService {
         <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); overflow: hidden;">
           <tr>
             <td style="padding: 40px 48px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff;">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em;">Lumina Academy</h1>
-              <p style="margin: 8px 0 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Academic Portal Support</p>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em;">Entrance Exam Prep</h1>
             </td>
           </tr>
           <tr>
             <td style="padding: 48px;">
               <p style="margin: 0 0 24px; font-size: 16px; line-height: 24px; color: #334155;">Hello <strong style="color: #0f172a;">${user.firstName}</strong>,</p>
-              <p style="margin: 0 0 32px; font-size: 16px; line-height: 24px; color: #334155;">We received a request to reset the password for your Lumina Academy account. If you made this request, please click the button below to securely set a new password.</p>
+              <p style="margin: 0 0 32px; font-size: 16px; line-height: 24px; color: #334155;">We received a request to reset your password for Entrance Exam Prep. Click the button below to continue.</p>
               
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                 <tr>
@@ -230,7 +233,7 @@ class AuthService {
           </tr>
           <tr>
             <td style="padding: 32px 48px; background-color: #f8fafc; text-align: center; border-top: 1px solid #f1f5f9;">
-              <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8;">&copy; ${new Date().getFullYear()} Lumina Academy. All rights reserved.</p>
+              <p style="margin: 0 0 8px; font-size: 12px; color: #94a3b8;">&copy; ${new Date().getFullYear()} Entrance Exam Prep. All rights reserved.</p>
               <p style="margin: 0; font-size: 12px; color: #94a3b8;">This is an automated message. Please do not reply directly to this email.</p>
             </td>
           </tr>

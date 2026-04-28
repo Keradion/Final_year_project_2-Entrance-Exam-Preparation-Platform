@@ -53,19 +53,79 @@ class SubjectService {
     subject.teacher = teacher._id;
     await subject.save();
 
-    // Send email with login/register link
+    // Send email with login/register link (Non-blocking)
     const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
     let emailBody;
     if (isNew) {
-      emailBody = `Hello,\n\nYou have been invited to be a teacher for the subject: ${subject.subjectName}.\n\nPlease log in using your email and this temporary password: ${teacher.password}\nLogin here: ${loginUrl}\n\nYou can change your password after logging in.`;
+      // Use the plain text randomPassword instead of teacher.password (which is now hashed)
+      emailBody = `Hello,\n\nYou have been assigned to ${subject.subjectName} for Entrance Exam Prep.\n\nTemporary Password: ${randomPassword}\nPortal: ${loginUrl}`;
     } else {
-      emailBody = `Hello,\n\nYou have been assigned as a teacher for the subject: ${subject.subjectName}.\n\nLogin here: ${loginUrl}`;
+      emailBody = `Hello,\n\nYou have been assigned to ${subject.subjectName} for Entrance Exam Prep.\n\nPortal: ${loginUrl}`;
     }
-    await require('./emailService').sendEmail(
+
+    const htmlBody = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; color: #0f172a;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f8fafc; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden;">
+          <tr>
+            <td style="padding: 40px 48px; text-align: center; border-bottom: 1px solid #f1f5f9;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em;">Entrance Exam Prep</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 48px;">
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 24px; color: #334155;">Hello <strong style="color: #0f172a;">${firstName || 'Teacher'}</strong>,</p>
+              <p style="margin: 0 0 32px; font-size: 16px; line-height: 24px; color: #334155;">You have been assigned to the following subject for <strong>Entrance Exam Prep</strong>:</p>
+              
+              <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+                <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;">Assigned Subject</p>
+                <p style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">${subject.subjectName}</p>
+                ${isNew ? `
+                  <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px;">Temporary Password</p>
+                    <code style="font-size: 18px; font-weight: 700; color: #0f172a; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">${randomPassword}</code>
+                  </div>
+                ` : ''}
+              </div>
+
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 16px 32px; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Access Portal</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 48px; background-color: #f8fafc; text-align: center; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">&copy; ${new Date().getFullYear()} Entrance Exam Prep. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    // We don't await this to avoid blocking the response if email service (Redis) is slow or down
+    require('./emailService').sendEmail(
       teacher.email,
-      'You have been assigned as a teacher',
-      emailBody
-    );
+      'Subject Assignment Notification',
+      emailBody,
+      htmlBody
+    ).catch(err => {
+      console.error('Failed to queue assignment email:', err.message);
+    });
+
     return { success: true, teacherId: teacher._id, subjectId: subject._id, isNew };
   }
   /**
@@ -92,7 +152,7 @@ class SubjectService {
     // .populate() is a powerful Mongoose feature that replaces the teacher's ObjectId
     // with the actual User document. We select only the 'firstName' and 'lastName'
     // to avoid exposing sensitive user data.
-    return await Subject.find({}).populate('teacher', 'firstName lastName');
+    return await Subject.find({}).populate('teacher', 'firstName lastName email');
   }
 
   /**
@@ -102,7 +162,7 @@ class SubjectService {
    * @returns {Promise<object|null>} The subject document or null if not found.
    */
   async getSubjectById(subjectId) {
-    return await Subject.findById(subjectId).populate('teacher', 'firstName lastName');
+    return await Subject.findById(subjectId).populate('teacher', 'firstName lastName email');
   }
 
   /**

@@ -61,6 +61,11 @@ const subjectSchema = new Schema(
       ref: 'User', // Creates a reference to the User model
       required: false, // A teacher can be assigned later
     },
+    stream: {
+      type: String,
+      enum: ['Natural', 'Social', 'General', null, ''],
+      default: null,
+    },
   },
   {
     /**

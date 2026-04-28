@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const authService = require('../services/authService');
+const { getRedisClient } = require('../config/redis');
 
 class AuthController {
   /**
@@ -67,12 +68,34 @@ class AuthController {
 
       const result = await authService.loginUser(email, password);
 
+      // Reset failed attempts on successful login
+      const redisClient = getRedisClient();
+      if (redisClient) {
+        await redisClient.del(`login_attempts:${email}`);
+      }
+
       res.status(200).json({
         success: true,
         message: 'Login successful',
         data: result,
       });
     } catch (error) {
+      // Increment failed attempts on error (only if it's an authentication error)
+      if (error.status === 401) {
+        const { email } = req.body;
+        const redisClient = getRedisClient();
+        if (redisClient && email) {
+          const key = `login_attempts:${email}`;
+          try {
+            const attempts = await redisClient.incr(key);
+            if (attempts === 1) {
+              await redisClient.expire(key, 30);
+            }
+          } catch (redisErr) {
+            console.error('Redis error during rate limiting:', redisErr);
+          }
+        }
+      }
       next(error);
     }
   }

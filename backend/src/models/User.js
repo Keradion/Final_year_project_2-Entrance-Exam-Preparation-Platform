@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema(
     },
     stream: {
       type: String,
-      enum: ['Natural', 'Social'],
+      enum: ['Natural', 'Social', null],
       default: null,
     },
     isEmailVerified: {
@@ -70,11 +70,16 @@ userSchema.index({ email: 1 });
 // Pre-save middleware to hash password
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
 
-  const salt = await bcryptjs.genSalt(10);
-  this.password = await bcryptjs.hash(this.password, salt);
+  try {
+    const salt = await bcryptjs.genSalt(10);
+    this.password = await bcryptjs.hash(this.password, salt);
+    return next();
+  } catch (err) {
+    return next(err);
+  }
 });
 
 // Method to compare passwords

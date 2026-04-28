@@ -96,23 +96,20 @@ class AdminUserController {
         return res.status(400).json({ success: false, message: 'Role must be student or teacher.' });
       }
 
-      const user = await User.findOne({ _id: userId, role: { $in: ['student', 'teacher'] } });
+      const user = await User.findOneAndUpdate(
+        { _id: userId, role: { $in: ['student', 'teacher'] } },
+        { role },
+        { new: true, runValidators: true }
+      );
+
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found.' });
       }
 
-      if (user.role === role) {
-        return res.status(200).json({ success: true, message: 'Role unchanged.', data: user });
-      }
-
-      const previousRole = user.role;
-      user.role = role;
-      await user.save();
-
       await notificationService.sendNotification(
         user._id,
         'Account role updated',
-        `Your account role was changed from ${previousRole} to ${role} by an administrator.`
+        `Your account role was changed by an administrator.`
       );
 
       res.status(200).json({ success: true, message: 'User role updated successfully', data: user });
@@ -134,26 +131,31 @@ class AdminUserController {
         return res.status(400).json({ success: false, message: 'Status must be active, inactive, or suspended.' });
       }
 
-      const user = await User.findOne({ _id: userId, role: { $in: ['student', 'teacher'] } });
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found.' });
+      try {
+        const user = await User.findOneAndUpdate(
+          { _id: userId, role: { $in: ['student', 'teacher'] } },
+          { status },
+          { new: true, runValidators: false }
+        );
+
+        if (!user) {
+          return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        await notificationService.sendNotification(
+          user._id,
+          'Account status updated',
+          `Your account status was changed by an administrator.`
+        );
+
+        res.status(200).json({ success: true, message: 'User status updated successfully', data: user });
+      } catch (innerError) {
+        // Log error to a diagnostic file
+        const fs = require('fs');
+        const logPath = 'C:/Users/atutor/.gemini/antigravity/scratch/validation_error.log';
+        fs.appendFileSync(logPath, `[${new Date().toISOString()}] User: ${userId} Status: ${status} Error: ${JSON.stringify(innerError, null, 2)}\n`);
+        throw innerError;
       }
-
-      if (user.status === status) {
-        return res.status(200).json({ success: true, message: 'Status unchanged.', data: user });
-      }
-
-      const previousStatus = user.status;
-      user.status = status;
-      await user.save();
-
-      await notificationService.sendNotification(
-        user._id,
-        'Account status updated',
-        `Your account status was changed from ${previousStatus} to ${status} by an administrator.`
-      );
-
-      res.status(200).json({ success: true, message: 'User status updated successfully', data: user });
     } catch (error) {
       next(error);
     }
