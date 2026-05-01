@@ -2,13 +2,23 @@ const Quiz = require('../models/Quiz');
 const QuizProblem = require('../models/QuizProblem');
 const QuizScore = require('../models/QuizScore');
 const Topic = require('../models/Topic');
+const Chapter = require('../models/Chapter');
+const Answer = require('../models/Answer');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
+const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),
     role: req.user?.role,
 });
+
+const getSubjectIdForTopic = async (topicId) => {
+    const topic = await Topic.findById(topicId).select('chapter').lean();
+    if (!topic?.chapter) return null;
+    const chapter = await Chapter.findById(topic.chapter).select('subject').lean();
+    return chapter?.subject || null;
+};
 
 // @desc    Create a quiz
 // @route   POST /api/quizzes
@@ -23,6 +33,15 @@ exports.createQuiz = asyncHandler(async (req, res, next) => {
     }
 
     const quiz = await Quiz.create(req.body);
+
+    const subjectId = await getSubjectIdForTopic(topicId);
+    if (subjectId) {
+        await notifyStudentsOfSubjectUpdate(
+            subjectId,
+            'New quiz available',
+            `A new quiz "${quiz.title}" was added.`
+        );
+    }
 
     res.status(201).json({
         success: true,
@@ -79,6 +98,15 @@ exports.updateQuiz = asyncHandler(async (req, res, next) => {
 
     Object.assign(quiz, req.body);
     await quiz.save();
+
+    const subjectId = await getSubjectIdForTopic(quiz.topic);
+    if (subjectId) {
+        await notifyStudentsOfSubjectUpdate(
+            subjectId,
+            'Quiz updated',
+            `Quiz "${quiz.title}" was updated.`
+        );
+    }
 
     res.status(200).json({
         success: true,
@@ -216,5 +244,49 @@ exports.getQuizScore = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         success: true,
         data: score
+    });
+});
+
+// @desc    Validate quiz answer interactively
+// @route   POST /api/quizzes/problems/:problemId/validate
+// @access  Private (Student)
+exports.validateQuizAnswer = asyncHandler(async (req, res, next) => {
+    const { problemId } = req.params;
+    const { submittedAnswer } = req.body;
+    const studentId = req.user.id || req.user._id;
+
+    if (!submittedAnswer) {
+        return next(new ErrorResponse('submittedAnswer is required', 400));
+    }
+
+    const problem = await QuizProblem.findById(problemId);
+    if (!problem) {
+        return next(new ErrorResponse(`Quiz problem not found with id of ${problemId}`, 404));
+    }
+
+    const isCorrect = problem.correctAnswer === submittedAnswer;
+
+    const answer = await Answer.create({
+        student: studentId,
+        question: problemId,
+        questionModel: 'QuizProblem',
+        submittedAnswer,
+        isCorrect
+    });
+
+    if (isCorrect) {
+        await QuizScore.findOneAndUpdate(
+            { quiz: problem.quizId, student: studentId },
+            { $inc: { score: 1 } },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+    }
+
+    res.status(200).json({
+        success: true,
+        isCorrect,
+        correctAnswer: problem.correctAnswer,
+        answerExplanation: problem.answerExplanation,
+        answer
     });
 });

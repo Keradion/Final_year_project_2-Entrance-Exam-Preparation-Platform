@@ -6,7 +6,15 @@ class AppError extends Error {
   constructor(message, statusCode = 500) {
     super(message);
     this.statusCode = statusCode;
+    this.status = statusCode;
     Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ErrorResponse extends AppError {
+  constructor(message, statusCode = 500) {
+    super(message, statusCode);
+    this.name = 'ErrorResponse';
   }
 }
 
@@ -45,11 +53,11 @@ class ConflictError extends AppError {
   }
 }
 
-module.exports = {
-  AppError,
-  ValidationError,
-  AuthenticationError,
-  AuthorizationError,
-  NotFoundError,
-  ConflictError,
-};
+module.exports = ErrorResponse;
+module.exports.ErrorResponse = ErrorResponse;
+module.exports.AppError = AppError;
+module.exports.ValidationError = ValidationError;
+module.exports.AuthenticationError = AuthenticationError;
+module.exports.AuthorizationError = AuthorizationError;
+module.exports.NotFoundError = NotFoundError;
+module.exports.ConflictError = ConflictError;

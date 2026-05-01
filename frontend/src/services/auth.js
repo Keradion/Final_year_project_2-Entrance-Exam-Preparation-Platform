@@ -31,6 +31,21 @@ export const changePassword = async (payload) => {
   return response.data;
 };
 
+export const getAiSettings = async () => {
+  const response = await api.get('/auth/ai-settings');
+  return response.data;
+};
+
+export const saveGeminiApiKey = async (apiKey) => {
+  const response = await api.put('/auth/gemini-key', { apiKey });
+  return response.data;
+};
+
+export const removeGeminiApiKey = async () => {
+  const response = await api.delete('/auth/gemini-key');
+  return response.data;
+};
+
 export const requestPasswordReset = async (payload) => {
   const response = await api.post('/auth/request-password-reset', payload);
   return response.data;
@@ -44,4 +59,4 @@ export const resetPassword = async (payload) => {
 export const verifyEmail = async (payload) => {
   const response = await api.post('/auth/verify-email', payload);
   return response.data;
-};
+};

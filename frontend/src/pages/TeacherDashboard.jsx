@@ -4,39 +4,29 @@ import {
   CheckCircle, ArrowLeft, ArrowRight, Edit2, Trash2, LogOut, Save, 
   MonitorPlay, GraduationCap, 
   Compass, Book, Tv, FileCheck, Activity, Library, 
-  PlusCircle, Menu, X, CircleUserRound, Search, Filter, RefreshCw, User, Settings
+  PlusCircle, Menu, X, CircleUserRound, Search, Filter, RefreshCw, User, Settings, Layout, TriangleAlert, MessageCircle, Send, Bell
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { getIssuesForReview, updateIssueStatus, listQuestions, answerQuestion, getUnreadNotifications, markNotificationRead } from '../services/engagement';
 
 const TeacherDashboard = () => {
   const { user, logout } = useContext(AuthContext);
-  const [activeSection, setActiveSection] = useState('subjects');
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Curriculum Management
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [topicContent, setTopicContent] = useState({ concepts: [], videos: [], exercises: [], quizzes: [], examQuestions: [] });
-  const [activeContentStep, setActiveContentStep] = useState(0);
-  const [topicObjectives, setTopicObjectives] = useState([]);
-  const [newObjective, setNewObjective] = useState('');
-  const [newContent, setNewContent] = useState({ 
-    id: null, title: '', url: '', type: 'concept', contentBody: '', 
-    examPaperId: '', question: '', options: ['', '', '', ''], correctAnswer: 0, hint: '', difficulty: 'Medium' 
-  });
-  const [isEditingContent, setIsEditingContent] = useState(false);
-  const [isSavingContent, setIsSavingContent] = useState(false);
-  const [examPapers, setExamPapers] = useState([]);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
-  };
+  const [issues, setIssues] = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [answerDrafts, setAnswerDrafts] = useState({});
+  const [feedback, setFeedback] = useState('');
+  const [activeSection, setActiveSection] = useState('courses');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [qaStatusFilter, setQaStatusFilter] = useState('');
+  const [qaSearch, setQaSearch] = useState('');
 
   const fetchSubjects = useCallback(async () => {
     setLoading(true);
@@ -53,143 +43,97 @@ const TeacherDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    if (activeSection === 'subjects') {
-      fetchSubjects();
-    }
-  }, [activeSection, fetchSubjects]);
+    fetchSubjects();
+  }, [fetchSubjects]);
 
-  const fetchTopicContent = async (topicId) => {
-    try {
-      const ts = Date.now();
-      const [conceptsRes, videosRes, exercisesRes, quizzesRes, examQsRes] = await Promise.all([
-        api.get(`/content/topics/${topicId}/concepts?t=${ts}`),
-        api.get(`/content/topics/${topicId}/videos?t=${ts}`),
-        api.get(`/exercises/topics/${topicId}/exercises?t=${ts}`).catch(() => ({ data: { data: [] } })),
-        api.get(`/quizzes/topics/${topicId}/quizzes?t=${ts}`).catch(() => ({ data: { data: [] } })),
-        api.get(`/exams/questions/search?topicId=${topicId}&t=${ts}`).catch(() => ({ data: { data: [] } }))
-      ]);
-      setTopicContent({
-        concepts: conceptsRes.data,
-        videos: videosRes.data,
-        exercises: exercisesRes.data?.data || [],
-        quizzes: quizzesRes.data?.data || [],
-        examQuestions: examQsRes.data?.data || []
-      });
-    } catch (err) {
-      console.error('Failed to load topic content', err);
-    }
-  };
-
-  const handleManageTopic = async (topic, subjectId) => {
-    const topicId = topic._id || topic.id;
-    setSelectedTopic({ ...topic, _id: topicId, subjectId });
-    setTopicObjectives(topic.topicObjectives || []);
-    setActiveContentStep(0);
-    fetchTopicContent(topicId);
-    try {
-      const res = await api.get(`/exams/papers/subjects/${subjectId}`);
-      setExamPapers(res.data);
-    } catch (err) {
-      console.error('Failed to load exam papers', err);
-    }
-  };
-
-  const handleUpdateObjectives = async () => {
-    if (topicObjectives.length === 0) return showToast('Please add at least one goal.', 'error');
-    try {
-      await api.put(`/content/topics/${selectedTopic._id}`, { topicObjectives });
-      showToast('Goals updated successfully!');
-    } catch (err) {
-      showToast('Failed to update goals.', 'error');
-    }
-  };
-
-  const handleAddObjective = () => {
-    if (!newObjective.trim()) return;
-    setTopicObjectives([...topicObjectives, newObjective.trim()]);
-    setNewObjective('');
-  };
-
-  const handleAddContent = async () => {
-    setIsSavingContent(true);
-    try {
-      let endpoint = '';
-      let method = isEditingContent ? 'put' : 'post';
-      let payload = {};
-
-      if (newContent.type === 'concept') {
-        endpoint = isEditingContent ? `/content/concepts/${newContent.id}` : `/content/topics/${selectedTopic._id}/concepts`;
-        payload = { title: newContent.title, content: newContent.contentBody };
-      } else if (newContent.type === 'video') {
-        endpoint = isEditingContent ? `/content/videos/${newContent.id}` : `/content/topics/${selectedTopic._id}/videos`;
-        payload = { title: newContent.title, videoUrl: newContent.url };
-      } else if (newContent.type === 'exercise') {
-        endpoint = isEditingContent ? `/exercises/${newContent.id}` : '/exercises';
-        payload = {
-          title: newContent.title,
-          topic: selectedTopic._id,
-          question: newContent.question,
-          options: newContent.options,
-          correctAnswer: newContent.correctAnswer,
-          difficulty: newContent.difficulty,
-          description: newContent.contentBody
-        };
-      } else if (newContent.type === 'examQuestion') {
-        if (!newContent.examPaperId) return showToast('Please select an exam paper.', 'error');
-        endpoint = `/exams/papers/${newContent.examPaperId}/questions`;
-        payload = {
-          questionText: newContent.title,
-          topic: selectedTopic._id,
-          marks: 5,
-          options: [{ optionText: 'A', isCorrect: true }, { optionText: 'B', isCorrect: false }],
-          explanation: newContent.contentBody
-        };
+  useEffect(() => {
+    const fetchTeacherFeeds = async () => {
+      try {
+        const [issueRes, questionRes, notificationRes] = await Promise.all([
+          getIssuesForReview(),
+          listQuestions({ limit: 100 }),
+          getUnreadNotifications()
+        ]);
+        setIssues(issueRes?.data || []);
+        setQuestions(questionRes?.data || []);
+        setNotifications(notificationRes?.data || []);
+      } catch (err) {
+        console.error('Failed to load teacher dashboard feeds', err);
       }
-
-      await api[method](endpoint, payload);
-      showToast(`${newContent.type} saved successfully!`);
-      fetchTopicContent(selectedTopic._id);
-      setIsEditingContent(false);
-      setNewContent({ ...newContent, id: null, title: '', url: '', contentBody: '', question: '', options: ['', '', '', ''] });
-    } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to save', 'error');
-    } finally {
-      setIsSavingContent(false);
-    }
-  };
-
-  const handleDeleteContent = async (id, type) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      const endpoints = { concept: '/content/concepts/', video: '/content/videos/', exercise: '/exercises/', examQuestion: '/exams/questions/' };
-      await api.delete(`${endpoints[type]}${id}`);
-      fetchTopicContent(selectedTopic._id);
-      showToast('Deleted successfully');
-    } catch (err) {
-      showToast('Failed to delete', 'error');
-    }
-  };
+    };
+    fetchTeacherFeeds();
+  }, []);
 
   const SIDEBAR_ITEMS = [
-    { key: 'subjects', label: 'Subjects', icon: <BookOpen size={20} /> },
+    { key: 'courses', label: 'Course Management', icon: <BookOpen size={20} /> },
+    { key: 'qa', label: 'Q&A Management', icon: <MessageCircle size={20} /> },
   ];
 
+  const filteredQuestions = questions.filter((question) => {
+    const status = question.status === 'answered' ? 'answered' : 'open';
+    const matchesStatus = !qaStatusFilter || status === qaStatusFilter;
+    const query = qaSearch.trim().toLowerCase();
+    const matchesSearch = !query
+      || question.questionText?.toLowerCase().includes(query)
+      || question.studentId?.firstName?.toLowerCase().includes(query)
+      || question.studentId?.lastName?.toLowerCase().includes(query)
+      || question.topicId?.topicName?.toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
+
+  const handleIssueStatus = async (issueId, issueStatus) => {
+    try {
+      const res = await updateIssueStatus(issueId, { issueStatus, response: 'Thanks, we reviewed this item.' });
+      setIssues((prev) => prev.map((it) => (it._id === issueId ? res.data : it)));
+      setFeedback('Issue status updated.');
+    } catch (err) {
+      setFeedback(err?.response?.data?.message || 'Failed to update issue.');
+    }
+  };
+
+  const handleAnswerQuestion = async (questionId) => {
+    const answerText = answerDrafts[questionId];
+    if (!answerText) return;
+    try {
+      await answerQuestion(questionId, { answerText });
+      setAnswerDrafts((prev) => ({ ...prev, [questionId]: '' }));
+      setQuestions((prev) => prev.map((question) => (
+        question._id === questionId ? { ...question, status: 'answered' } : question
+      )));
+      setFeedback('Answer submitted.');
+    } catch (err) {
+      setFeedback(err?.response?.data?.message || 'Failed to submit answer.');
+    }
+  };
+
+  const handleNotificationClick = async (notification) => {
+    try {
+      await markNotificationRead(notification._id);
+      setNotifications((prev) => prev.filter((item) => item._id !== notification._id));
+    } catch (err) {
+      setFeedback('Failed to update notification.');
+    }
+  };
+
   return (
-    <div className="h-screen bg-white text-on-surface font-sans flex overflow-hidden">
+    <div className="h-screen bg-background text-on-surface font-sans flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-[280px] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shrink-0 h-full">
-        <div className="h-20 flex items-center gap-3 border-b border-outline/5 px-8">
-          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
+      <aside className="w-[280px] bg-background border-r border-outline/10 hidden lg:flex flex-col z-50 shrink-0 h-full">
+        <div className="h-20 flex items-center gap-3 border-b border-outline/5 px-6">
+          <div className="w-9 h-9 bg-primary-container rounded-lg flex items-center justify-center shadow-sm">
             <GraduationCap className="text-on-primary" size={20} />
           </div>
-          <h2 className="text-xl font-bold tracking-tight">Entrance Prep</h2>
+          <div>
+            <h2 className="text-base font-bold tracking-tight">Entrance Exam Prep</h2>
+            <p className="text-[10px] font-black text-primary-container uppercase tracking-widest">Teacher</p>
+          </div>
         </div>
         <nav className="flex-grow p-4 space-y-2">
           {SIDEBAR_ITEMS.map((item) => (
             <button
               key={item.key}
-              onClick={() => { setActiveSection(item.key); setSelectedTopic(null); }}
-              className={`flex items-center gap-3 w-full px-4 py-3 transition-all font-semibold rounded-lg border-l-4 ${activeSection === item.key ? 'bg-primary-container/10 text-primary-container border-primary-container' : 'border-transparent hover:bg-surface'}`}
+              onClick={() => item.path ? navigate(item.path) : setActiveSection(item.key)}
+              className={`flex items-center gap-3 w-full px-3 py-2.5 transition-all font-semibold rounded-lg ${activeSection === item.key ? 'bg-primary-container/10 text-primary-container' : 'text-on-surface-variant hover:bg-primary-container/5'}`}
             >
               {item.icon}
               {item.label}
@@ -204,179 +148,270 @@ const TeacherDashboard = () => {
       </aside>
 
       <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-outline/5 px-6 flex items-center justify-between sticky top-0 z-40">
+        <header className="h-20 bg-white/95 backdrop-blur border-b border-outline/10 px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2"><Menu size={24} /></button>
-            <h2 className="text-xl font-semibold">Teacher Dashboard</h2>
+            <h2 className="text-xl font-semibold">{activeSection === 'qa' ? 'Q&A Management' : 'Course Management'}</h2>
           </div>
           <div className="flex items-center gap-4">
+             <div className="relative">
+               <button
+                 type="button"
+                 onClick={() => setShowNotifications((value) => !value)}
+                 className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
+                 title="Notifications"
+               >
+                 <Bell size={20} />
+                 {notifications.length > 0 && (
+                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary-container text-white text-[10px] font-bold flex items-center justify-center">
+                     {notifications.length > 9 ? '9+' : notifications.length}
+                   </span>
+                 )}
+               </button>
+               {showNotifications && (
+                 <div className="absolute right-0 top-12 w-80 max-w-[calc(100vw-2rem)] bg-white border border-outline/10 rounded-2xl shadow-2xl p-3 z-50">
+                   <div className="flex items-center justify-between px-2 py-2 border-b border-outline/5">
+                     <p className="font-bold text-sm">Notifications</p>
+                     <span className="text-xs text-on-surface-variant">{notifications.length} unread</span>
+                   </div>
+                   <div className="max-h-80 overflow-auto mt-2 space-y-2">
+                     {notifications.map((notification) => (
+                       <button
+                         key={notification._id}
+                         type="button"
+                         onClick={() => handleNotificationClick(notification)}
+                         className="w-full text-left p-3 rounded-xl hover:bg-surface transition-colors"
+                       >
+                         <p className="text-sm font-bold text-on-surface">{notification.title}</p>
+                         <p className="text-xs text-on-surface-variant mt-1">{notification.message}</p>
+                       </button>
+                     ))}
+                     {notifications.length === 0 && (
+                       <p className="text-sm text-on-surface-variant p-3">No unread notifications.</p>
+                     )}
+                   </div>
+                 </div>
+               )}
+             </div>
              <div className="text-right hidden sm:block">
                <p className="text-sm font-bold">{user?.firstName} {user?.lastName}</p>
-               <p className="text-[10px] text-primary-container uppercase font-black tracking-widest">Instructor</p>
+               <p className="text-[10px] text-primary-container uppercase font-black tracking-widest">Teacher</p>
              </div>
-             <div className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20">
-                <CircleUserRound size={24} />
-             </div>
+             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity" title="Open profile">
+                {user?.profileImage ? <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" /> : <CircleUserRound size={24} />}
+             </Link>
           </div>
         </header>
 
-        <main className="flex-grow p-8 overflow-y-auto bg-[#fafbfc]">
+        <main className="flex-grow p-8 overflow-y-auto bg-background">
           <div className="max-w-[1440px] mx-auto animate-in fade-in duration-700">
-            {activeSection === 'subjects' && !selectedTopic && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {subjects.map(subject => (
-                  <div key={subject._id} className="bg-white rounded-2xl border border-outline/10 p-8 shadow-sm hover:shadow-md transition-all group">
-                    <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-on-primary transition-all border border-primary-container/10">
-                      <BookOpen size={24} />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-6">{subject.subjectName}</h3>
-                    <div className="space-y-2">
-                       {(subject.topics || []).map(topic => (
-                         <button key={topic._id} onClick={() => handleManageTopic(topic, subject._id)} className="w-full flex items-center justify-between p-4 rounded-xl bg-[#fafbfc] border border-outline/5 hover:border-primary-container/30 transition-all">
-                           <span className="text-sm font-bold">{topic.topicName}</span>
-                           <ChevronRight size={16} className="text-outline" />
-                         </button>
-                       ))}
-                    </div>
+            {activeSection === 'courses' && (
+              <>
+                <div className="mb-10">
+                  <h3 className="text-2xl font-bold mb-2">Assigned Courses</h3>
+                  <p className="text-on-surface-variant">Select a course to manage its chapters, topics, and learning materials.</p>
+                </div>
+
+                {loading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {[1,2,3].map(i => <div key={i} className="h-64 bg-surface-variant/20 rounded-2xl animate-pulse"></div>)}
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {subjects.map(subject => (
+                      <div key={subject._id} className="bg-white rounded-2xl border border-outline/10 p-8 shadow-sm hover:shadow-md transition-all group flex flex-col">
+                        <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container mb-6 border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all">
+                          <BookOpen size={24} />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-2">{subject.subjectName}</h3>
+                        <p className="text-on-surface-variant text-sm mb-8 flex-grow">Manage the curriculum for Grade {subject.gradeLevel} {subject.stream ? `${subject.stream} Stream` : ''}.</p>
+                        <button 
+                          onClick={() => navigate(`/teacher/subject/${subject._id}/chapters`)} 
+                          className="w-full bg-primary-container text-on-primary py-4 rounded-lg font-semibold text-xs uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                        >
+                          Manage Curriculum
+                          <ArrowRight size={18} />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {subjects.length === 0 && (
+                      <div className="col-span-full py-32 text-center bg-surface-variant/10 rounded-2xl border border-dashed border-outline/20">
+                        <BookOpen size={48} className="text-outline/40 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold mb-2">No Courses Assigned</h3>
+                        <p className="text-on-surface-variant max-w-sm mx-auto">You haven't been assigned as a teacher to any subjects yet. Please contact the administrator.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
-            {activeSection === 'subjects' && selectedTopic && (
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                   <button onClick={() => setSelectedTopic(null)} className="flex items-center gap-2 text-sm font-bold text-outline hover:text-on-surface transition-all">
-                     <ArrowLeft size={18} /> Back to Subjects
-                   </button>
-                   <h2 className="text-2xl font-black">{selectedTopic.topicName}</h2>
+            {activeSection === 'courses' && (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+              <div className="bg-white rounded-2xl border border-outline/10 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <TriangleAlert size={18} className="text-primary-container" />
+                  <h4 className="font-bold">Student Reported Issues (FR-24)</h4>
                 </div>
-
-                <div className="bg-white rounded-[2.5rem] border border-outline/10 p-4 flex justify-around shadow-sm overflow-x-auto">
-                   {[Compass, Book, Tv, FileCheck, Activity, Library].map((Icon, idx) => (
-                     <button key={idx} onClick={() => setActiveContentStep(idx)} className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${activeContentStep === idx ? 'bg-on-surface text-white' : 'text-outline hover:text-on-surface-variant'}`}>
-                       <Icon size={20} />
-                       <span className="text-[8px] font-black uppercase tracking-widest">{['Goals', 'Concepts', 'Videos', 'Exercises', 'Quizzes', 'Exam'][idx]}</span>
-                     </button>
-                   ))}
+                <p className="text-xs text-on-surface-variant mb-4">
+                  Showing reports only for subjects assigned to you.
+                </p>
+                <div className="space-y-3 max-h-80 overflow-auto pr-1">
+                  {issues.slice(0, 10).map((issue) => (
+                    <div key={issue._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-semibold text-sm">{issue.title}</p>
+                        <span className="text-[11px] px-2 py-1 rounded bg-primary-container/10 text-primary-container capitalize shrink-0">{issue.issueStatus}</span>
+                      </div>
+                      <p className="text-[11px] text-on-surface-variant mt-1">
+                        {issue.studentId?.firstName || 'Student'} {issue.studentId?.lastName || ''} • {issue.topicId?.chapter?.subject?.subjectName || 'Subject'} • {issue.topicId?.topicName || 'Topic'}
+                      </p>
+                      <p className="text-xs text-on-surface-variant mt-1">{issue.issueDescription}</p>
+                      {issue.response && (
+                        <p className="text-xs text-primary-container mt-1">Outcome: {issue.response}</p>
+                      )}
+                      <div className="mt-3 flex items-center gap-2">
+                        <button onClick={() => handleIssueStatus(issue._id, 'in-progress')} className="text-xs font-semibold text-primary-container">Set in-progress</button>
+                        <button onClick={() => handleIssueStatus(issue._id, 'resolved')} className="text-xs font-semibold text-primary-container">Resolve</button>
+                      </div>
+                    </div>
+                  ))}
+                  {issues.length === 0 && <p className="text-sm text-on-surface-variant">No open issues right now.</p>}
                 </div>
+              </div>
 
-                <div className="bg-white rounded-[2.5rem] border border-outline/10 p-10 shadow-xl min-h-[600px]">
-                   {activeContentStep === 0 && (
-                     <div className="max-w-2xl">
-                        <h3 className="text-2xl font-bold mb-6">Learning Goals</h3>
-                        <div className="flex gap-4 mb-8">
-                           <input value={newObjective} onChange={e => setNewObjective(e.target.value)} placeholder="e.g. Master the quadratic formula" className="flex-grow bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold" />
-                           <button onClick={handleAddObjective} className="bg-on-surface text-white px-8 rounded-xl font-bold text-xs uppercase">Add</button>
+              <div className="bg-white rounded-2xl border border-outline/10 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageCircle size={18} className="text-primary-container" />
+                  <h4 className="font-bold">Student Questions (FR-16)</h4>
+                </div>
+                <div className="space-y-3 max-h-80 overflow-auto pr-1">
+                  {questions.map((q) => (
+                    <div key={q._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
+                      <p className="font-semibold text-sm">{q.questionText}</p>
+                      <p className="text-xs text-on-surface-variant mt-1">
+                        {q.studentId?.firstName} {q.studentId?.lastName} • {q.topicId?.topicName || 'Topic'}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          value={answerDrafts[q._id] || ''}
+                          onChange={(e) => setAnswerDrafts((prev) => ({ ...prev, [q._id]: e.target.value }))}
+                          placeholder="Write answer..."
+                          className="flex-1 border border-outline/20 rounded-lg px-3 py-2 text-xs"
+                        />
+                        <button
+                          onClick={() => handleAnswerQuestion(q._id)}
+                          className="px-3 py-2 rounded-lg bg-primary-container text-white text-xs font-semibold inline-flex items-center gap-1"
+                        >
+                          <Send size={12} /> Reply
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {questions.length === 0 && <p className="text-sm text-on-surface-variant">No questions yet.</p>}
+                </div>
+              </div>
+            </div>
+            )}
+            {activeSection === 'qa' && (
+              <div className="bg-white rounded-2xl border border-outline/10 p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold">Q&A Management</h3>
+                    <p className="text-sm text-on-surface-variant mt-1">Review student questions for your assigned subjects and post teacher replies.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const questionRes = await listQuestions({ limit: 100 });
+                      setQuestions(questionRes?.data || []);
+                    }}
+                    className="px-4 py-2 rounded-lg border border-outline/20 text-sm font-semibold"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-5">
+                  <div className="lg:col-span-6 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={16} />
+                    <input
+                      type="text"
+                      value={qaSearch}
+                      onChange={(e) => setQaSearch(e.target.value)}
+                      placeholder="Search by question, student, or topic..."
+                      className="w-full bg-white border border-outline/20 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold outline-none focus:border-primary-container"
+                    />
+                  </div>
+                  <div className="lg:col-span-6 flex flex-wrap items-center gap-2">
+                    {[
+                      { label: 'All', value: '' },
+                      { label: 'Open', value: 'open' },
+                      { label: 'Answered', value: 'answered' },
+                    ].map((filter) => (
+                      <button
+                        key={filter.label}
+                        type="button"
+                        onClick={() => setQaStatusFilter(filter.value)}
+                        className={`px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors ${qaStatusFilter === filter.value ? 'bg-primary-container text-white border-primary-container' : 'bg-white text-on-surface-variant border-outline/20 hover:bg-surface'}`}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                    <span className="text-xs text-on-surface-variant font-semibold ml-auto">
+                      {filteredQuestions.length} shown
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-4 max-h-[70vh] overflow-auto pr-1">
+                  {filteredQuestions.map((q) => (
+                    <div key={q._id} className="p-5 rounded-2xl border border-outline/10 bg-surface">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-bold text-on-surface">{q.questionText}</p>
+                            <span className={`text-[10px] px-2 py-1 rounded font-black uppercase tracking-widest ${q.status === 'answered' ? 'bg-primary-container/10 text-primary-container' : 'bg-amber-500/10 text-amber-600'}`}>
+                              {q.status === 'answered' ? 'Answered' : 'Open'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-on-surface-variant mt-2">
+                            {q.studentId?.firstName} {q.studentId?.lastName} • {q.topicId?.topicName || 'Topic'}
+                          </p>
                         </div>
-                        <div className="space-y-3">
-                           {topicObjectives.map((obj, i) => (
-                             <div key={i} className="flex items-center justify-between p-4 bg-[#fafbfc] rounded-xl border border-outline/5 group">
-                               <span className="font-bold text-sm">{obj}</span>
-                               <button onClick={() => setTopicObjectives(topicObjectives.filter((_, idx) => idx !== i))} className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={18}/></button>
-                             </div>
-                           ))}
-                        </div>
-                        <button onClick={handleUpdateObjectives} className="mt-10 bg-on-surface text-white px-10 py-4 rounded-xl font-bold text-xs uppercase flex items-center gap-2"><Save size={18} /> Save All Goals</button>
-                     </div>
-                   )}
-
-                   {activeContentStep === 1 && (
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <div className="space-y-6">
-                           <h4 className="text-xs font-black uppercase tracking-widest text-outline">New Concept</h4>
-                           <input value={newContent.title} onChange={e => setNewContent({...newContent, title: e.target.value, type: 'concept'})} placeholder="Concept Title" className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold" />
-                           <textarea value={newContent.contentBody} onChange={e => setNewContent({...newContent, contentBody: e.target.value})} placeholder="Explanation..." rows="6" className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-medium resize-none" />
-                           <button onClick={handleAddContent} disabled={isSavingContent} className="w-full bg-on-surface text-white py-4 rounded-xl font-bold text-xs uppercase">{isSavingContent ? 'Saving...' : 'Commit Concept'}</button>
-                        </div>
-                        <div className="space-y-4">
-                           {topicContent.concepts.map(c => (
-                             <div key={c._id} className="p-6 border border-outline/10 rounded-2xl flex justify-between items-center group hover:border-primary-container transition-all">
-                               <div><h4 className="font-bold">{c.title}</h4><p className="text-xs text-on-surface-variant truncate max-w-xs">{c.content}</p></div>
-                               <button onClick={() => handleDeleteContent(c._id, 'concept')} className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={18}/></button>
-                             </div>
-                           ))}
-                        </div>
-                   </div>
-                   )}
-
-                   {activeContentStep === 2 && (
-                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <div className="space-y-6">
-                           <h4 className="text-xs font-black uppercase tracking-widest text-outline">New Video</h4>
-                           <input value={newContent.title} onChange={e => setNewContent({...newContent, title: e.target.value, type: 'video'})} placeholder="Lesson Title" className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold" />
-                           <input value={newContent.url} onChange={e => setNewContent({...newContent, url: e.target.value})} placeholder="YouTube URL" className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold" />
-                           <button onClick={handleAddContent} disabled={isSavingContent} className="w-full bg-on-surface text-white py-4 rounded-xl font-bold text-xs uppercase">Append Video</button>
-                        </div>
-                        <div className="space-y-4">
-                           {topicContent.videos.map(v => (
-                             <div key={v._id} className="p-6 border border-outline/10 rounded-2xl flex justify-between items-center group">
-                               <div><h4 className="font-bold">{v.title}</h4><p className="text-[10px] text-primary-container font-black">{v.videoUrl}</p></div>
-                               <button onClick={() => handleDeleteContent(v._id, 'video')} className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={18}/></button>
-                             </div>
-                           ))}
-                        </div>
-                     </div>
-                   )}
-
-                   {activeContentStep === 3 && (
-                     <div className="space-y-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-outline">Problem Title</label>
-                              <input value={newContent.title} onChange={e => setNewContent({...newContent, title: e.target.value, type: 'exercise'})} className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold" />
-                           </div>
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-outline">Difficulty</label>
-                              <div className="flex gap-2">
-                                {['Easy', 'Medium', 'Hard'].map(d => (
-                                  <button key={d} onClick={() => setNewContent({...newContent, difficulty: d})} className={`flex-1 py-4 rounded-xl font-bold text-[10px] uppercase border ${newContent.difficulty === d ? 'bg-on-surface text-white border-on-surface' : 'bg-white text-outline border-outline/10'}`}>{d}</button>
-                                ))}
-                              </div>
-                           </div>
-                        </div>
-                        <div className="space-y-4">
-                           <label className="text-[10px] font-black uppercase text-outline">Question Prompt</label>
-                           <textarea value={newContent.question} onChange={e => setNewContent({...newContent, question: e.target.value})} rows="3" className="w-full bg-[#fafbfc] border border-outline/10 px-6 py-4 rounded-xl font-bold resize-none" />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           {newContent.options.map((opt, i) => (
-                             <div key={i} className="relative">
-                               <input value={opt} onChange={e => { const o = [...newContent.options]; o[i] = e.target.value; setNewContent({...newContent, options: o}); }} placeholder={`Option ${i+1}`} className={`w-full bg-[#fafbfc] border px-6 py-4 rounded-xl font-bold ${newContent.correctAnswer === i ? 'border-primary-container' : 'border-outline/10'}`} />
-                               <button onClick={() => setNewContent({...newContent, correctAnswer: i})} className={`absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 ${newContent.correctAnswer === i ? 'bg-primary-container border-primary-container' : 'border-outline/20'}`} />
-                             </div>
-                           ))}
-                        </div>
-                        <button onClick={handleAddContent} className="w-full bg-on-surface text-white py-5 rounded-xl font-bold text-xs uppercase shadow-lg shadow-on-surface/10">Commit Exercise</button>
-                        
-                        <div className="space-y-4 pt-10">
-                           <h4 className="text-xs font-black uppercase text-outline">Inventory</h4>
-                           {topicContent.exercises.map(e => (
-                             <div key={e._id} className="p-6 border border-outline/10 rounded-2xl flex justify-between items-center group">
-                               <div><h4 className="font-bold">{e.title}</h4><p className="text-xs text-on-surface-variant line-clamp-1">{e.question}</p></div>
-                               <button onClick={() => handleDeleteContent(e._id, 'exercise')} className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={18}/></button>
-                             </div>
-                           ))}
-                        </div>
-                     </div>
-                   )}
-
-                   {activeContentStep >= 4 && (
-                     <div className="flex flex-col items-center justify-center py-40 text-center opacity-30">
-                        <Activity size={64} className="mb-6" />
-                        <h3 className="text-2xl font-bold mb-2">Advanced Module</h3>
-                        <p className="text-sm font-medium">Stage 4 and 5 are being optimized for project parity.</p>
-                     </div>
-                   )}
+                        <button
+                          type="button"
+                          onClick={() => q.topicId?._id && navigate(`/teacher/topic/${q.topicId._id}/qa`)}
+                          className="text-xs font-bold text-primary-container"
+                        >
+                          Open Topic Q&A
+                        </button>
+                      </div>
+                      <div className="mt-4 flex flex-col md:flex-row gap-2">
+                        <textarea
+                          value={answerDrafts[q._id] || ''}
+                          onChange={(e) => setAnswerDrafts((prev) => ({ ...prev, [q._id]: e.target.value }))}
+                          placeholder="Write teacher answer..."
+                          rows={2}
+                          className="flex-1 border border-outline/20 rounded-xl px-3 py-2 text-sm resize-none bg-white"
+                        />
+                        <button
+                          onClick={() => handleAnswerQuestion(q._id)}
+                          disabled={!answerDrafts[q._id]?.trim()}
+                          className="px-4 py-2 rounded-xl bg-primary-container text-white text-xs font-black uppercase tracking-widest inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <Send size={14} /> Reply
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredQuestions.length === 0 && <p className="text-sm text-on-surface-variant py-10 text-center">No questions match the current filters.</p>}
                 </div>
               </div>
             )}
-
-            {/* No other sections for now */}
+            {feedback && <p className="text-sm text-primary-container font-semibold mt-4">{feedback}</p>}
           </div>
         </main>
       </div>
-      {toast.show && <div className={`fixed bottom-8 right-8 px-8 py-4 rounded-xl shadow-2xl animate-in slide-in-from-right duration-300 font-bold text-xs uppercase text-white ${toast.type === 'success' ? 'bg-on-surface' : 'bg-error'}`}>{toast.message}</div>}
     </div>
   );
 };

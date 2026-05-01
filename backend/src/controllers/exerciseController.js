@@ -1,14 +1,26 @@
 const Exercise = require('../models/Exercise');
 const ExerciseProblem = require('../models/ExerciseProblem');
 const Topic = require('../models/Topic');
+const Chapter = require('../models/Chapter');
 const Answer = require('../models/Answer');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
+const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
 
 const getRequester = (req) => ({
   id: req.user?.id || req.user?._id?.toString(),
   role: req.user?.role,
 });
+
+const getSubjectIdForTopic = async (topicId) => {
+  const topic = await Topic.findById(topicId).select('chapter topicName').lean();
+  if (!topic?.chapter) {
+    return null;
+  }
+
+  const chapter = await Chapter.findById(topic.chapter).select('subject').lean();
+  return chapter?.subject || null;
+};
 
 // @desc    Create an exercise
 // @route   POST /api/exercises
@@ -32,6 +44,15 @@ exports.createExercise = asyncHandler(async (req, res, next) => {
     difficulty,
     createdBy: req.user.id,
   });
+
+  const subjectId = await getSubjectIdForTopic(topicId);
+  if (subjectId) {
+    await notifyStudentsOfSubjectUpdate(
+      subjectId,
+      'New exercise available',
+      `A new practice exercise "${exercise.title}" was added.`
+    );
+  }
 
   res.status(201).json({
     success: true,
@@ -95,6 +116,15 @@ exports.updateExercise = asyncHandler(async (req, res, next) => {
   });
   
   await exercise.save();
+
+  const subjectId = await getSubjectIdForTopic(exercise.topic);
+  if (subjectId) {
+    await notifyStudentsOfSubjectUpdate(
+      subjectId,
+      'Exercise updated',
+      `Practice exercise "${exercise.title}" was updated.`
+    );
+  }
 
   res.status(200).json({
     success: true,
@@ -199,10 +229,16 @@ exports.getExercisesByTopic = asyncHandler(async (req, res, next) => {
   }
 
   const filter = { topic: topicId };
+  const difficultyOrder = { Easy: 1, Medium: 2, Hard: 3 };
   const [exercises, total] = await Promise.all([
-    Exercise.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Exercise.find(filter).sort({ createdAt: 1 }).skip(skip).limit(limit),
     Exercise.countDocuments(filter),
   ]);
+  exercises.sort((a, b) => {
+    const byDifficulty = (difficultyOrder[a.difficulty] || 99) - (difficultyOrder[b.difficulty] || 99);
+    if (byDifficulty !== 0) return byDifficulty;
+    return new Date(a.createdAt || a.created_at || 0) - new Date(b.createdAt || b.created_at || 0);
+  });
 
   res.status(200).json({
     success: true,
@@ -243,6 +279,43 @@ exports.submitProblemAnswer = asyncHandler(async (req, res, next) => {
     isCorrect,
     correctAnswer: problem.correctAnswer,
     answerExplanation: problem.answerExplanation,
+    answer,
+  });
+});
+
+// @desc    Submit an answer for a direct exercise
+// @route   POST /api/exercises/:exerciseId/submit
+// @access  Private (Student)
+exports.submitExerciseAnswer = asyncHandler(async (req, res, next) => {
+  const { exerciseId } = req.params;
+  const { submittedAnswer } = req.body;
+  const studentId = req.user.id || req.user._id;
+
+  const exercise = await Exercise.findById(exerciseId);
+  if (!exercise) {
+    return next(new ErrorResponse(`Exercise not found with id of ${exerciseId}`, 404));
+  }
+
+  const answerIndex = Number(submittedAnswer);
+  if (!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= exercise.options.length) {
+    return next(new ErrorResponse('A valid submittedAnswer option index is required', 400));
+  }
+
+  const isCorrect = exercise.correctAnswer === answerIndex;
+  const answer = await Answer.create({
+    student: studentId,
+    question: exerciseId,
+    questionModel: 'Exercise',
+    submittedAnswer: String(answerIndex),
+    isCorrect,
+  });
+
+  res.status(201).json({
+    success: true,
+    isCorrect,
+    correctAnswer: exercise.correctAnswer,
+    correctOption: exercise.options[exercise.correctAnswer],
+    hint: exercise.hint,
     answer,
   });
 });

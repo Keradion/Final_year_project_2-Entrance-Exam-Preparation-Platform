@@ -27,16 +27,22 @@ class SubjectService {
    * If exists, assign and notify.
    */
   async inviteAndAssignTeacherByEmail(subjectId, email, firstName, lastName) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw { status: 400, message: 'Teacher email is required.' };
+    }
+
     // Try to find teacher by email
-    let teacher = await User.findOne({ email });
+    let teacher = await User.findOne({ email: normalizedEmail });
     let isNew = false;
+    let randomPassword = '';
     if (!teacher) {
       // Create teacher with random password
-      const randomPassword = Math.random().toString(36).slice(-8);
+      randomPassword = Math.random().toString(36).slice(-8);
       teacher = new User({
-        firstName: firstName || 'Teacher',
-        lastName: lastName || '',
-        email,
+        firstName: firstName?.trim() || 'Teacher',
+        lastName: lastName?.trim() || '',
+        email: normalizedEmail,
         password: randomPassword,
         role: 'teacher',
         status: 'active',
@@ -44,14 +50,18 @@ class SubjectService {
       await teacher.save();
       isNew = true;
     } else if (teacher.role !== 'teacher') {
-      throw { status: 400, message: 'User exists but is not a teacher.' };
+      teacher.role = 'teacher';
+      teacher.status = 'active';
+      await teacher.save();
     }
 
     // Assign teacher to subject
-    const subject = await this.getSubjectById(subjectId);
+    const subject = await Subject.findByIdAndUpdate(
+      subjectId,
+      { teacher: teacher._id },
+      { new: true, runValidators: true }
+    ).populate('teacher', 'firstName lastName email');
     if (!subject) throw { status: 404, message: 'Subject not found.' };
-    subject.teacher = teacher._id;
-    await subject.save();
 
     // Send email with login/register link (Non-blocking)
     const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
@@ -118,7 +128,7 @@ class SubjectService {
 
     // We don't await this to avoid blocking the response if email service (Redis) is slow or down
     require('./emailService').sendEmail(
-      teacher.email,
+      normalizedEmail,
       'Subject Assignment Notification',
       emailBody,
       htmlBody
@@ -126,7 +136,7 @@ class SubjectService {
       console.error('Failed to queue assignment email:', err.message);
     });
 
-    return { success: true, teacherId: teacher._id, subjectId: subject._id, isNew };
+    return { success: true, teacherId: teacher._id, subjectId: subject._id, subject, isNew };
   }
   /**
    * Creates a new subject.
@@ -181,7 +191,7 @@ class SubjectService {
     const subject = await Subject.findByIdAndUpdate(subjectId, updateData, {
       new: true,
       runValidators: true, // Ensures that any updates still adhere to the schema's validation rules.
-    });
+    }).populate('teacher', 'firstName lastName email');
     return subject;
   }
 
@@ -214,13 +224,15 @@ class SubjectService {
       throw { status: 404, message: 'Teacher not found or user is not a teacher.' };
     }
 
-    const subject = await this.getSubjectById(subjectId);
+    const subject = await Subject.findByIdAndUpdate(
+      subjectId,
+      { teacher: teacherId },
+      { new: true, runValidators: true }
+    ).populate('teacher', 'firstName lastName email');
     if (!subject) {
       throw { status: 404, message: 'Subject not found.' };
     }
 
-    subject.teacher = teacherId;
-    await subject.save();
     return subject;
   }
 }

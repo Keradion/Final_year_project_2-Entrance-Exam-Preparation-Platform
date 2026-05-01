@@ -8,12 +8,44 @@ const emailService = require('./emailService');
 const logger = require('../utils/logger');
 
 class AuthService {
+  getGeminiKeyEncryptionKey() {
+    const secret = process.env.GEMINI_KEY_ENCRYPTION_SECRET || process.env.JWT_SECRET;
+    if (!secret) {
+      throw { status: 500, message: 'Gemini key encryption secret is not configured' };
+    }
+    return crypto.createHash('sha256').update(secret).digest();
+  }
+
+  encryptGeminiApiKey(apiKey) {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', this.getGeminiKeyEncryptionKey(), iv);
+    const encrypted = Buffer.concat([cipher.update(apiKey, 'utf8'), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+    return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted.toString('base64')}`;
+  }
+
+  decryptGeminiApiKey(encryptedValue) {
+    const [ivRaw, authTagRaw, encryptedRaw] = encryptedValue.split(':');
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      this.getGeminiKeyEncryptionKey(),
+      Buffer.from(ivRaw, 'base64')
+    );
+    decipher.setAuthTag(Buffer.from(authTagRaw, 'base64'));
+    const decrypted = Buffer.concat([
+      decipher.update(Buffer.from(encryptedRaw, 'base64')),
+      decipher.final(),
+    ]);
+    return decrypted.toString('utf8');
+  }
+
   /**
    * Register a new user (student, teacher, or admin)
    * FR-01: System shall allow users to create accounts
    */
   async registerUser(userData) {
-    const { firstName, lastName, email, password, phoneNumber, role, profileImage, stream } = userData;
+    const { firstName, lastName, email, password, phoneNumber, role, profileImage, stream, gradeLevel } = userData;
+    const requestedRole = role || 'student';
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -24,10 +56,10 @@ class AuthService {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // If teacher, register immediately (per requirement: only non-teachers go through verification stage)
-    if (role === 'teacher') {
+    if (requestedRole === 'teacher') {
       const user = new User({
         firstName, lastName, email, password, phoneNumber, profileImage,
-        role: 'teacher', status: 'active', isEmailVerified: true
+        role: 'teacher', status: 'active', isEmailVerified: true, stream, gradeLevel
       });
       await user.save();
       const token = this.generateToken(user._id);
@@ -38,7 +70,7 @@ class AuthService {
     await PendingUser.findOneAndDelete({ email }); // Clear any previous attempt
     const pendingUser = new PendingUser({
       firstName, lastName, email, password, phoneNumber, profileImage,
-      role: role || 'student', stream, verificationCode
+      role: requestedRole, stream, gradeLevel: requestedRole === 'student' ? null : gradeLevel, verificationCode
     });
     await pendingUser.save();
 
@@ -89,6 +121,7 @@ class AuthService {
       profileImage: pending.profileImage,
       role: pending.role,
       stream: pending.stream,
+      gradeLevel: pending.role === 'student' ? null : pending.gradeLevel,
       status: 'active',
       isEmailVerified: true,
     });
@@ -396,6 +429,64 @@ class AuthService {
     return { message: 'Password changed successfully' };
   }
 
+  async getAiSettings(userId) {
+    const user = await User.findById(userId).select('role geminiApiKeyLast4 geminiApiKeyUpdatedAt');
+    if (!user) {
+      throw { status: 404, message: 'User not found' };
+    }
+    if (user.role !== 'student') {
+      throw { status: 403, message: 'AI settings are only available for students' };
+    }
+
+    return {
+      hasGeminiApiKey: Boolean(user.geminiApiKeyLast4),
+      geminiApiKeyLast4: user.geminiApiKeyLast4,
+      geminiApiKeyUpdatedAt: user.geminiApiKeyUpdatedAt,
+    };
+  }
+
+  async updateGeminiApiKey(userId, apiKey) {
+    const trimmed = typeof apiKey === 'string' ? apiKey.trim() : '';
+    if (!trimmed) {
+      throw { status: 400, message: 'Gemini API key is required' };
+    }
+    if (trimmed.length < 20) {
+      throw { status: 400, message: 'Gemini API key looks too short' };
+    }
+
+    const user = await User.findById(userId).select('+geminiApiKeyEncrypted role');
+    if (!user) {
+      throw { status: 404, message: 'User not found' };
+    }
+    if (user.role !== 'student') {
+      throw { status: 403, message: 'Only students can save a Gemini API key' };
+    }
+
+    user.geminiApiKeyEncrypted = this.encryptGeminiApiKey(trimmed);
+    user.geminiApiKeyLast4 = trimmed.slice(-4);
+    user.geminiApiKeyUpdatedAt = new Date();
+    await user.save();
+
+    return this.getAiSettings(userId);
+  }
+
+  async removeGeminiApiKey(userId) {
+    const user = await User.findById(userId).select('+geminiApiKeyEncrypted role');
+    if (!user) {
+      throw { status: 404, message: 'User not found' };
+    }
+    if (user.role !== 'student') {
+      throw { status: 403, message: 'Only students can remove a Gemini API key' };
+    }
+
+    user.geminiApiKeyEncrypted = null;
+    user.geminiApiKeyLast4 = null;
+    user.geminiApiKeyUpdatedAt = null;
+    await user.save();
+
+    return this.getAiSettings(userId);
+  }
+
   /**
    * Logout user
    * FR-04: System shall provide a logout option
@@ -472,6 +563,7 @@ class AuthService {
       profileImage: user.profileImage,
       role: user.role,
       stream: user.stream,
+      gradeLevel: user.gradeLevel,
       status: user.status,
       isEmailVerified: user.isEmailVerified,
       created_at: user.created_at,

@@ -60,6 +60,16 @@ class ContentService {
   }
 
   /**
+   * Retrieves a chapter by its ID.
+   *
+   * @param {string} chapterId - The chapter ID.
+   * @returns {Promise<object|null>} Chapter document or null.
+   */
+  async getChapterById(chapterId) {
+    return await Chapter.findById(chapterId);
+  }
+
+  /**
    * Updates a chapter by its ID.
    *
    * @param {string} chapterId - The chapter ID.

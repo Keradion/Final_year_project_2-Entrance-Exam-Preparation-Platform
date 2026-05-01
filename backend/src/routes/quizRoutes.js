@@ -8,7 +8,8 @@ const {
   updateQuizProblem,
   deleteQuizProblem,
   getQuizzesByTopic,
-  getQuizScore
+  getQuizScore,
+  validateQuizAnswer
 } = require('../controllers/quizController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -33,5 +34,8 @@ router.route('/:quizId/problems/:problemId')
 
 router.route('/:quizId/score')
     .get(protect, authorize('student'), getQuizScore);
+
+router.route('/problems/:problemId/validate')
+  .post(protect, authorize('student'), validateQuizAnswer);
 
 module.exports = router;

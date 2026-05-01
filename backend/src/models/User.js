@@ -50,12 +50,30 @@ const userSchema = new mongoose.Schema(
       enum: ['Natural', 'Social', null],
       default: null,
     },
+    gradeLevel: {
+      type: String,
+      enum: ['9', '10', '11', '12', null],
+      default: null,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
     },
     verificationCode: {
       type: String,
+      default: null,
+    },
+    geminiApiKeyEncrypted: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    geminiApiKeyLast4: {
+      type: String,
+      default: null,
+    },
+    geminiApiKeyUpdatedAt: {
+      type: Date,
       default: null,
     },
   },

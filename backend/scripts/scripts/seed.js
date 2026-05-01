@@ -28,6 +28,20 @@ const {
  */
 const seedDatabase = async () => {
   try {
+    const findOrCreateUser = async (email, userData) => {
+      let user = await User.findOne({ email });
+
+      if (!user) {
+        user = new User(userData);
+        await user.save();
+        return user;
+      }
+
+      Object.assign(user, userData);
+      await user.save();
+      return user;
+    };
+
     // 1. Connect to the database
     await connectDB();
     console.log('Database connected successfully.');
@@ -45,8 +59,8 @@ const seedDatabase = async () => {
     // 3. Create or find users
     console.log('Creating or finding users...');
     // Default admin
-    const admin = await User.findOneAndUpdate(
-      { email: 'admin@example.com' },
+    const admin = await findOrCreateUser(
+      'admin@example.com',
       {
         firstName: 'Admin',
         lastName: 'User',
@@ -54,13 +68,12 @@ const seedDatabase = async () => {
         password: 'password123', // The pre-save hook will hash this
         role: 'admin',
         status: 'active',
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      }
     );
 
     // Custom admin for entranceadmin@gmail.com
-    const customAdmin = await User.findOneAndUpdate(
-      { email: 'entranceadmin@gmail.com' },
+    const customAdmin = await findOrCreateUser(
+      'entranceadmin@gmail.com',
       {
         firstName: 'Entrance',
         lastName: 'Admin',
@@ -68,12 +81,11 @@ const seedDatabase = async () => {
         password: '12345Qwert@', // The pre-save hook will hash this
         role: 'admin',
         status: 'active',
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      }
     );
 
-    const teacher = await User.findOneAndUpdate(
-      { email: 'teacher.gebre@example.com' },
+    const teacher = await findOrCreateUser(
+      'teacher.gebre@example.com',
       {
         firstName: 'Gebre',
         lastName: 'Hagos',
@@ -81,12 +93,11 @@ const seedDatabase = async () => {
         password: 'password123',
         role: 'teacher',
         status: 'active',
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      }
     );
 
-    const student = await User.findOneAndUpdate(
-      { email: 'student@example.com' },
+    const student = await findOrCreateUser(
+      'student@example.com',
       {
         firstName: 'Student',
         lastName: 'User',
@@ -94,32 +105,27 @@ const seedDatabase = async () => {
         password: 'password123',
         role: 'student',
         status: 'active',
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      }
     );
     console.log(`Users found or created: ${admin.email}, ${customAdmin.email}, ${teacher.email}, ${student.email}`);
 
-    // 4. Create the Subject
+
+    // 4. Create the Mathematics Subject
     console.log('Creating "Mathematics" subject...');
     const mathSubject = await Subject.create({
       subjectName: 'Mathematics',
       subjectDescription: 'A comprehensive course on Grade 12 mathematics, covering algebra, calculus, and more.',
       gradeLevel: 'Grade 12',
-      teacher: teacher._id, // Assign Mr. Gebre as the teacher
+      teacher: teacher._id,
     });
     console.log(`Subject created: ${mathSubject.subjectName} (ID: ${mathSubject._id})`);
 
-    // 5. Create the Chapter
-    console.log('Creating "Arithmetic" chapter...');
+    // Mathematics Chapter, Topic, Content
     const arithmeticChapter = await Chapter.create({
       chapterName: 'Chapter 1: Arithmetic',
       chapterDescription: 'Fundamentals of arithmetic, including sequences, series, and properties of numbers.',
-      subject: mathSubject._id, // Link to the Mathematics subject
+      subject: mathSubject._id,
     });
-    console.log(`Chapter created: ${arithmeticChapter.chapterName} (ID: ${arithmeticChapter._id})`);
-
-    // 6. Create the Topic
-    console.log('Creating "Definition of Arithmetic" topic...');
     const arithmeticTopic = await Topic.create({
       topicName: 'Definition of Arithmetic',
       topicDescription: 'Understanding the basic concepts and definitions of arithmetic sequences.',
@@ -128,24 +134,57 @@ const seedDatabase = async () => {
         'Identify the common difference.',
         'Find the nth term of a sequence.',
       ],
-      chapter: arithmeticChapter._id, // Link to the Arithmetic chapter
+      chapter: arithmeticChapter._id,
     });
-    console.log(`Topic created: ${arithmeticTopic.topicName} (ID: ${arithmeticTopic._id})`);
-
-    // 7. Add Content to the Topic
-    console.log('Adding content to the topic...');
-    const concept = await Concept.create({
+    await Concept.create({
+      title: 'Definition of Arithmetic',
       content: '<h1>Definition of Arithmetic</h1><p>An arithmetic sequence is a sequence of numbers such that the difference between the consecutive terms is constant. This constant difference is called the <strong>common difference (d)</strong>.</p><p>For example, the sequence 5, 7, 9, 11, 13, 15, ... is an arithmetic sequence with a common difference of 2.</p>',
       topic: arithmeticTopic._id,
     });
-    console.log(`  - Concept page added (ID: ${concept._id})`);
-
-    const video = await Video.create({
+    await Video.create({
       videoUrl: 'https://www.youtube.com/watch?v=IwW0GJWKH98',
-      videoDuration: 545, // Example duration in seconds
+      videoDuration: 545,
       topic: arithmeticTopic._id,
     });
-    console.log(`  - Video added (ID: ${video._id})`);
+    console.log('Mathematics subject, chapter, topic, and content created.');
+
+    // 5. Create the Chemistry Subject
+    console.log('Creating "Chemistry" subject...');
+    const chemistrySubject = await Subject.create({
+      subjectName: 'Chemistry',
+      subjectDescription: 'A comprehensive course on Grade 12 chemistry, covering atomic structure, chemical bonding, and more.',
+      gradeLevel: 'Grade 12',
+      teacher: teacher._id,
+    });
+    console.log(`Subject created: ${chemistrySubject.subjectName} (ID: ${chemistrySubject._id})`);
+
+    // Chemistry Chapter, Topic, Content
+    const atomicStructureChapter = await Chapter.create({
+      chapterName: 'Chapter 1: Atomic Structure',
+      chapterDescription: 'Introduction to atomic theory, subatomic particles, and atomic models.',
+      subject: chemistrySubject._id,
+    });
+    const atomicTheoryTopic = await Topic.create({
+      topicName: 'Atomic Theory',
+      topicDescription: 'Explore the development of atomic theory and the structure of atoms.',
+      topicObjectives: [
+        'Describe the historical development of atomic theory.',
+        'Identify subatomic particles and their properties.',
+        'Explain modern atomic models.',
+      ],
+      chapter: atomicStructureChapter._id,
+    });
+    await Concept.create({
+      title: 'Atomic Theory',
+      content: '<h1>Atomic Theory</h1><p>The atomic theory explains the nature of matter by stating that matter is composed of discrete units called atoms. The modern atomic theory began with John Dalton in the early 19th century and has evolved to include subatomic particles and quantum mechanics.</p>',
+      topic: atomicTheoryTopic._id,
+    });
+    await Video.create({
+      videoUrl: 'https://www.youtube.com/watch?v=thnDxFdkzZs',
+      videoDuration: 600,
+      topic: atomicTheoryTopic._id,
+    });
+    console.log('Chemistry subject, chapter, topic, and content created.');
 
     console.log('\n✅ Database seeding completed successfully!');
   } catch (error) {

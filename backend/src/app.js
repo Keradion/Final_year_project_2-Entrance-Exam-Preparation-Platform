@@ -88,6 +88,11 @@ app.use('/api/exercises', require('./routes/exerciseRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes'));
 app.use('/api/exams', require('./routes/examRoutes'));
 app.use('/api/answers', require('./routes/answerRoutes'));
+app.use('/api/issues', require('./routes/issueRoutes'));
+app.use('/api/bookmarks', require('./routes/bookmarkRoutes'));
+app.use('/api/questions', require('./routes/questionRoutes'));
+app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 // 404 handler
 app.use((req, res) => {
@@ -111,9 +116,22 @@ app.use((err, req, res, next) => {
     stack: err.stack,
   });
 
-  const fs = require('fs');
-  const logPath = 'C:/Users/atutor/.gemini/antigravity/scratch/validation_error.log';
-  fs.appendFileSync(logPath, `[${new Date().toISOString()}] GLOBAL ERROR: ${err.name} - ${err.message}\n${JSON.stringify(err.errors || {}, null, 2)}\n`);
+  // Best-effort local error log; never fail request handling if file path is unavailable.
+  try {
+    const fs = require('fs');
+    const logPath = path.join(__dirname, '../logs/validation_error.log');
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.appendFileSync(
+      logPath,
+      `[${new Date().toISOString()}] GLOBAL ERROR: ${err.name} - ${err.message}\n${JSON.stringify(
+        err.errors || {},
+        null,
+        2
+      )}\n`
+    );
+  } catch (logErr) {
+    logger.warn('Failed to write validation_error.log', { message: logErr.message });
+  }
 
   // Mongoose/ObjectId casting issues (e.g., invalid :id in URL)
   if (err.name === 'CastError') {

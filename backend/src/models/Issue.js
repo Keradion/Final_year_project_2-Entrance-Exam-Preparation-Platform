@@ -30,6 +30,11 @@ const issueSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    topicId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Topic',
+      required: [true, 'Topic is required for this issue'],
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

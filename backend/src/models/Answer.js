@@ -15,7 +15,7 @@ const answerSchema = new mongoose.Schema(
     questionModel: {
       type: String,
       required: true,
-      enum: ['ExerciseProblem', 'QuizProblem', 'ExamQuestion']
+      enum: ['Exercise', 'ExerciseProblem', 'QuizProblem', 'ExamQuestion']
     },
     submittedAnswer: {
       type: String,

@@ -16,6 +16,9 @@ const { Schema } = mongoose;
  *     or a video file hosted on a CDN.
  *   - It is required, as the primary purpose of this document is to point to a video.
  *
+ * @property {String} title
+ *   - The display title for the video lesson.
+ *
  * @property {Number} videoDuration
  *   - The duration of the video in seconds.
  *   - This is an optional field that can be useful for displaying the video length
@@ -36,6 +39,11 @@ const { Schema } = mongoose;
  */
 const videoSchema = new Schema(
   {
+    title: {
+      type: String,
+      required: [true, 'Video title is required.'],
+      trim: true,
+    },
     videoUrl: {
       type: String,
       required: [true, 'Video URL is required.'],

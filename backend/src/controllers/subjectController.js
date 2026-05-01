@@ -1,6 +1,7 @@
 
 const subjectService = require('../services/subjectService');
 const mongoose = require('mongoose');
+const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -33,6 +34,9 @@ class SubjectController {
       try {
         const { subjectId } = req.params;
         const { email, firstName, lastName } = req.body;
+        if (!isValidObjectId(subjectId)) {
+          return res.status(400).json({ success: false, message: 'Invalid subject id format.' });
+        }
         if (!email) {
           return res.status(400).json({ success: false, message: 'Email is required.' });
         }
@@ -61,6 +65,11 @@ class SubjectController {
 
       // Ensure gradeLevel is a string if the model expects it, though Mongoose handles this
       const subject = await subjectService.createSubject(req.body);
+      await notifyStudentsOfSubjectUpdate(
+        subject._id,
+        'New subject available',
+        `A new subject "${subject.subjectName}" is now available for your grade.`
+      );
       console.log('Subject created successfully:', subject._id);
       res.status(201).json(subject);
     } catch (error) {

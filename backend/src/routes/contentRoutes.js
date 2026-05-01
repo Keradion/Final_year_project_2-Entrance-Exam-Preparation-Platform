@@ -27,6 +27,9 @@ router.get('/subjects/:subjectId/chapters', contentController.getChaptersBySubje
 // Get all topics for a specific chapter
 router.get('/chapters/:chapterId/topics', contentController.getTopicsByChapter);
 
+// Get a specific chapter by ID
+router.get('/chapters/:chapterId', contentController.getChapterById);
+
 // Search for topics by title
 router.get('/topics/search', contentController.searchTopics);
 

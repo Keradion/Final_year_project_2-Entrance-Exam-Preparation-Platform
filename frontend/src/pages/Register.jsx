@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { registerUser, verifyEmail } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
-import { Eye, EyeOff, GraduationCap, ShieldCheck, Mail, Lock, Phone, User, ArrowRight, ArrowLeft, BookOpen, CheckCircle, FlaskConical, Globe } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, Mail, Lock, Phone, User, ArrowRight, ArrowLeft, BookOpen, CheckCircle, FlaskConical, Globe } from 'lucide-react';
 
 const FIELD_NAME_MAP = {
   firstName: 'First name',
@@ -39,7 +39,8 @@ const Register = () => {
       confirmEmail: '',
       password: '',
       confirmPassword: '',
-      phoneNumber: ''
+      phoneNumber: '',
+      stream: ''
     }
   });
 
@@ -60,8 +61,8 @@ const Register = () => {
     }
   };
 
-  const onStreamSelect = (stream) => {
-    onSubmit({ ...registrationData, stream });
+  const onAcademicSubmit = (data) => {
+    onSubmit({ ...registrationData, ...data });
   };
 
   const onSubmit = async (data) => {
@@ -263,52 +264,60 @@ const Register = () => {
           </div>
         ) : step === 2 ? (
           /* Step 2: Stream Selection ... (kept existing code) */
-          <div className="w-full max-w-[900px]">
-            {/* ... contents of step 2 ... */}
+          <div className="w-full max-w-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-12">
                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-                  Step 02: Stream Selection
+                  Step 02: Academic Configuration
                </div>
-               <h2 className="text-4xl font-bold text-on-surface mb-3">Select Your Academic Stream</h2>
-               <p className="text-on-surface-variant">Choose your primary area of focus for customized learning paths.</p>
+               <h2 className="text-4xl font-bold text-on-surface mb-3">Your Academic Path</h2>
+               <p className="text-on-surface-variant">Select your primary area of focus.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Natural Science */}
-              <button 
-                onClick={() => onStreamSelect('Natural')}
-                className="group p-stack-lg bg-white border-2 border-outline-variant rounded-xl text-left hover:border-primary-container hover:shadow-xl transition-all relative overflow-hidden"
-              >
-                <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                  <FlaskConical size={32} />
-                </div>
-                <h3 className="text-2xl font-bold text-on-surface mb-2">Natural Science</h3>
-                <p className="text-on-surface-variant mb-6">Mathematics, Physics, Biology, and Chemistry. Focused on logical reasoning and experimental discovery.</p>
-                <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
-                  Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
+            <div className="bg-white rounded-2xl border border-outline-variant p-10 shadow-xl mb-12">
+               <div className="max-w-xl mx-auto">
+                  <div className="space-y-6">
+                     <div className="flex items-center gap-4 mb-4">
+                        <div className="w-10 h-10 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container">
+                           <BookOpen size={20} />
+                        </div>
+                        <h4 className="text-lg font-bold">Academic Stream</h4>
+                     </div>
+                     <div className="space-y-4">
+                        {['Natural', 'Social'].map(s => (
+                           <label key={s} className="relative group cursor-pointer block">
+                              <input 
+                                 type="radio" 
+                                 name="stream" 
+                                 value={s} 
+                                 className="peer hidden" 
+                                 {...register('stream', { required: 'Please select a stream' })} 
+                              />
+                              <div className="p-4 border-2 border-outline-variant rounded-xl flex items-center justify-between font-bold text-on-surface peer-checked:border-primary-container peer-checked:bg-primary-container/5 peer-checked:text-primary-container transition-all group-hover:border-outline">
+                                 <div className="flex items-center gap-4">
+                                    {s === 'Natural' ? <FlaskConical size={20} /> : <Globe size={20} />}
+                                    <span>{s} Sciences</span>
+                                 </div>
+                                 <CheckCircle size={20} className="opacity-0 peer-checked:opacity-100 transition-opacity" />
+                              </div>
+                           </label>
+                        ))}
+                        {errors.stream && <p className="text-xs text-error font-medium">{errors.stream.message}</p>}
+                     </div>
+                  </div>
+               </div>
 
-              {/* Social Science */}
-              <button 
-                onClick={() => onStreamSelect('Social')}
-                className="group p-stack-lg bg-white border-2 border-outline-variant rounded-xl text-left hover:border-primary-container hover:shadow-xl transition-all relative overflow-hidden"
-              >
-                <div className="w-14 h-14 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-6 group-hover:bg-primary-container group-hover:text-white transition-colors">
-                  <Globe size={32} />
-                </div>
-                <h3 className="text-2xl font-bold text-on-surface mb-2">Social Science</h3>
-                <p className="text-on-surface-variant mb-6">Economics, Business Mathematics, and Geography. Focused on human behavior and societal structures.</p>
-                <div className="flex items-center gap-2 text-primary-container font-semibold text-sm">
-                  Select Stream <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-            </div>
-
-            <div className="mt-12 text-center">
-              <button onClick={() => setStep(1)} className="text-on-surface-variant hover:text-on-surface font-semibold flex items-center gap-2 mx-auto transition-colors">
-                <ArrowLeft size={18} /> Back to Account Details
-              </button>
+               <div className="mt-12 pt-10 border-t border-outline/10 flex justify-between items-center">
+                  <button onClick={() => setStep(1)} className="text-on-surface-variant hover:text-on-surface font-semibold flex items-center gap-2 transition-colors">
+                     <ArrowLeft size={18} /> Back
+                  </button>
+                  <button 
+                     onClick={handleSubmit(onAcademicSubmit)}
+                     className="bg-primary-container text-on-primary px-12 py-4 rounded-xl font-bold text-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-3 shadow-lg shadow-primary-container/20"
+                  >
+                     Complete Registration
+                     <ArrowRight size={20} />
+                  </button>
+               </div>
             </div>
           </div>
         ) : (

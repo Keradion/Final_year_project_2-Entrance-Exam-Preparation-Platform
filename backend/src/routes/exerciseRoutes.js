@@ -8,7 +8,8 @@ const {
   updateExerciseProblem,
   deleteExerciseProblem,
   getExercisesByTopic,
-  submitProblemAnswer
+  submitProblemAnswer,
+  submitExerciseAnswer
 } = require('../controllers/exerciseController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -23,6 +24,9 @@ router.route('/')
 router.route('/:exerciseId')
   .put(protect, authorize('teacher', 'admin'), updateExercise)
   .delete(protect, authorize('teacher', 'admin'), deleteExercise);
+
+router.route('/:exerciseId/submit')
+  .post(protect, authorize('student'), submitExerciseAnswer);
 
 router.route('/:exerciseId/problems')
   .post(protect, authorize('teacher'), addExerciseProblem);

@@ -39,10 +39,19 @@ const ManageSubjects = () => {
   };
 
   const handleAssignTeacher = async (subjectId) => {
-    if (!assignData.email) return;
+    const normalizedEmail = assignData.email.trim().toLowerCase();
+    if (!normalizedEmail) return;
     setAssignLoading(true);
     try {
-      await api.post(`/subjects/${subjectId}/invite-assign-teacher`, assignData);
+      const response = await api.post(`/subjects/${subjectId}/invite-assign-teacher`, {
+        ...assignData,
+        email: normalizedEmail,
+      });
+      if (response.data?.subject) {
+        setSubjects((prev) => prev.map((subject) => (
+          subject._id === subjectId ? response.data.subject : subject
+        )));
+      }
       setAssignSuccess(true);
       setTimeout(() => {
         setAssigningId(null);

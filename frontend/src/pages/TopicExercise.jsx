@@ -1,0 +1,492 @@
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { Bookmark, ClipboardList, Trash2, CheckCircle2, Save, Edit2 } from 'lucide-react';
+import api from '../services/api';
+import { addBookmark, getBookmarks, removeBookmark } from '../services/engagement';
+
+const TopicExercise = () => {
+  const { topic, isStudent } = useOutletContext();
+  const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [exerciseFeedback, setExerciseFeedback] = useState({});
+  const [isSubmittingAttempt, setIsSubmittingAttempt] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+
+  const [newExercise, setNewExercise] = useState({
+    title: '',
+    question: '',
+    options: ['', '', '', ''],
+    correctAnswer: 0,
+    difficulty: 'Medium',
+    tag: ''
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  const fetchExercises = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/exercises/topics/${topic._id}/exercises`);
+      setExercises(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch exercises', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBookmarks = async () => {
+    if (!isStudent) return;
+    try {
+      const response = await getBookmarks();
+      setBookmarks(response?.data || []);
+    } catch (err) {
+      console.error('Failed to fetch bookmarks', err);
+    }
+  };
+
+  useEffect(() => {
+    if (topic?._id) {
+      fetchExercises();
+      fetchBookmarks();
+    }
+  }, [topic?._id, isStudent]);
+
+  const getExerciseBookmark = (exerciseId) => bookmarks.find((bookmark) => (
+    bookmark.resourceType === 'exercise-question' && String(bookmark.resourceId) === String(exerciseId)
+  ));
+
+  const handleToggleExerciseBookmark = async (exerciseId) => {
+    try {
+      const existing = getExerciseBookmark(exerciseId);
+      if (existing) {
+        await removeBookmark(existing._id);
+        setBookmarks((prev) => prev.filter((bookmark) => bookmark._id !== existing._id));
+        showToast('Exercise question removed from bookmarks.');
+      } else {
+        const note = window.prompt('Add a note for this bookmark (optional):', '') || '';
+        const response = await addBookmark({ resourceType: 'exercise-question', resourceId: exerciseId, note });
+        setBookmarks((prev) => [response.data, ...prev]);
+        showToast('Exercise question bookmarked.');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update bookmark.', 'error');
+    }
+  };
+
+  const [editingId, setEditingId] = useState(null);
+
+  const handleEdit = (ex) => {
+    setEditingId(ex._id);
+    setNewExercise({
+      title: ex.title,
+      question: ex.question,
+      options: [...ex.options],
+      correctAnswer: ex.correctAnswer,
+      difficulty: ex.difficulty,
+      tag: ex.tag || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setNewExercise({
+      title: '',
+      question: '',
+      options: ['', '', '', ''],
+      correctAnswer: 0,
+      difficulty: 'Medium',
+      tag: ''
+    });
+  };
+
+  const handleAddExercise = async () => {
+    if (!newExercise.title.trim()) {
+      return showToast('Exercise title is required.', 'error');
+    }
+    if (!newExercise.question.trim()) {
+      return showToast('Question statement is required.', 'error');
+    }
+    if (newExercise.options.some(opt => !opt.trim())) {
+      return showToast('All four options must be filled.', 'error');
+    }
+
+    setIsSaving(true);
+    try {
+      if (editingId) {
+        await api.put(`/exercises/${editingId}`, { 
+          ...newExercise, 
+          title: newExercise.title.trim(),
+          question: newExercise.question.trim(),
+          options: newExercise.options.map(o => o.trim()),
+          topic: topic._id 
+        });
+        showToast('Exercise updated successfully!');
+      } else {
+        await api.post('/exercises', { 
+          ...newExercise, 
+          title: newExercise.title.trim(),
+          question: newExercise.question.trim(),
+          options: newExercise.options.map(o => o.trim()),
+          topic: topic._id 
+        });
+        showToast('New practice exercise published successfully!');
+      }
+      handleCancelEdit();
+      fetchExercises();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to process exercise.';
+      showToast(msg, 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to permanently delete this exercise? This will affect students currently practicing this topic.')) return;
+    try {
+      await api.delete(`/exercises/${id}`);
+      showToast('Exercise successfully removed from inventory.');
+      if (editingId === id) handleCancelEdit();
+      fetchExercises();
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to delete exercise.';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleSubmitExerciseAttempt = async () => {
+    const pendingExercises = exercises.filter((ex) => !exerciseFeedback[ex._id] || !exerciseFeedback[ex._id].isCorrect);
+    const unanswered = pendingExercises.filter((ex) => selectedAnswers[ex._id] === undefined);
+    if (unanswered.length > 0) {
+      return showToast('Please answer all pending exercises before submitting.', 'error');
+    }
+  
+    try {
+      setIsSubmittingAttempt(true);
+      const results = await Promise.all(
+        pendingExercises.map(async (ex) => {
+          const res = await api.post(`/exercises/${ex._id}/submit`, {
+            submittedAnswer: selectedAnswers[ex._id],
+          });
+          return [ex._id, {
+          isCorrect: res.data?.isCorrect,
+          correctAnswer: res.data?.correctAnswer,
+          correctOption: res.data?.correctOption,
+          hint: res.data?.hint,
+          }];
+        })
+      );
+      setExerciseFeedback((prev) => ({
+        ...prev,
+        ...Object.fromEntries(results),
+      }));
+      showToast('Exercise attempt submitted.');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to submit attempt.', 'error');
+    } finally {
+      setIsSubmittingAttempt(false);
+    }
+  };
+
+  const handleRetryIncorrectExercises = () => {
+    const incorrectIds = Object.entries(exerciseFeedback)
+      .filter(([, feedback]) => feedback && !feedback.isCorrect)
+      .map(([id]) => id);
+
+    setExerciseFeedback((prev) => {
+      const next = { ...prev };
+      incorrectIds.forEach((id) => delete next[id]);
+      return next;
+    });
+    setSelectedAnswers((prev) => {
+      const next = { ...prev };
+      incorrectIds.forEach((id) => delete next[id]);
+      return next;
+    });
+  };
+
+  return (
+    <div className="py-6 space-y-10 animate-in slide-in-from-bottom-4 duration-500">
+      {toast.show && (
+        <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
+          <p className="font-bold">{toast.message}</p>
+        </div>
+      )}
+
+      {/* Exercise Builder Card */}
+      {!isStudent && (
+        <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h3 className="text-2xl font-bold text-on-surface">{editingId ? 'Edit Exercise' : 'Exercise Builder'}</h3>
+            <p className="text-on-surface-variant/60 text-sm font-medium mt-1">{editingId ? 'Modify existing MCQ exercise.' : 'Design challenging MCQs for your students.'}</p>
+          </div>
+          <div className="w-14 h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
+            <ClipboardList size={28} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Exercise Title</label>
+              <input 
+                value={newExercise.title} 
+                onChange={e => setNewExercise({...newExercise, title: e.target.value})} 
+                placeholder="e.g. Practice Set 1" 
+                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Question Statement</label>
+              <textarea 
+                value={newExercise.question} 
+                onChange={e => setNewExercise({...newExercise, question: e.target.value})} 
+                placeholder="Type your question here..." 
+                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm" 
+                rows="4"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Difficulty</label>
+                  <select 
+                    value={newExercise.difficulty} 
+                    onChange={e => setNewExercise({...newExercise, difficulty: e.target.value})} 
+                    className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest text-on-surface focus:border-primary-container outline-none shadow-sm appearance-none"
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Classification Tag</label>
+                  <input 
+                    value={newExercise.tag} 
+                    onChange={e => setNewExercise({...newExercise, tag: e.target.value})} 
+                    placeholder="e.g. Algebra" 
+                    className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-xs uppercase tracking-widest text-on-surface focus:border-primary-container outline-none shadow-sm" 
+                  />
+               </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Options & Correct Answer</label>
+            <div className="grid grid-cols-1 gap-3">
+              {['A', 'B', 'C', 'D'].map((opt, i) => (
+                <div key={opt} className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border transition-all ${newExercise.correctAnswer === i ? 'bg-primary-container text-white border-primary-container shadow-md' : 'bg-surface text-outline border-outline/10'}`}>
+                    {opt}
+                  </div>
+                  <input 
+                    value={newExercise.options[i]} 
+                    onChange={e => {
+                      const opts = [...newExercise.options];
+                      opts[i] = e.target.value;
+                      setNewExercise({...newExercise, options: opts});
+                    }} 
+                    placeholder={`Option ${opt}`} 
+                    className={`flex-grow bg-white border px-5 py-3 rounded-xl font-semibold text-sm outline-none transition-all shadow-sm ${newExercise.correctAnswer === i ? 'border-primary-container ring-1 ring-primary-container/20' : 'border-outline/20 focus:border-primary-container/40'}`} 
+                  />
+                  <input 
+                    type="radio" 
+                    name="correctAnswer" 
+                    checked={newExercise.correctAnswer === i} 
+                    onChange={() => setNewExercise({...newExercise, correctAnswer: i})} 
+                    className="w-5 h-5 accent-primary-container cursor-pointer"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 flex justify-end border-t border-outline/5 pt-8 gap-4">
+           {editingId && (
+             <button 
+               onClick={handleCancelEdit} 
+               className="bg-white border border-outline/20 text-on-surface px-10 py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-surface transition-all shadow-sm"
+             >
+               Cancel
+             </button>
+           )}
+           <button 
+             onClick={handleAddExercise} 
+             disabled={isSaving || !newExercise.question || !newExercise.title} 
+             className={`${editingId ? 'bg-primary-container' : 'bg-on-surface'} text-white px-12 py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:brightness-110 active:opacity-80 transition-all shadow-xl shadow-on-surface/10 disabled:opacity-50 flex items-center gap-3`}
+           >
+             <Save size={20} /> {isSaving ? 'Processing...' : (editingId ? 'Update Exercise' : 'Publish Exercise')}
+           </button>
+        </div>
+      </div>
+      )}
+
+      {/* Inventory Panel */}
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-2">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Practice Lab' : 'Exercise Inventory'} ({exercises.length})</h4>
+          {isStudent && exercises.length > 0 && (
+            <p className="text-xs text-on-surface-variant font-semibold">Answer every pending question, then submit at the end.</p>
+          )}
+        </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-20 bg-white rounded-xl border border-outline/5"><div className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></div></div>
+        ) : exercises.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6">
+            {exercises.map((ex, i) => (
+              <div key={ex._id} className="bg-white rounded-xl border border-outline-variant p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all group">
+                {(() => {
+                  const feedback = exerciseFeedback[ex._id];
+                  const hasFeedback = Boolean(feedback);
+                  return (
+                    <>
+                <div className="flex items-start justify-between gap-6 mb-6">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 bg-primary-container/5 rounded-lg flex items-center justify-center text-primary-container font-black text-xs border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                         <h4 className="font-bold text-on-surface text-lg leading-tight">{ex.title}</h4>
+                         <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                           ex.difficulty === 'Hard' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
+                           ex.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
+                           'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                         }`}>
+                           {ex.difficulty}
+                         </span>
+                      </div>
+                      <p className="text-on-surface-variant/70 text-sm font-medium leading-relaxed mb-4">{ex.question}</p>
+                      {ex.tag && (
+                        <span className="px-2 py-0.5 rounded-lg bg-surface text-[9px] font-black uppercase tracking-widest border border-outline/10 text-on-surface-variant/60">
+                           {ex.tag}
+                         </span>
+                      )}
+                    </div>
+                  </div>
+                  {!isStudent && (
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                      <button 
+                        onClick={() => handleEdit(ex)} 
+                        className="p-3 rounded-xl text-outline hover:text-primary-container hover:bg-primary-container/5 transition-all"
+                        title="Edit Exercise"
+                      >
+                        <Edit2 size={20} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(ex._id)} 
+                        className="p-3 rounded-xl text-outline hover:text-error hover:bg-error/5 transition-all"
+                        title="Delete Exercise"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  )}
+                  {isStudent && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleExerciseBookmark(ex._id)}
+                      className={`p-3 rounded-xl border shrink-0 transition-all ${getExerciseBookmark(ex._id) ? 'bg-primary-container text-white border-primary-container' : 'text-primary-container border-primary-container/20 hover:bg-primary-container/5'}`}
+                      title={getExerciseBookmark(ex._id) ? 'Remove bookmark' : 'Bookmark exercise question'}
+                    >
+                      <Bookmark size={18} fill={getExerciseBookmark(ex._id) ? 'currentColor' : 'none'} />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-14">
+                  {ex.options.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={!isStudent || (hasFeedback && feedback.isCorrect)}
+                      onClick={() => setSelectedAnswers((prev) => ({ ...prev, [ex._id]: idx }))}
+                      className={`p-4 rounded-xl border flex items-center gap-4 transition-all text-left ${
+                        isStudent
+                          ? hasFeedback
+                            ? idx === feedback.correctAnswer
+                              ? 'bg-emerald-500/5 border-emerald-500/20 ring-1 ring-emerald-500/10'
+                              : selectedAnswers[ex._id] === idx
+                                ? 'bg-error/5 border-error/20'
+                                : 'bg-surface/50 border-outline/5 opacity-70'
+                            : selectedAnswers[ex._id] === idx
+                              ? 'bg-primary-container/5 border-primary-container/30 ring-1 ring-primary-container/10'
+                              : 'bg-surface/50 border-outline/5 hover:border-primary-container/20'
+                          : idx === ex.correctAnswer
+                            ? 'bg-emerald-500/5 border-emerald-500/20 ring-1 ring-emerald-500/10'
+                            : 'bg-surface/50 border-outline/5 opacity-60'
+                      }`}
+                    >
+                      <span className="text-[10px] font-black uppercase text-outline w-4">{String.fromCharCode(65 + idx)}</span>
+                      <span className={`text-sm font-bold ${(!isStudent && idx === ex.correctAnswer) || (hasFeedback && idx === feedback.correctAnswer) ? 'text-emerald-700' : 'text-on-surface'}`}>{opt}</span>
+                      {((!isStudent && idx === ex.correctAnswer) || (hasFeedback && idx === feedback.correctAnswer)) && <CheckCircle2 size={16} className="ml-auto text-emerald-600" />}
+                    </button>
+                  ))}
+                </div>
+                {isStudent && hasFeedback && (
+                  <div className="pl-14 mt-5">
+                      <div className={`rounded-xl border px-5 py-4 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
+                        <p className="font-bold text-sm">
+                          {feedback.isCorrect ? 'Correct answer. Well done.' : `Incorrect. Correct answer: ${feedback.correctOption}`}
+                        </p>
+                        {!feedback.isCorrect && feedback.hint && (
+                          <p className="text-xs mt-1 opacity-80">Hint: {feedback.hint}</p>
+                        )}
+                      </div>
+                  </div>
+                )}
+                    </>
+                  );
+                })()}
+              </div>
+            ))}
+            {isStudent && (
+              <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur border border-outline-variant rounded-2xl p-5 shadow-[0px_12px_32px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black text-on-surface">Ready to check your answers?</p>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    Submit after completing the full exercise set. Incorrect answers can be retried.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {Object.values(exerciseFeedback).some((f) => f && !f.isCorrect) && (
+                    <button onClick={handleRetryIncorrectExercises} className="px-5 py-3 rounded-xl border border-outline/20 text-xs font-bold hover:bg-surface transition-colors">
+                      Retry Incorrect
+                    </button>
+                  )}
+                  <button
+                    onClick={handleSubmitExerciseAttempt}
+                    disabled={isSubmittingAttempt || exercises.every((ex) => exerciseFeedback[ex._id]?.isCorrect)}
+                    className="bg-primary-container text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-primary-container/20"
+                  >
+                    {isSubmittingAttempt ? 'Submitting...' : 'Submit Attempt'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-32 text-center opacity-40">
+             <ClipboardList size={64} className="mx-auto mb-6 text-outline" />
+             <p className="text-xl font-bold uppercase tracking-widest">No Exercises Yet</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TopicExercise;

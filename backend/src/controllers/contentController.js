@@ -1,8 +1,7 @@
 const contentService = require('../services/contentService');
 const mongoose = require('mongoose');
-const { Subject, Chapter, Topic, User, Progress } = require('../models');
-const notificationService = require('../services/notificationService');
-const emailService = require('../services/emailService');
+const { Chapter, Topic } = require('../models');
+const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -19,48 +18,7 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
  */
 class ContentController {
   notifyStudentsOfSubjectUpdate = async (subjectId, title, message) => {
-    const subject = await Subject.findById(subjectId).select('subjectName');
-    if (!subject) {
-      return;
-    }
-
-    const chapters = await Chapter.find({ subject: subjectId }).select('_id').lean();
-    if (!chapters.length) {
-      return;
-    }
-
-    const chapterIds = chapters.map((chapter) => chapter._id);
-    const topics = await Topic.find({ chapter: { $in: chapterIds } }).select('_id').lean();
-    if (!topics.length) {
-      return;
-    }
-
-    const topicIds = topics.map((topic) => topic._id);
-    const studentIds = await Progress.distinct('studentId', { topicId: { $in: topicIds } });
-    if (!studentIds.length) {
-      return;
-    }
-
-    const students = await User.find({
-      _id: { $in: studentIds },
-      role: 'student',
-      status: 'active',
-    })
-      .select('_id email firstName')
-      .lean();
-
-    await Promise.all(
-      students.map(async (student) => {
-        await notificationService.sendNotification(student._id, title, message);
-        if (student.email) {
-          await emailService.sendEmail(
-            student.email,
-            `${subject.subjectName} update`,
-            `Hi ${student.firstName || 'Student'},\n\n${message}`
-          );
-        }
-      })
-    );
+    await notifyStudentsOfSubjectUpdate(subjectId, title, message);
   };
 
   // ==================================================================================
@@ -114,6 +72,28 @@ class ContentController {
 
       const chapters = await contentService.getChaptersBySubject(subjectId);
       res.status(200).json(chapters);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Handles the request to get a single chapter by ID.
+   */
+  getChapterById = async (req, res, next) => {
+    try {
+      const { chapterId } = req.params;
+
+      if (!isValidObjectId(chapterId)) {
+        return res.status(400).json({ message: 'Invalid chapter id format.' });
+      }
+
+      const chapter = await contentService.getChapterById(chapterId);
+      if (!chapter) {
+        return res.status(404).json({ message: 'Chapter not found.' });
+      }
+
+      res.status(200).json(chapter);
     } catch (error) {
       next(error);
     }
@@ -388,6 +368,10 @@ class ContentController {
 
       if (!req.body?.videoUrl) {
         return res.status(400).json({ message: 'videoUrl is required.' });
+      }
+
+      if (!req.body?.title) {
+        return res.status(400).json({ message: 'title is required.' });
       }
 
       const video = await contentService.addVideoToTopic(req.body, topicId);

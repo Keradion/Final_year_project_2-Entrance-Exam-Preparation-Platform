@@ -9,6 +9,7 @@ const pendingUserSchema = new mongoose.Schema(
     phoneNumber: { type: String },
     role: { type: String, default: 'student' },
     stream: { type: String },
+    gradeLevel: { type: String },
     profileImage: { type: String },
     verificationCode: { type: String, required: true },
     expiresAt: { type: Date, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) }, // 24 hours

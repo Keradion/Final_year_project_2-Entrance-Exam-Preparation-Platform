@@ -25,6 +25,7 @@ class AuthController {
         role,
         profileImage,
         stream,
+        gradeLevel,
       } = req.body || {};
       const uploadedProfileImage = req.file
         ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
@@ -38,6 +39,7 @@ class AuthController {
         phoneNumber,
         role,
         stream,
+        gradeLevel,
         profileImage: uploadedProfileImage || profileImage,
       });
 
@@ -212,7 +214,7 @@ class AuthController {
       }
 
       const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
-      const { firstName, lastName, phoneNumber, profileImage, stream } = req.body || {};
+      const { firstName, lastName, phoneNumber, profileImage, stream, gradeLevel } = req.body || {};
       const uploadedProfileImage = req.file
         ? `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`
         : undefined;
@@ -222,6 +224,7 @@ class AuthController {
         lastName,
         phoneNumber,
         stream,
+        gradeLevel,
         profileImage: uploadedProfileImage || profileImage,
       });
 
@@ -257,6 +260,47 @@ class AuthController {
         success: true,
         message: result.message,
         data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAiSettings(req, res, next) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
+      const settings = await authService.getAiSettings(userId);
+      res.status(200).json({
+        success: true,
+        data: settings,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateGeminiApiKey(req, res, next) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
+      const settings = await authService.updateGeminiApiKey(userId, req.body?.apiKey);
+      res.status(200).json({
+        success: true,
+        message: 'Gemini API key saved',
+        data: settings,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async removeGeminiApiKey(req, res, next) {
+    try {
+      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
+      const settings = await authService.removeGeminiApiKey(userId);
+      res.status(200).json({
+        success: true,
+        message: 'Gemini API key removed',
+        data: settings,
       });
     } catch (error) {
       next(error);

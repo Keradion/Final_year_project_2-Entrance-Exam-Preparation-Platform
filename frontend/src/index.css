@@ -33,10 +33,67 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #1e293b;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
 }
 
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.025em;
+}
+
+/*
+  App-wide visual alignment with the login/register pages.
+  The auth screens define the product style: soft background, white cards,
+  outline-variant borders, primary blue actions, and compact rounded controls.
+*/
+body :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) {
+  background-color: #ffffff;
+  border-color: color-mix(in srgb, var(--color-outline) 20%, transparent);
+  border-radius: 0.5rem;
+  color: var(--color-on-surface);
+  font-weight: 500;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+body :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea):focus {
+  border-color: var(--color-primary-container) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-container);
+  outline: none;
+}
+
+body :is(label, .text-outline) {
+  color: var(--color-outline);
+}
+
+body .bg-on-surface.text-white,
+body .bg-on-surface.text-on-primary {
+  background-color: var(--color-primary-container) !important;
+  color: var(--color-on-primary) !important;
+}
+
+body .text-white {
+  color: var(--color-on-primary);
+}
+
+body .bg-white.border:not([class*="border-primary-container"]):not([class*="border-error"]):not([class*="border-emerald"]):not([class*="border-amber"]):not([class*="border-rose"]):not([class*="border-indigo"]) {
+  border-color: var(--color-outline-variant);
+}
+
+body .rounded-2xl {
+  border-radius: 0.75rem;
+}
+
+body .shadow-2xl,
+body [class*="shadow-["] {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+body .bg-surface,
+body .bg-surface\/50 {
+  background-color: var(--color-surface);
+}
+
+body .text-on-surface-variant\/60,
+body .text-on-surface-variant\/70 {
+  color: var(--color-on-surface-variant);
 }
