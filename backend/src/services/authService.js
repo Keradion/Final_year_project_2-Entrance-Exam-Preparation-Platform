@@ -1,7 +1,7 @@
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { User, PendingUser } = require('../models');
+const { User, PendingUser, PasswordResetToken } = require('../models');
 const { getRedisClient } = require('../config/redis');
 const notificationService = require('./notificationService');
 const emailService = require('./emailService');
@@ -203,6 +203,15 @@ class AuthService {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
 
+    // Always persist in MongoDB so reset works even if Redis is unavailable.
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await PasswordResetToken.deleteMany({ userId: user._id });
+    await PasswordResetToken.create({
+      token: resetTokenHash,
+      userId: user._id,
+      expiresAt,
+    });
+
     // Try to store in Redis, but continue if Redis is unavailable
     const redis = getRedisClient();
     if (redis) {
@@ -222,11 +231,12 @@ class AuthService {
     const frontendBase = process.env.RESET_PASSWORD_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
     const resetLink = `${frontendBase.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
-    await emailService.sendEmail(
-      user.email,
-      'Reset your password',
-      `Hi ${user.firstName},\n\nUse the link below to reset your password:\n${resetLink}\n\nThis link will expire in 10 minutes.`,
-      `<!DOCTYPE html>
+    emailService
+      .sendEmail(
+        user.email,
+        'Reset your password',
+        `Hi ${user.firstName},\n\nUse the link below to reset your password:\n${resetLink}\n\nThis link will expire in 10 minutes.`,
+        `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -276,7 +286,14 @@ class AuthService {
   </table>
 </body>
 </html>`
-    );
+        , { immediate: true }
+      )
+      .catch((err) => {
+        logger.warn('Password reset email could not be sent', {
+          email,
+          error: err.message,
+        });
+      });
 
     return {
       message: 'If any account exists for this email, a reset link will be sent.',
@@ -303,30 +320,23 @@ class AuthService {
           error: err.message,
         });
       }
-    } else {
-      logger.warn('Redis not available during password reset token validation');
-      // Without Redis, we can't validate the token
-      // This is a security risk for production!
-      // For now, just accept any token and proceed
-      userId = 'unknown';
+    }
+
+    // Fallback to Mongo token storage when Redis is unavailable or missing this key.
+    if (!userId) {
+      const tokenRecord = await PasswordResetToken.findOne({
+        token: resetTokenHash,
+        expiresAt: { $gt: new Date() },
+      });
+      if (tokenRecord) {
+        userId = tokenRecord.userId.toString();
+      }
     }
 
     if (!userId) {
       throw {
         status: 400,
         message: 'Invalid or expired reset token',
-      };
-    }
-
-    // If userId is 'unknown' (Redis not available), we can't verify
-    // For development without Redis, you might want to accept it anyway
-    // But this is not recommended for production
-
-    // For now, only proceed if we have a valid userId from Redis
-    if (userId === 'unknown') {
-      throw {
-        status: 400,
-        message: 'Token validation requires Redis. Please start Redis server.',
       };
     }
 
@@ -354,6 +364,8 @@ class AuthService {
         });
       }
     }
+
+    await PasswordResetToken.deleteOne({ token: resetTokenHash });
 
     return { message: 'Password reset successful' };
   }

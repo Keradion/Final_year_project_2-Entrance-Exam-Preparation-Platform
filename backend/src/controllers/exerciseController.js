@@ -3,6 +3,7 @@ const ExerciseProblem = require('../models/ExerciseProblem');
 const Topic = require('../models/Topic');
 const Chapter = require('../models/Chapter');
 const Answer = require('../models/Answer');
+const appCache = require('../services/appCache');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
 const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
@@ -274,6 +275,8 @@ exports.submitProblemAnswer = asyncHandler(async (req, res, next) => {
     isCorrect,
   });
 
+  await appCache.invalidateUserProgress(String(studentId));
+
   res.status(201).json({
     success: true,
     isCorrect,
@@ -309,6 +312,8 @@ exports.submitExerciseAnswer = asyncHandler(async (req, res, next) => {
     submittedAnswer: String(answerIndex),
     isCorrect,
   });
+
+  await appCache.invalidateUserProgress(String(studentId));
 
   res.status(201).json({
     success: true,

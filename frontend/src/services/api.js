@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5005/api', // adjust if backend changed from v1
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,5 +17,11 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+/** Origin (no /api) for absolute URLs to uploaded files */
+export function resolvePublicApiOrigin() {
+  const raw = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  return String(raw).replace(/\/?api\/?$/, '').replace(/\/$/, '') || 'http://localhost:5000';
+}
 
 export default api;

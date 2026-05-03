@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { LockKeyhole, Eye, EyeOff, GraduationCap, ShieldCheck, ArrowRight, CheckCircle } from 'lucide-react';
 import { resetPassword } from '../services/auth';
+import ThemeToggle from '../components/ThemeToggle';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -46,16 +47,17 @@ const ResetPassword = () => {
   if (!token) {
     return (
       <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
-        <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-white border-b border-slate-200">
+        <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-header-surface/95 backdrop-blur border-b border-outline/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
                <GraduationCap className="text-on-primary" size={20} />
             </div>
             <h1 className="text-xl font-bold text-on-surface tracking-tight">Entrance Exam Prep</h1>
           </div>
+          <ThemeToggle />
         </header>
         <main className="flex-grow flex items-center justify-center pt-24 px-6">
-          <div className="mx-auto w-full max-w-lg rounded-lg border border-outline/20 bg-white p-stack-lg shadow-sm">
+          <div className="mx-auto w-full max-w-lg rounded-lg border border-outline/20 bg-card p-stack-lg shadow-sm">
             <h2 className="text-2xl font-bold text-on-surface mb-2">Invalid Link</h2>
             <p className="text-on-surface-variant mb-6">The recovery token is missing or has expired.</p>
             <Link to="/forgot-password" className="text-primary-container font-semibold hover:underline">
@@ -70,17 +72,18 @@ const ResetPassword = () => {
   return (
     <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
       {/* TopAppBar Shell */}
-      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-white border-b border-slate-200">
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-header-surface/95 backdrop-blur border-b border-outline/10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
              <GraduationCap className="text-on-primary" size={20} />
           </div>
           <h1 className="text-xl font-bold text-on-surface tracking-tight">Entrance Exam Prep</h1>
         </div>
+        <ThemeToggle />
       </header>
 
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-6">
-        <div className="w-full max-w-lg bg-white rounded-lg border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col justify-center">
+        <div className="w-full max-w-lg bg-card rounded-lg border border-outline-variant p-stack-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)] flex flex-col justify-center">
           <div className="mb-stack-lg">
             <h3 className="text-2xl font-semibold text-on-surface mb-2">Reset Password</h3>
             <p className="text-body-md text-on-surface-variant">Define your new secure portal password.</p>
@@ -175,10 +178,10 @@ const ResetPassword = () => {
         </div>
       </main>
 
-      <footer className="w-full py-8 px-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50 border-t border-slate-200">
+      <footer className="w-full py-8 px-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-4 bg-surface border-t border-outline/10">
         <div className="flex flex-col items-center md:items-start gap-1">
-          <span className="text-sm font-semibold text-slate-900">Entrance Exam Prep</span>
-          <p className="text-xs text-slate-500">© 2026 Ethiopian University Entrance Exam Preparation Platform. All rights reserved.</p>
+          <span className="text-sm font-semibold text-on-surface">Entrance Exam Prep</span>
+          <p className="text-xs text-on-surface-variant">© 2026 Ethiopian University Entrance Exam Preparation Platform. All rights reserved.</p>
         </div>
       </footer>
     </div>

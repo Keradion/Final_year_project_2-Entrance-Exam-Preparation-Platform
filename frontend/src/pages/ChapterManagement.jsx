@@ -1,33 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { BookOpen, Layers, Plus, Trash2, Edit2, ChevronLeft, Save, X, GraduationCap, LogOut, Menu, CircleUserRound } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Layers, Plus, Trash2, Edit2, ChevronLeft, Save, X } from 'lucide-react';
 import api from '../services/api';
 import { getChaptersBySubject, createChapter, updateChapter, deleteChapter } from '../services/chapter';
 import { getSubjectChapterProgress } from '../services/engagement';
 import { useAuth } from '../context/AuthContext';
 
-const SIDEBAR_ITEMS = [
-  { key: 'courses', label: 'Course Management', icon: <BookOpen size={20} /> },
-];
-
 const ChapterManagement = ({ isStudent = false }) => {
   const { subjectId } = useParams();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
   const [subject, setSubject] = useState(null);
   const [chapters, setChapters] = useState([]);
-  const [subjectProgress, setSubjectProgress] = useState(null);
-  const [chapterProgressById, setChapterProgressById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // CRUD State
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [chapterForm, setChapterForm] = useState({ chapterName: '', chapterDescription: '' });
+  const [subjectProgress, setSubjectProgress] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -58,13 +52,8 @@ const ChapterManagement = ({ isStudent = false }) => {
         const progressResponse = await getSubjectChapterProgress(subjectId);
         const progressData = progressResponse?.data || {};
         setSubjectProgress(progressData.subjectProgress || null);
-        setChapterProgressById((progressData.chapters || []).reduce((acc, chapter) => {
-          acc[String(chapter.chapterId)] = chapter;
-          return acc;
-        }, {}));
       } else {
         setSubjectProgress(null);
-        setChapterProgressById({});
       }
     } catch (err) {
       setError('Failed to load chapter data.');
@@ -122,8 +111,7 @@ const ChapterManagement = ({ isStudent = false }) => {
   };
 
   const content = (
-    <main className="flex-grow p-4 sm:p-gutter overflow-y-auto bg-white">
-      <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6 sm:mb-10 gap-5 sm:gap-6">
           <div className="min-w-0">
             <button onClick={() => navigate(isStudent ? '/dashboard' : '/teacher')} className="flex items-center gap-2 text-[10px] font-black text-outline uppercase tracking-widest hover:text-primary-container transition-all mb-4">
@@ -134,17 +122,27 @@ const ChapterManagement = ({ isStudent = false }) => {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-4 w-full lg:w-auto">
             {isStudent && subjectProgress && (
-              <div className="bg-white px-5 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] min-w-0 sm:min-w-[220px]">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Subject Progress</span>
+              <div className="bg-white px-5 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] min-w-0 sm:min-w-[280px] max-w-full">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Topic completion</span>
                   <span className="text-sm font-black text-primary-container">{subjectProgress.completionPercentage || 0}%</span>
                 </div>
+                <p className="text-[11px] text-on-surface-variant leading-snug mb-3">
+                  {typeof subjectProgress.totalTopics === 'number' && subjectProgress.totalTopics > 0 ? (
+                    <>
+                      Lesson topics marked complete across this subject ({subject?.subjectName || 'subject'}):{' '}
+                      <span className="font-semibold text-on-surface">
+                        {subjectProgress.completedTopics ?? 0} of {subjectProgress.totalTopics}
+                      </span>
+                      .
+                    </>
+                  ) : (
+                    <>No published lesson topics are recorded for this subject yet.</>
+                  )}
+                </p>
                 <div className="h-2 rounded-full bg-surface border border-outline/10 overflow-hidden">
                   <div className="h-full bg-primary-container" style={{ width: `${subjectProgress.completionPercentage || 0}%` }} />
                 </div>
-                <p className="text-[11px] text-on-surface-variant mt-2">
-                  {subjectProgress.completedTopics || 0} of {subjectProgress.totalTopics || 0} topics completed
-                </p>
               </div>
             )}
             <div className="bg-white px-5 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center">
@@ -210,9 +208,7 @@ const ChapterManagement = ({ isStudent = false }) => {
                 </div>
               </div>
             ) : (
-              chapters.map(chapter => {
-                const progress = chapterProgressById[String(chapter._id)] || {};
-                return (
+              chapters.map((chapter) => (
                 <div key={chapter._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 group">
                   {editingId === chapter._id ? (
                     <div className="flex-grow flex flex-col gap-6 w-full animate-in fade-in">
@@ -258,17 +254,6 @@ const ChapterManagement = ({ isStudent = false }) => {
                           ) : (
                             <p className="text-on-surface-variant/30 italic text-sm font-medium">No description provided for this chapter.</p>
                           )}
-                          {isStudent && (
-                            <div className="mt-4 max-w-md">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-on-surface-variant mb-2">
-                                <span>Topic completion</span>
-                                <span>{progress.completedTopics || 0}/{progress.totalTopics || 0} topics • {progress.completionPercentage || 0}%</span>
-                              </div>
-                              <div className="h-2 rounded-full bg-surface border border-outline/10 overflow-hidden">
-                                <div className="h-full bg-primary-container" style={{ width: `${progress.completionPercentage || 0}%` }} />
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0 border-outline/5 w-full md:w-auto">
@@ -307,127 +292,22 @@ const ChapterManagement = ({ isStudent = false }) => {
                     </>
                   )}
                 </div>
-                );
-              })
+              ))
             )}
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 
-  if (isStudent) {
-    return (
-      <>
-        {toast.show && (
-          <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border animate-in slide-in-from-bottom-4 ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
-            <p className="font-bold">{toast.message}</p>
-          </div>
-        )}
-        {content}
-      </>
-    );
-  }
-
   return (
-    <div className="h-screen bg-background text-on-surface font-sans flex overflow-hidden">
+    <>
       {toast.show && (
         <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border animate-in slide-in-from-bottom-4 ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
           <p className="font-bold">{toast.message}</p>
         </div>
       )}
-
-      {/* Sidebar (Desktop) */}
-      <aside className="w-[280px] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shadow-[4px_0_12px_rgba(0,0,0,0.02)] shrink-0 h-full sticky top-0">
-        <div className="p-gutter h-20 flex items-center gap-3 border-b border-outline/5 px-8">
-          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
-            <GraduationCap className="text-on-primary" size={20} />
-          </div>
-          <h2 className="text-xl font-semibold tracking-tight">Entrance Exam Prep</h2>
-        </div>
-        <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
-          <div className="h-4"></div>
-          {SIDEBAR_ITEMS.map((item) => (
-            <Link
-              key={item.key}
-              to={isStudent ? "/dashboard" : "/teacher"}
-              className="flex items-center gap-3 w-full px-4 py-3 transition-all font-semibold rounded-lg border-l-4 bg-primary-container/10 text-primary-container border-primary-container"
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-outline/5">
-          <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 text-error hover:bg-error/5 transition-all font-semibold rounded-lg">
-            <LogOut size={20} /> Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile Drawer Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          <div className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
-            <div className="p-gutter h-20 flex items-center justify-between border-b border-outline/5 px-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
-                  <GraduationCap className="text-on-primary" size={20} />
-                </div>
-                <span className="text-xl font-semibold tracking-tight">Entrance Exam Prep</span>
-              </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="text-on-surface-variant p-2">
-                <X size={24} />
-              </button>
-            </div>
-            <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
-              <div className="h-4"></div>
-              {SIDEBAR_ITEMS.map((item) => (
-                <Link
-                  key={item.key}
-                  to={isStudent ? "/dashboard" : "/teacher"}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-4 py-3 transition-all font-semibold rounded-lg border-l-4 bg-primary-container/10 text-primary-container border-primary-container"
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="p-4 border-t border-outline/5">
-              <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 text-error hover:bg-error/5 transition-all font-semibold rounded-lg">
-                <LogOut size={20} /> Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-outline/5 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2"><Menu size={24} /></button>
-            <h2 className="text-xl font-semibold text-on-surface">Course Management</h2>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="hidden md:block text-right">
-               <p className="text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
-               <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">{isStudent ? 'Scholar' : 'Teacher'}</p>
-             </div>
-             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity">
-               {user?.profileImage ? (
-                 <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-               ) : (
-                 <CircleUserRound size={24} />
-               )}
-             </Link>
-          </div>
-        </header>
-
-        {content}
-      </div>
-    </div>
+      {content}
+    </>
   );
 };
 

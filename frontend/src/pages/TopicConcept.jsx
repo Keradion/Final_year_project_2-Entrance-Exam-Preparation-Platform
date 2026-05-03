@@ -1,9 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { BookOpen, Trash2, CheckCircle2, Image, FileText, X, Paperclip, UploadCloud, Edit2 } from 'lucide-react';
-import api from '../services/api';
+import { BookOpen, Trash2, CheckCircle2, FileText, X, Paperclip, UploadCloud, Edit2 } from 'lucide-react';
+import api, { resolvePublicApiOrigin } from '../services/api';
+
+/** Split on blank lines so long pasted text reads as formal paragraphs */
+const toParagraphBlocks = (text) => {
+  const raw = String(text || '').replace(/\r\n/g, '\n').trim();
+  if (!raw) return [];
+  return raw
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+};
 
 const ConceptBody = ({ content, isStudent }) => {
+  const blocks = toParagraphBlocks(content);
+
   if (!isStudent) {
     return (
       <p className="text-sm text-on-surface-variant mt-3 leading-7 whitespace-pre-line line-clamp-3">
@@ -13,8 +25,20 @@ const ConceptBody = ({ content, isStudent }) => {
   }
 
   return (
-    <div className="mt-4 text-base leading-8 text-on-surface whitespace-pre-line">
-      {content}
+    <div className="mt-6 max-w-[65ch] border-l-[3px] border-primary-container/25 pl-5 sm:pl-7 ml-0.5">
+      <div className="space-y-5">
+        {blocks.map((block, idx) => (
+          <p
+            key={idx}
+            className="text-[1.05rem] sm:text-[1.0625rem] leading-[1.75] text-on-surface font-normal tracking-normal whitespace-pre-line"
+          >
+            {block}
+          </p>
+        ))}
+      </div>
+      {blocks.length === 0 && content && (
+        <p className="text-[1.05rem] leading-[1.75] text-on-surface whitespace-pre-line">{content}</p>
+      )}
     </div>
   );
 };
@@ -66,16 +90,15 @@ const TopicConcept = () => {
   };
 
   const [editingId, setEditingId] = useState(null);
-  
+
   const handleEdit = (concept) => {
     setEditingId(concept._id);
     setNewConcept({ title: concept.title, content: concept.content });
     if (concept.contentImageUrl) {
-      setFilePreview(`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${concept.contentImageUrl}`);
+      setFilePreview(`${resolvePublicApiOrigin()}${concept.contentImageUrl}`);
     } else {
       setFilePreview(null);
     }
-    // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -94,7 +117,7 @@ const TopicConcept = () => {
     if (!newConcept.content.trim()) {
       return showToast('Concept content is required.', 'error');
     }
-    
+
     setIsSaving(true);
     try {
       const formData = new FormData();
@@ -106,12 +129,12 @@ const TopicConcept = () => {
 
       if (editingId) {
         await api.put(`/content/concepts/${editingId}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
         showToast('Concept updated successfully!');
       } else {
         await api.post(`/content/topics/${topic._id}/concepts`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
         showToast('New concept published to topic successfully!');
       }
@@ -123,7 +146,10 @@ const TopicConcept = () => {
       if (fileInputRef.current) fileInputRef.current.value = '';
       fetchConcepts();
     } catch (err) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to process concept. Please check your file size and type.';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Failed to process concept. Please check your file size and type.';
       showToast(msg, 'error');
     } finally {
       setIsSaving(false);
@@ -146,69 +172,87 @@ const TopicConcept = () => {
   return (
     <div className="py-6 space-y-10 animate-in slide-in-from-bottom-4 duration-500">
       {toast.show && (
-        <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
+        <div
+          className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${
+            toast.type === 'error'
+              ? 'bg-error/10 border-error/20 text-error'
+              : 'bg-primary-container/10 border-primary-container/20 text-primary-container'
+          }`}
+        >
           <p className="font-bold">{toast.message}</p>
         </div>
       )}
 
       <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-10`}>
-        {/* Creator Panel */}
         {!isStudent && (
           <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-8 h-fit">
-          <div className="flex items-center justify-between">
-             <div>
-               <h3 className="text-2xl font-bold text-on-surface">{editingId ? 'Edit Concept' : 'Concept Builder'}</h3>
-               <p className="text-on-surface-variant/60 text-sm font-medium mt-1">{editingId ? 'Modify existing learning material.' : 'Design and publish learning materials.'}</p>
-             </div>
-             <div className="w-14 h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
-               <BookOpen size={28} />
-             </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Concept Title</label>
-              <input 
-                value={newConcept.title} 
-                onChange={e => setNewConcept({...newConcept, title: e.target.value})} 
-                placeholder="e.g. Fundamental Principles of..." 
-                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm" 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Content & Explanation</label>
-              <textarea 
-                value={newConcept.content} 
-                onChange={e => setNewConcept({...newConcept, content: e.target.value})} 
-                placeholder="Explain the topic in depth..." 
-                rows="6" 
-                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-medium text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm" 
-              />
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-on-surface">{editingId ? 'Edit Concept' : 'Concept Builder'}</h3>
+                <p className="text-on-surface-variant/60 text-sm font-medium mt-1">
+                  {editingId ? 'Modify existing learning material.' : 'Design and publish learning materials.'}
+                </p>
+              </div>
+              <div className="w-14 h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
+                <BookOpen size={28} />
+              </div>
             </div>
 
-            {/* File Upload Area */}
-            <div className="space-y-2">
-               <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Supporting Assets (Images/PDF)</label>
-               <div 
-                 onClick={() => fileInputRef.current.click()}
-                 className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedFile ? 'border-primary-container bg-primary-container/5' : 'border-outline/20 hover:border-primary-container/40 hover:bg-surface'}`}
-               >
-                 <input 
-                   type="file" 
-                   ref={fileInputRef} 
-                   onChange={handleFileChange} 
-                   className="hidden" 
-                   accept="image/*,application/pdf"
-                 />
-                 
-                 {selectedFile ? (
-                   <div className="flex flex-col items-center gap-3">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Concept Title</label>
+                <input
+                  value={newConcept.title}
+                  onChange={(e) => setNewConcept({ ...newConcept, title: e.target.value })}
+                  placeholder="e.g. Fundamental Principles of..."
+                  className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Content & Explanation</label>
+                <textarea
+                  value={newConcept.content}
+                  onChange={(e) => setNewConcept({ ...newConcept, content: e.target.value })}
+                  placeholder="Explain the topic in depth..."
+                  rows="6"
+                  className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-medium text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">
+                  Supporting Assets (Images/PDF)
+                </label>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
+                  }}
+                  onClick={() => fileInputRef.current.click()}
+                  className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedFile ? 'border-primary-container bg-primary-container/5' : 'border-outline/20 hover:border-primary-container/40 hover:bg-surface'}`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*,application/pdf"
+                  />
+
+                  {selectedFile ? (
+                    <div className="flex flex-col items-center gap-3">
                       {filePreview ? (
                         <div className="w-32 h-32 rounded-lg overflow-hidden border border-outline/10 shadow-sm relative group">
                           <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setFilePreview(null); }}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFile(null);
+                              setFilePreview(null);
+                            }}
                             className="absolute inset-0 bg-on-surface/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
                           >
                             <X size={24} />
@@ -216,129 +260,170 @@ const TopicConcept = () => {
                         </div>
                       ) : (
                         <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-outline/10 shadow-sm">
-                           <div className="p-2 bg-primary-container/10 rounded-lg text-primary-container">
-                             {selectedFile.type.includes('pdf') ? <FileText size={20} /> : <Paperclip size={20} />}
-                           </div>
-                           <div className="text-left">
-                              <p className="text-xs font-bold text-on-surface truncate max-w-[150px]">{selectedFile.name}</p>
-                              <p className="text-[10px] text-outline">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                           </div>
-                           <button onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }} className="p-1 hover:bg-error/5 text-outline hover:text-error transition-colors rounded">
-                             <X size={16} />
-                           </button>
+                          <div className="p-2 bg-primary-container/10 rounded-lg text-primary-container">
+                            {selectedFile.type.includes('pdf') ? <FileText size={20} /> : <Paperclip size={20} />}
+                          </div>
+                          <div className="text-left">
+                            <p className="text-xs font-bold text-on-surface truncate max-w-[150px]">{selectedFile.name}</p>
+                            <p className="text-[10px] text-outline">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFile(null);
+                            }}
+                            className="p-1 hover:bg-error/5 text-outline hover:text-error transition-colors rounded"
+                          >
+                            <X size={16} />
+                          </button>
                         </div>
                       )}
-                   </div>
-                 ) : (
-                   <div className="text-center">
-                     <UploadCloud size={40} className="mx-auto text-outline/40 mb-3" />
-                     <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Click to upload assets</p>
-                     <p className="text-[10px] text-outline mt-1 font-medium">Max size: 20MB (JPG, PNG, PDF)</p>
-                   </div>
-                 )}
-               </div>
-            </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <UploadCloud size={40} className="mx-auto text-outline/40 mb-3" />
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                        Click to upload assets
+                      </p>
+                      <p className="text-[10px] text-outline mt-1 font-medium">Max size: 20MB (JPG, PNG, PDF)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <div className="flex gap-4">
-              {editingId && (
-                <button 
-                  onClick={handleCancelEdit} 
-                  className="flex-grow bg-white border border-outline/20 text-on-surface px-6 py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-surface transition-all"
+              <div className="flex gap-4">
+                {editingId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="flex-grow bg-white border border-outline/20 text-on-surface px-6 py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-surface transition-all"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleAddConcept}
+                  disabled={isSaving || !newConcept.title}
+                  className={`flex-grow ${editingId ? 'bg-primary-container' : 'bg-on-surface'} text-white py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:brightness-110 active:opacity-80 transition-all shadow-xl shadow-on-surface/10 disabled:opacity-50`}
                 >
-                  Cancel
+                  {isSaving ? 'Processing...' : editingId ? 'Update Concept' : 'Publish Concept'}
                 </button>
-              )}
-              <button 
-                onClick={handleAddConcept} 
-                disabled={isSaving || !newConcept.title} 
-                className={`flex-grow ${editingId ? 'bg-primary-container' : 'bg-on-surface'} text-white py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:brightness-110 active:opacity-80 transition-all shadow-xl shadow-on-surface/10 disabled:opacity-50`}
-              >
-                {isSaving ? 'Processing...' : (editingId ? 'Update Concept' : 'Publish Concept')}
-              </button>
+              </div>
             </div>
           </div>
-        </div>
         )}
 
-        {/* List Panel */}
-        <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline px-2">{isStudent ? 'Learning Materials' : 'Knowledge Base'} ({concepts.length})</h4>
+        <div className="space-y-6 min-w-0">
+          <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant px-1">
+            {isStudent ? 'Concept notes' : 'Knowledge base'}{' '}
+            {!isStudent && `(${concepts.length})`}
+          </h4>
           {loading ? (
-            <div className="flex justify-center py-20 bg-white rounded-xl border border-outline/5"><div className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></div></div>
+            <div className="flex justify-center py-20 bg-white rounded-xl border border-outline/5">
+              <div className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : concepts.length > 0 ? (
-            <div className="space-y-6">
-              {concepts.map(c => (
-                <div key={c._id} className={`${isStudent ? 'p-0 border-0 shadow-none' : 'p-6 rounded-xl border border-outline-variant'} bg-white flex flex-col gap-6 group ${isStudent ? '' : 'hover:border-primary-container hover:shadow-[0px_12px_32px_rgba(0,0,0,0.07)]'} transition-all duration-300`}>
-                  <div className="flex justify-between items-start">
-                    <div className={`${isStudent ? 'items-start' : 'items-center'} flex gap-6 w-full`}>
-                      {!isStudent && <div className="w-12 h-12 rounded-xl bg-primary-container/5 flex items-center justify-center text-primary-container border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all shrink-0">
-                        <CheckCircle2 size={24} />
-                      </div>}
-                      <div className="min-w-0 flex-1">
-                        <div>
-                          {!isStudent && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-2">Concept Note</p>}
-                          <h4 className={`${isStudent ? 'text-xl' : 'text-lg'} font-bold text-on-surface leading-tight`}>
-                            {c.title}
-                          </h4>
+            <div className={`space-y-8 ${isStudent ? '' : ''}`}>
+              {concepts.map((c) => (
+                <article
+                  key={c._id}
+                  className={`flex flex-col gap-6 group transition-all duration-300 ${
+                    isStudent
+                      ? 'rounded-xl border border-outline/10 bg-card px-6 py-8 sm:px-8 sm:py-10 shadow-sm'
+                      : 'p-6 rounded-xl border border-outline-variant bg-white hover:border-primary-container hover:shadow-[0px_12px_32px_rgba(0,0,0,0.07)]'
+                  }`}
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className={`flex gap-6 w-full min-w-0 ${isStudent ? 'items-start' : 'items-center'}`}>
+                      {!isStudent && (
+                        <div className="w-12 h-12 rounded-xl bg-primary-container/5 flex items-center justify-center text-primary-container border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all shrink-0">
+                          <CheckCircle2 size={24} />
                         </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        {!isStudent && (
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant mb-2">
+                            Concept note
+                          </p>
+                        )}
+                        {isStudent && (
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant mb-3">
+                            Reading
+                          </p>
+                        )}
+                        <h4
+                          className={`font-semibold text-on-surface tracking-tight ${
+                            isStudent ? 'text-xl sm:text-2xl leading-snug' : 'text-lg leading-tight'
+                          }`}
+                        >
+                          {c.title}
+                        </h4>
                         <ConceptBody content={c.content} isStudent={isStudent} />
                       </div>
                     </div>
                     {!isStudent && (
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                        <button 
-                          onClick={() => handleEdit(c)} 
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(c)}
                           className="text-outline hover:text-primary-container p-2.5 hover:bg-primary-container/5 rounded-lg"
                           title="Edit Concept"
                         >
-                          <Edit2 size={20}/>
+                          <Edit2 size={20} />
                         </button>
-                        <button 
-                          onClick={() => handleDelete(c._id)} 
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(c._id)}
                           className="text-outline hover:text-error p-2.5 hover:bg-error/5 rounded-lg"
                           title="Delete Concept"
                         >
-                          <Trash2 size={20}/>
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     )}
                   </div>
-                  
+
                   {c.contentImageUrl && (
-                    <div className="ml-[72px] rounded-xl overflow-hidden border border-outline/5 bg-surface/50">
-                       {c.contentImageUrl.toLowerCase().endsWith('.pdf') ? (
-                         <div className="flex items-center gap-3 p-4">
-                            <div className="w-10 h-10 bg-error/10 text-error rounded-lg flex items-center justify-center">
-                              <FileText size={20} />
-                            </div>
-                            <div>
-                               <p className="text-xs font-bold text-on-surface">Supporting Document (PDF)</p>
-                               <a 
-                                 href={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${c.contentImageUrl}`} 
-                                 target="_blank" 
-                                 rel="noreferrer"
-                                 className="text-[10px] text-primary-container font-bold uppercase tracking-wider hover:underline"
-                               >
-                                 Download File
-                               </a>
-                            </div>
-                         </div>
-                       ) : (
-                         <img 
-                           src={`${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${c.contentImageUrl}`} 
-                           alt="Concept" 
-                           className="max-h-[300px] w-full object-cover"
-                         />
-                       )}
+                    <div
+                      className={`rounded-xl overflow-hidden border border-outline/10 bg-surface/50 ${isStudent ? '' : 'ml-[72px]'}`}
+                    >
+                      {c.contentImageUrl.toLowerCase().endsWith('.pdf') ? (
+                        <div className="flex items-center gap-3 p-5">
+                          <div className="w-10 h-10 bg-error/10 text-error rounded-lg flex items-center justify-center">
+                            <FileText size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-on-surface">Supporting document (PDF)</p>
+                            <a
+                              href={`${resolvePublicApiOrigin()}${c.contentImageUrl}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-primary-container font-semibold uppercase tracking-wider hover:underline mt-1 inline-block"
+                            >
+                              Download file
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={`${resolvePublicApiOrigin()}${c.contentImageUrl}`}
+                          alt=""
+                          className="max-h-[320px] w-full object-cover"
+                        />
+                      )}
                     </div>
                   )}
-                </div>
+                </article>
               ))}
             </div>
           ) : (
-            <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-32 text-center opacity-40">
-              <BookOpen size={64} className="mx-auto mb-4 text-outline" />
-              <p className="text-lg font-bold uppercase tracking-widest text-on-surface-variant">No learning materials found.</p>
+            <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-24 text-center">
+              <BookOpen size={56} className="mx-auto mb-4 text-outline/40" />
+              <p className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest">
+                No concept notes published yet.
+              </p>
             </div>
           )}
         </div>

@@ -1,5 +1,42 @@
 // backend/src/services/emailService.js
-const emailQueue = require('../queues/emailQueue');
+const nodemailer = require('nodemailer');
+
+const getTransporter = () => {
+  const host = process.env.EMAIL_HOST;
+  const port = Number(process.env.EMAIL_PORT || 587);
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+
+  if (!host || !user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
+const sendDirectEmail = async (to, subject, body, html) => {
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    throw new Error('Email transport is not configured');
+  }
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to,
+    subject,
+    text: body,
+    html,
+  });
+};
 
 /**
  * What: This service provides a simple and clean interface for sending emails.
@@ -15,20 +52,28 @@ const emailQueue = require('../queues/emailQueue');
  *      processed multiple times.
  */
 class EmailService {
-  async sendEmail(to, subject, body, html) {
-    await emailQueue.add(
-      'send-email',
-      { to, subject, body, html },
-      {
-        // Attempt each job up to 3 times if it fails
-        attempts: 3,
-        // Wait 5 seconds before retrying a failed job
-        backoff: {
-          type: 'fixed',
-          delay: 5000,
-        },
-      }
-    );
+  async sendEmail(to, subject, body, html, options = {}) {
+    if (options.immediate || process.env.REDIS_ENABLED === 'false') {
+      await sendDirectEmail(to, subject, body, html);
+      return;
+    }
+
+    try {
+      const emailQueue = require('../queues/emailQueue');
+      await emailQueue.add(
+        'send-email',
+        { to, subject, body, html },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'fixed',
+            delay: 5000,
+          },
+        }
+      );
+    } catch (_err) {
+      await sendDirectEmail(to, subject, body, html);
+    }
   }
 }
 

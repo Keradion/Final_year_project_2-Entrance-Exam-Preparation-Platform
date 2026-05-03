@@ -1,5 +1,6 @@
 
 const { Subject, User } = require('../models');
+const emailService = require('./emailService');
 
 /**
  * ==================================================================================
@@ -63,7 +64,7 @@ class SubjectService {
     ).populate('teacher', 'firstName lastName email');
     if (!subject) throw { status: 404, message: 'Subject not found.' };
 
-    // Send email with login/register link (Non-blocking)
+    // Send the assignment email without waiting for the queue worker.
     const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
     let emailBody;
     if (isNew) {
@@ -127,14 +128,13 @@ class SubjectService {
 </html>`;
 
     // We don't await this to avoid blocking the response if email service (Redis) is slow or down
-    require('./emailService').sendEmail(
-      normalizedEmail,
-      'Subject Assignment Notification',
-      emailBody,
-      htmlBody
-    ).catch(err => {
-      console.error('Failed to queue assignment email:', err.message);
-    });
+    require('./emailService')
+      .sendEmail(normalizedEmail, 'Subject Assignment Notification', emailBody, htmlBody, {
+        immediate: true,
+      })
+      .catch((err) => {
+        console.error('Failed to send assignment email:', err.message);
+      });
 
     return { success: true, teacherId: teacher._id, subjectId: subject._id, subject, isNew };
   }
@@ -231,6 +231,51 @@ class SubjectService {
     ).populate('teacher', 'firstName lastName email');
     if (!subject) {
       throw { status: 404, message: 'Subject not found.' };
+    }
+
+    if (teacher.email) {
+      const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+      await emailService.sendEmail(
+        teacher.email,
+        'Subject Assignment Notification',
+        `Hello ${teacher.firstName || 'Teacher'},\n\nYou have been assigned to ${subject.subjectName} for Entrance Exam Prep.\n\nPortal: ${loginUrl}`,
+        `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f8fafc; color: #0f172a;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f8fafc; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow: hidden;">
+          <tr>
+            <td style="padding: 40px 48px; text-align: center; border-bottom: 1px solid #f1f5f9;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.025em;">Entrance Exam Prep</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 48px;">
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 24px; color: #334155;">Hello <strong style="color: #0f172a;">${teacher.firstName || 'Teacher'}</strong>,</p>
+              <p style="margin: 0 0 32px; font-size: 16px; line-height: 24px; color: #334155;">You have been assigned to <strong>${subject.subjectName}</strong> for Entrance Exam Prep.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 16px 32px; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Access Portal</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+  , { immediate: true }
+      );
     }
 
     return subject;

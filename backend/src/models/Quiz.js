@@ -14,6 +14,11 @@ const quizSchema = new Schema({
   description: {
     type: String
   },
+  duration: {
+    type: Number, // duration in minutes
+    required: true,
+    default: 30
+  },
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: 'User', // Teacher

@@ -1,19 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+/* Roboto: primary UI — Roboto Mono: code/math blocks inside the app */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,500;1,700&display=swap');
 @import "tailwindcss";
 
+/* Manual toggle: `.dark` on `html`; `dark:*` utilities */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-primary-container: #0056D2;
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --color-primary-container: #EB7100;
   --color-on-primary: #FFFFFF;
-  --color-surface: #F9F9F9;
+  --color-surface: #FFF7ED;
   --color-on-surface: #1A1C1C;
-  --color-surface-variant: #E2E2E2;
+  --color-surface-variant: #FED7AA;
   --color-on-surface-variant: #424654;
-  --color-outline: #737785;
-  --color-outline-variant: #C3C6D6;
+  --color-outline: #9A6A45;
+  --color-outline-variant: #FED7AA;
   --color-error: #BA1A1A;
   --color-error-container: #FFDAD6;
   --color-on-error-container: #93000A;
-  --color-background: #F9F9F9;
+  --color-background: #FFFAF5;
+
+  /* Surfaces lifted above background (cards, drawers, dropdowns using `bg-white`) */
+  --color-card: #ffffff;
+  --color-field: #ffffff;
+  --color-header-surface: #ffffff;
+  --color-white: #ffffff;
+  --color-on-error: #ffffff;
 
   --spacing-gutter: 24px;
   --spacing-stack-sm: 12px;
@@ -22,8 +36,16 @@
 }
 
 :root {
-  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
-  line-height: 1.6;
+  /* Matches @theme --font-* so Tailwind utilities and globals stay aligned */
+  font-family:
+    'Roboto',
+    ui-sans-serif,
+    system-ui,
+    sans-serif,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  font-size: 16px;
+  line-height: 1.5;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -33,12 +55,38 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
   background-color: var(--color-background);
   color: var(--color-on-surface);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.025em;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.28;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family:
+    'Roboto Mono',
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
 }
 
 /*
@@ -47,7 +95,7 @@ h1, h2, h3, h4, h5, h6 {
   outline-variant borders, primary blue actions, and compact rounded controls.
 */
 body :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) {
-  background-color: #ffffff;
+  background-color: var(--color-field);
   border-color: color-mix(in srgb, var(--color-outline) 20%, transparent);
   border-radius: 0.5rem;
   color: var(--color-on-surface);
@@ -75,6 +123,10 @@ body .text-white {
   color: var(--color-on-primary);
 }
 
+.dark body .bg-error.text-white {
+  color: var(--color-on-error);
+}
+
 body .bg-white.border:not([class*="border-primary-container"]):not([class*="border-error"]):not([class*="border-emerald"]):not([class*="border-amber"]):not([class*="border-rose"]):not([class*="border-indigo"]) {
   border-color: var(--color-outline-variant);
 }
@@ -88,6 +140,40 @@ body [class*="shadow-["] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+.dark body .shadow-2xl,
+.dark body [class*="shadow-["] {
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42);
+}
+
+@layer theme {
+  .dark {
+    color-scheme: dark;
+
+    --color-primary-container: #ff9f45;
+    --color-on-primary: #321300;
+
+    --color-surface: #221f1c;
+    --color-on-surface: #f4ebe4;
+    --color-surface-variant: #39332e;
+    --color-on-surface-variant: #d0c8c0;
+
+    --color-outline: #b09a87;
+    --color-outline-variant: #554a43;
+
+    --color-error: #ffb4ab;
+    --color-error-container: #601410;
+    --color-on-error-container: #ffdad6;
+
+    --color-background: #151311;
+
+    --color-card: #2a2724;
+    --color-field: #2e2a26;
+    --color-header-surface: #1e1b18;
+    --color-white: #2c2825;
+    --color-on-error: #ffffff;
+  }
+}
+
 body .bg-surface,
 body .bg-surface\/50 {
   background-color: var(--color-surface);
@@ -97,3 +183,5 @@ body .text-on-surface-variant\/60,
 body .text-on-surface-variant\/70 {
   color: var(--color-on-surface-variant);
 }
+
+/* Raised panels that use `bg-white` follow `--color-white` tokens above */

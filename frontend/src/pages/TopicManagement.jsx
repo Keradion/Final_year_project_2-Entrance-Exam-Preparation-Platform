@@ -1,27 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { BookOpen, Compass, Plus, Trash2, Edit2, ChevronLeft, Save, X, GraduationCap, LogOut, Menu, CircleUserRound } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Compass, Plus, Trash2, Edit2, ChevronLeft, Save, X } from 'lucide-react';
 import api from '../services/api';
 import { getTopicsByChapter, createTopic, updateTopic, deleteTopic } from '../services/chapter';
-import { getSubjectChapterProgress } from '../services/engagement';
 import { useAuth } from '../context/AuthContext';
-
-const SIDEBAR_ITEMS = [
-  { key: 'courses', label: 'Course Management', icon: <BookOpen size={20} /> },
-];
 
 const TopicManagement = ({ isStudent = false }) => {
   const { chapterId } = useParams();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
   const [chapter, setChapter] = useState(null);
   const [topics, setTopics] = useState([]);
-  const [chapterProgress, setChapterProgress] = useState(null);
-  const [topicProgressById, setTopicProgressById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   // CRUD State
@@ -59,20 +51,6 @@ const TopicManagement = ({ isStudent = false }) => {
 
       const topicsData = await getTopicsByChapter(chapterId);
       setTopics(topicsData);
-
-      if (isStudent && user?.role === 'student') {
-        const progressResponse = await getSubjectChapterProgress(currentSubjectId);
-        const progressData = progressResponse?.data || {};
-        const currentChapterProgress = (progressData.chapters || []).find((item) => String(item.chapterId) === String(chapterId));
-        setChapterProgress(currentChapterProgress || null);
-        setTopicProgressById((currentChapterProgress?.topics || []).reduce((acc, topic) => {
-          acc[String(topic.topicId)] = topic;
-          return acc;
-        }, {}));
-      } else {
-        setChapterProgress(null);
-        setTopicProgressById({});
-      }
     } catch (err) {
       setError('Failed to load topics.');
       showToast('Error loading data', 'error');
@@ -129,8 +107,7 @@ const TopicManagement = ({ isStudent = false }) => {
   };
 
   const content = (
-    <main className="flex-grow p-4 sm:p-gutter overflow-y-auto bg-white">
-      <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6 sm:mb-10 gap-5 sm:gap-6">
           <div className="min-w-0">
             <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[10px] font-black text-outline uppercase tracking-widest hover:text-primary-container transition-all mb-4">
@@ -140,24 +117,12 @@ const TopicManagement = ({ isStudent = false }) => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-4 w-full lg:w-auto">
-            {isStudent && chapterProgress && (
-              <div className="bg-white px-5 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] min-w-0 sm:min-w-[220px]">
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Chapter Progress</span>
-                  <span className="text-sm font-black text-primary-container">{chapterProgress.completionPercentage || 0}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-surface border border-outline/10 overflow-hidden">
-                  <div className="h-full bg-primary-container" style={{ width: `${chapterProgress.completionPercentage || 0}%` }} />
-                </div>
-                <p className="text-[11px] text-on-surface-variant mt-2">
-                  {chapterProgress.completedTopics || 0} of {chapterProgress.totalTopics || 0} topics completed
-                </p>
-              </div>
-            )}
+            {!isStudent && (
             <div className="bg-white px-5 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center">
               <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Topic Count</span>
               <p className="text-2xl font-bold text-primary-container leading-none">{topics.length}</p>
             </div>
+            )}
             {!isStudent && (
               <button 
                 onClick={() => { setIsAdding(true); setTopicForm({ topicName: '' }); }}
@@ -217,9 +182,7 @@ const TopicManagement = ({ isStudent = false }) => {
                 </div>
               </div>
             ) : (
-              topics.map(topic => {
-                const progress = topicProgressById[String(topic._id)] || {};
-                return (
+              topics.map((topic) => (
                 <div key={topic._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 group">
                   {editingId === topic._id ? (
                     <div className="flex-grow flex flex-col gap-6 w-full animate-in fade-in">
@@ -265,15 +228,6 @@ const TopicManagement = ({ isStudent = false }) => {
                           ) : (
                             <p className="text-on-surface-variant/30 italic text-sm font-medium">No description provided for this topic.</p>
                           )}
-                          {isStudent && (
-                            <span className={`inline-flex mt-3 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${
-                              progress.completed
-                                ? 'bg-primary-container/10 border-primary-container/20 text-primary-container'
-                                : 'bg-surface border-outline/10 text-on-surface-variant'
-                            }`}>
-                              {progress.completed ? 'Completed' : 'Not completed'}
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4 border-t md:border-t-0 pt-4 md:pt-0 border-outline/5 w-full md:w-auto">
@@ -312,127 +266,22 @@ const TopicManagement = ({ isStudent = false }) => {
                     </>
                   )}
                 </div>
-                );
-              })
+              ))
             )}
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 
-  if (isStudent) {
-    return (
-      <>
-        {toast.show && (
-          <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border animate-in slide-in-from-bottom-4 ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
-            <p className="font-bold">{toast.message}</p>
-          </div>
-        )}
-        {content}
-      </>
-    );
-  }
-
   return (
-    <div className="h-screen bg-background text-on-surface font-sans flex overflow-hidden">
+    <>
       {toast.show && (
         <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border animate-in slide-in-from-bottom-4 ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
           <p className="font-bold">{toast.message}</p>
         </div>
       )}
-
-      {/* Sidebar (Desktop) */}
-      <aside className="w-[280px] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shadow-[4px_0_12px_rgba(0,0,0,0.02)] shrink-0 h-full sticky top-0">
-        <div className="p-gutter h-20 flex items-center gap-3 border-b border-outline/5 px-8">
-          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
-            <GraduationCap className="text-on-primary" size={20} />
-          </div>
-          <h2 className="text-xl font-semibold tracking-tight">Entrance Exam Prep</h2>
-        </div>
-        <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
-          <div className="h-4"></div>
-          {SIDEBAR_ITEMS.map((item) => (
-            <Link
-              key={item.key}
-              to={isStudent ? "/dashboard" : "/teacher"}
-              className="flex items-center gap-3 w-full px-4 py-3 transition-all font-semibold rounded-lg border-l-4 bg-primary-container/10 text-primary-container border-primary-container"
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-outline/5">
-          <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 text-error hover:bg-error/5 transition-all font-semibold rounded-lg">
-            <LogOut size={20} /> Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile Drawer Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          <div className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
-            <div className="p-gutter h-20 flex items-center justify-between border-b border-outline/5 px-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
-                  <GraduationCap className="text-on-primary" size={20} />
-                </div>
-                <span className="text-xl font-semibold tracking-tight">Entrance Exam Prep</span>
-              </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="text-on-surface-variant p-2">
-                <X size={24} />
-              </button>
-            </div>
-            <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
-              <div className="h-4"></div>
-              {SIDEBAR_ITEMS.map((item) => (
-                <Link
-                  key={item.key}
-                  to={isStudent ? "/dashboard" : "/teacher"}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-4 py-3 transition-all font-semibold rounded-lg border-l-4 bg-primary-container/10 text-primary-container border-primary-container"
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="p-4 border-t border-outline/5">
-              <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 text-error hover:bg-error/5 transition-all font-semibold rounded-lg">
-                <LogOut size={20} /> Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-grow flex flex-col min-w-0">
-        <header className="h-20 bg-white border-b border-outline/5 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2"><Menu size={24} /></button>
-            <h2 className="text-xl font-semibold text-on-surface">Course Management</h2>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="hidden md:block text-right">
-               <p className="text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
-               <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">{isStudent ? 'Scholar' : 'Teacher'}</p>
-             </div>
-             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity">
-               {user?.profileImage ? (
-                 <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
-               ) : (
-                 <CircleUserRound size={24} />
-               )}
-             </Link>
-          </div>
-        </header>
-
-        {content}
-      </div>
-    </div>
+      {content}
+    </>
   );
 };
 

@@ -6,6 +6,7 @@ import ManageUsers from '../components/ManageUsers';
 import ManageSubjects from '../components/ManageCourses';
 import ManageDiscussionChannels from '../components/ManageDiscussionChannels';
 import { getIssuesForReview, updateIssueStatus } from '../services/engagement';
+import ThemeToggle from '../components/ThemeToggle';
 import { Link, useNavigate } from 'react-router-dom';
 
 const SIDEBAR_ITEMS = [
@@ -146,7 +147,7 @@ const AdminDashboard = () => {
     () => ({
       open: 'bg-error/10 text-error border-error/20',
       'in-progress': 'bg-primary-container/10 text-primary-container border-primary-container/20',
-      resolved: 'bg-green-50 text-green-700 border-green-100',
+      resolved: 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-200 border-green-100 dark:border-green-800',
       closed: 'bg-surface-variant/30 text-on-surface-variant border-outline/10',
     }),
     []
@@ -253,7 +254,7 @@ const AdminDashboard = () => {
 
       <div className="flex-grow flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-20 bg-white/95 backdrop-blur border-b border-outline/10 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
+        <header className="h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
            <div className="flex items-center gap-3">
              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2">
                <Menu size={24} />
@@ -262,6 +263,7 @@ const AdminDashboard = () => {
            </div>
            
            <div className="flex items-center gap-4">
+             <ThemeToggle />
              <div className="text-right hidden sm:block">
                <p className="text-sm font-semibold">{user?.firstName || 'Admin'}</p>
                 <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">Admin</p>
@@ -412,7 +414,7 @@ const AdminDashboard = () => {
                   ) : (
                     <div className="space-y-4 max-h-[65vh] overflow-auto pr-1">
                       {issues.map((issue) => (
-                        <div key={issue._id} className="p-5 rounded-xl border border-outline/10 bg-surface hover:bg-white hover:shadow-sm transition-all">
+                        <div key={issue._id} className="p-5 rounded-xl border border-outline/10 bg-surface hover:bg-card hover:shadow-sm transition-all">
                           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">

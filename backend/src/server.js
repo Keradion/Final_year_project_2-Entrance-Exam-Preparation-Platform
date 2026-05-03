@@ -1,12 +1,19 @@
 const path = require('path');
 
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env'), override: true });
 const app = require('./app');
 const { connectDB, disconnectDB } = require('./config/database');
 const { connectRedis, disconnectRedis } = require('./config/redis');
-require('./workers/emailWorker'); // Import to start the worker
 
-const PORT = process.env.PORT || 5000;
+if (process.env.REDIS_ENABLED !== 'false') {
+  try {
+    require('./workers/emailWorker'); // Import to start the worker when Redis is available.
+  } catch (error) {
+    console.warn('⚠️  Email worker could not start:', error.message);
+  }
+}
+
+const PORT = 5000;
 
 async function start() {
   try {

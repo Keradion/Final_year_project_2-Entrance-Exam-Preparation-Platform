@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { PlayCircle, Trash2, Save, Video, VideoOff, Edit2 } from 'lucide-react';
+import { Bot, PlayCircle, Trash2, Save, Video, VideoOff, Edit2 } from 'lucide-react';
 import api from '../services/api';
 
 const TopicVideo = () => {
@@ -99,6 +99,12 @@ const TopicVideo = () => {
     if (url.includes('vimeo.com/')) return url.replace('vimeo.com/', 'player.vimeo.com/video/');
     if (url.includes('/embed/')) return url;
     return '';
+  };
+
+  const getVideoSummary = (video) => {
+    const topicName = topic?.topicName || 'this topic';
+    const title = video?.title || 'This video lesson';
+    return `${title} supports your study of ${topicName}. Focus on the main definitions, worked examples, and any problem-solving steps shown in the lesson. After watching, try to explain the key idea in your own words and connect it to the topic exercises or quiz questions.`;
   };
 
   return (
@@ -200,13 +206,26 @@ const TopicVideo = () => {
                     </div>
                     {isStudent && (
                       getEmbeddableUrl(v.videoUrl) ? (
-                        <div className="aspect-video w-full rounded-xl overflow-hidden bg-surface mt-2 border border-outline/5 shadow-inner">
-                          <iframe
-                            src={getEmbeddableUrl(v.videoUrl)}
-                            title={v.title}
-                            className="w-full h-full border-none"
-                            allowFullScreen
-                          ></iframe>
+                        <div className="mt-2 space-y-4">
+                          <div className="aspect-video w-full max-w-3xl mx-auto rounded-xl overflow-hidden bg-surface border border-outline/5 shadow-inner">
+                            <iframe
+                              src={getEmbeddableUrl(v.videoUrl)}
+                              title={v.title}
+                              className="w-full h-full border-none"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                          <div className="max-w-3xl mx-auto rounded-xl border border-primary-container/15 bg-primary-container/5 p-5">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-primary-container/10 text-primary-container flex items-center justify-center shrink-0">
+                                <Bot size={20} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">AI Summary</p>
+                                <p className="text-sm text-on-surface-variant leading-6 mt-2">{getVideoSummary(v)}</p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <a

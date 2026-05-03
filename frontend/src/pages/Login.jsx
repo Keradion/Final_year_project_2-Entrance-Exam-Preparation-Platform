@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { loginUser } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { Eye, EyeOff, GraduationCap, ShieldCheck, Mail, Lock, ArrowRight, BookOpen, CheckCircle } from 'lucide-react';
 
 const Login = () => {
@@ -20,8 +21,8 @@ const Login = () => {
       setError(null);
       const response = await loginUser(data);
       if (response && response.data && response.data.token) {
-        const { user } = response.data;
-        login(response.data.token, user);
+        const { user, token } = response.data;
+        login(token, user);
         
         if (user.role === 'admin') {
           navigate('/admin');
@@ -39,9 +40,12 @@ const Login = () => {
   };
 
   return (
-    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
+    <div className="relative bg-background text-on-surface min-h-screen flex flex-col font-sans">
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       <main className="flex-grow flex items-center justify-center py-12 px-6">
-        <div className="w-full max-w-[450px] bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+        <div className="w-full max-w-[450px] bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
           <div className="mb-stack-lg">
             <h3 className="text-2xl font-semibold text-on-surface mb-2">Sign In</h3>
             <p className="text-body-md text-on-surface-variant">Access your dashboard.</p>

@@ -97,14 +97,16 @@ const seedDatabase = async () => {
     );
 
     const student = await findOrCreateUser(
-      'student@example.com',
+      'dan@gmail.com',
       {
-        firstName: 'Student',
+        firstName: 'Dan',
         lastName: 'User',
-        email: 'student@example.com',
-        password: 'password123',
+        email: 'dan@gmail.com',
+        password: '12345Qwert@',
         role: 'student',
         status: 'active',
+        stream: 'Natural',
+        gradeLevel: '12',
       }
     );
     console.log(`Users found or created: ${admin.email}, ${customAdmin.email}, ${teacher.email}, ${student.email}`);
@@ -142,6 +144,7 @@ const seedDatabase = async () => {
       topic: arithmeticTopic._id,
     });
     await Video.create({
+      title: 'Definition of Arithmetic',
       videoUrl: 'https://www.youtube.com/watch?v=IwW0GJWKH98',
       videoDuration: 545,
       topic: arithmeticTopic._id,
@@ -180,6 +183,7 @@ const seedDatabase = async () => {
       topic: atomicTheoryTopic._id,
     });
     await Video.create({
+      title: 'Atomic Theory',
       videoUrl: 'https://www.youtube.com/watch?v=thnDxFdkzZs',
       videoDuration: 600,
       topic: atomicTheoryTopic._id,

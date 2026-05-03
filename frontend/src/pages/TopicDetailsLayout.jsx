@@ -11,10 +11,9 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
   const [topic, setTopic] = useState(null);
   const [chapter, setChapter] = useState(null);
   const [subject, setSubject] = useState(null);
-  const [completionSummary, setCompletionSummary] = useState(null);
   const [progressMessage, setProgressMessage] = useState('');
-  const [isCompletingTopic, setIsCompletingTopic] = useState(false);
   const [completionEligibility, setCompletionEligibility] = useState(null);
+  const [isCompletingTopic, setIsCompletingTopic] = useState(false);
   const [isLoadingEligibility, setIsLoadingEligibility] = useState(false);
 
   const fetchTopic = useCallback(async () => {
@@ -40,7 +39,6 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
 
   useEffect(() => {
     if (topicId) fetchTopic();
-    setCompletionSummary(null);
     setProgressMessage('');
   }, [fetchTopic, topicId]);
 
@@ -87,17 +85,10 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
       setIsCompletingTopic(true);
       setProgressMessage('');
       const response = await markTopicComplete(topicId);
-      const progress = response?.data;
-      const milestones = response?.newlyReachedMilestones || [];
-      setCompletionSummary(progress);
       setCompletionEligibility(response?.quizCompletion || completionEligibility);
       window.dispatchEvent(new Event('student-notifications-refresh'));
       window.dispatchEvent(new Event('student-progress-refresh'));
-      setProgressMessage(
-        milestones.length > 0
-          ? `Topic completed. Milestone reached: ${milestones.join('%, ')}%. Check your notifications.`
-          : `Topic completed. Subject progress is now ${progress?.completionPercentage || 0}%.`
-      );
+      setProgressMessage('Topic marked complete.');
     } catch (err) {
       setProgressMessage(err.response?.data?.message || 'Failed to update topic progress.');
       if (topicId) {
@@ -114,7 +105,11 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
   };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-500">
+    <div
+      className={`flex flex-col flex-1 min-h-0 min-w-0 animate-in fade-in duration-500 ${
+        !isStudent ? 'w-full max-w-[min(100%,1180px)] mx-auto' : ''
+      }`}
+    >
       <div className="mb-6">
         <button 
           onClick={() => navigate(-1)} 
@@ -122,7 +117,31 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
         >
           <ChevronLeft size={14}/> Back to Topics
         </button>
-        
+
+        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide mb-5">
+          {tabs.map((tab, index) => (
+            <NavLink
+              key={tab.path}
+              to={`${basePath}/${tab.path}`}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-primary-container text-on-primary shadow-md shadow-primary-container/20' 
+                    : isLearningTab && index < currentIndex
+                      ? 'bg-primary-container/10 text-primary-container hover:bg-primary-container/15'
+                      : 'bg-surface text-on-surface-variant hover:bg-surface-container-high'
+                }`
+              }
+            >
+              <span className="w-5 h-5 rounded-full bg-white/20 border border-current/10 flex items-center justify-center text-[10px]">
+                {index + 1}
+              </span>
+              {tab.icon}
+              {tab.name}
+            </NavLink>
+          ))}
+        </div>
+
         <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-[0px_8px_24px_rgba(0,0,0,0.08)] mb-6">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">
             {subject?.subjectName || 'Subject'} {chapter?.chapterName ? `• ${chapter.chapterName}` : ''}
@@ -132,9 +151,6 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
               <h1 className="text-3xl font-bold text-on-surface">
                 {topic?.topicName || 'Loading...'}
               </h1>
-              <p className="text-sm text-on-surface-variant mt-2 max-w-2xl">
-                Move through the lesson in order: objectives, concept, video, practice, quiz, then exam review.
-              </p>
             </div>
             {isStudent && (
               <div className="flex flex-col sm:flex-row gap-2">
@@ -170,54 +186,20 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
                 <p className={`text-sm font-semibold ${completionEligibility.eligible ? 'text-primary-container' : 'text-on-surface-variant'}`}>
                   {completionEligibility.message}
                 </p>
-                <span className="text-xs font-black uppercase tracking-widest text-on-surface-variant">
-                  {completionEligibility.answeredQuestions || 0}/{completionEligibility.totalQuestions || 0} quiz answered
-                </span>
               </div>
             </div>
           )}
-          {isStudent && (progressMessage || completionSummary) && (
+          {isStudent && progressMessage && (
             <div className="mt-5 rounded-lg bg-primary-container/5 border border-primary-container/10 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <p className="text-sm font-semibold text-primary-container">{progressMessage}</p>
-                {completionSummary && (
-                  <span className="text-xs font-black uppercase tracking-widest text-on-surface-variant">
-                    {completionSummary.completedTopics || 0}/{completionSummary.totalTopics || 0} topics • {completionSummary.completionPercentage || 0}%
-                  </span>
-                )}
-              </div>
+              <p className="text-sm font-semibold text-primary-container">{progressMessage}</p>
             </div>
           )}
         </div>
 
-        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-          {tabs.map((tab, index) => (
-            <NavLink
-              key={tab.path}
-              to={`${basePath}/${tab.path}`}
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-                  isActive 
-                    ? 'bg-primary-container text-on-primary shadow-md shadow-primary-container/20' 
-                    : isLearningTab && index < currentIndex
-                      ? 'bg-primary-container/10 text-primary-container hover:bg-primary-container/15'
-                      : 'bg-surface text-on-surface-variant hover:bg-surface-container-high'
-                }`
-              }
-            >
-              <span className="w-5 h-5 rounded-full bg-white/20 border border-current/10 flex items-center justify-center text-[10px]">
-                {index + 1}
-              </span>
-              {tab.icon}
-              {tab.name}
-            </NavLink>
-          ))}
-        </div>
         <div className="mt-4 rounded-xl border border-outline/10 bg-white p-4 shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">Support</p>
-              <p className="text-sm text-on-surface-variant mt-1">Use these when you need help or want to report a problem. They are separate from lesson progress.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {supportTabs.map((tab) => (
@@ -242,7 +224,7 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
         </div>
       </div>
 
-      <div className="flex-grow min-h-[500px]">
+      <div className={`flex-grow min-h-[500px] w-full ${isStudent ? 'px-4 sm:px-6 md:px-8 pb-4' : 'px-2 sm:px-4 pb-4'}`}>
         <Outlet context={{ topic, chapter, subject, isStudent, fetchData: fetchTopic }} />
       </div>
       <div className="mt-5 bg-white rounded-xl border border-outline-variant p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -256,7 +238,7 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
           {previousTab ? previousTab.name : 'Start'}
         </button>
         <p className="text-xs font-semibold text-on-surface-variant text-center">
-          {isLearningTab ? `Step ${currentIndex + 1} of ${tabs.length}: ${tabs[currentIndex]?.name}` : 'Support area: use the learning tabs above to continue the lesson path.'}
+          {isLearningTab ? `Step ${currentIndex + 1} of ${tabs.length}: ${tabs[currentIndex]?.name}` : 'Support: choose a lesson step from the tabs at the top.'}
         </p>
         <button
           type="button"

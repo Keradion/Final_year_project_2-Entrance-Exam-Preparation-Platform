@@ -11,9 +11,17 @@ const {
   getTopicQuizCompletionStatus,
   markTopicCompleted,
 } = require('../services/progressService');
+const appCache = require('../services/appCache');
+
+const userIdStr = (u) => (typeof u === 'string' ? u : String(u));
 
 exports.getMySubjectProgress = asyncHandler(async (req, res) => {
-  const progress = await getAllSubjectProgress(req.user.id);
+  const uid = userIdStr(req.user.id);
+  const progress = await appCache.readThrough(
+    appCache.progressAllSubjectsKey(uid),
+    appCache.TTL_PROGRESS,
+    () => getAllSubjectProgress(uid)
+  );
 
   res.status(200).json({
     success: true,
@@ -23,10 +31,18 @@ exports.getMySubjectProgress = asyncHandler(async (req, res) => {
 });
 
 exports.getMyResultsSummary = asyncHandler(async (req, res) => {
-  const results = await getStudentResultsSummary(req.user.id, {
-    gradeLevel: req.query.gradeLevel,
-    stream: req.user.stream,
-  });
+  const uid = userIdStr(req.user.id);
+  const stream = req.user.stream;
+  const gradeLevel = req.query.gradeLevel;
+  const results = await appCache.readThrough(
+    appCache.progressResultsKey(uid, gradeLevel, stream),
+    appCache.TTL_PROGRESS,
+    () =>
+      getStudentResultsSummary(uid, {
+        gradeLevel,
+        stream,
+      })
+  );
 
   res.status(200).json({
     success: true,
@@ -35,10 +51,18 @@ exports.getMyResultsSummary = asyncHandler(async (req, res) => {
 });
 
 exports.getMyLearningStreak = asyncHandler(async (req, res) => {
-  const streak = await getStudentLearningStreak(req.user.id, {
-    gradeLevel: req.query.gradeLevel,
-    stream: req.user.stream,
-  });
+  const uid = userIdStr(req.user.id);
+  const stream = req.user.stream;
+  const gradeLevel = req.query.gradeLevel;
+  const streak = await appCache.readThrough(
+    appCache.progressStreakKey(uid, gradeLevel, stream),
+    appCache.TTL_PROGRESS,
+    () =>
+      getStudentLearningStreak(uid, {
+        gradeLevel,
+        stream,
+      })
+  );
 
   res.status(200).json({
     success: true,
@@ -48,12 +72,17 @@ exports.getMyLearningStreak = asyncHandler(async (req, res) => {
 
 exports.getMyProgressForSubject = asyncHandler(async (req, res, next) => {
   const { subjectId } = req.params;
+  const uid = userIdStr(req.user.id);
 
   if (!mongoose.Types.ObjectId.isValid(subjectId)) {
     return next(new ErrorResponse('Invalid subjectId format', 400));
   }
 
-  const progress = await getSubjectProgress(req.user.id, subjectId);
+  const progress = await appCache.readThrough(
+    appCache.progressSubjectKey(uid, subjectId),
+    appCache.TTL_PROGRESS,
+    () => getSubjectProgress(uid, subjectId)
+  );
 
   res.status(200).json({
     success: true,
@@ -63,12 +92,17 @@ exports.getMyProgressForSubject = asyncHandler(async (req, res, next) => {
 
 exports.getMyChapterProgressForSubject = asyncHandler(async (req, res, next) => {
   const { subjectId } = req.params;
+  const uid = userIdStr(req.user.id);
 
   if (!mongoose.Types.ObjectId.isValid(subjectId)) {
     return next(new ErrorResponse('Invalid subjectId format', 400));
   }
 
-  const progress = await getSubjectChapterProgress(req.user.id, subjectId);
+  const progress = await appCache.readThrough(
+    appCache.progressChaptersKey(uid, subjectId),
+    appCache.TTL_PROGRESS,
+    () => getSubjectChapterProgress(uid, subjectId)
+  );
 
   res.status(200).json({
     success: true,
@@ -78,7 +112,13 @@ exports.getMyChapterProgressForSubject = asyncHandler(async (req, res, next) => 
 
 exports.getMyGradeProgress = asyncHandler(async (req, res) => {
   const { gradeLevel } = req.params;
-  const progress = await getGradeProgress(req.user.id, gradeLevel, req.user.stream);
+  const uid = userIdStr(req.user.id);
+  const stream = req.user.stream;
+  const progress = await appCache.readThrough(
+    appCache.progressGradeKey(uid, gradeLevel, stream),
+    appCache.TTL_PROGRESS,
+    () => getGradeProgress(uid, gradeLevel, stream)
+  );
 
   res.status(200).json({
     success: true,
@@ -88,12 +128,17 @@ exports.getMyGradeProgress = asyncHandler(async (req, res) => {
 
 exports.getTopicCompletionEligibility = asyncHandler(async (req, res, next) => {
   const { topicId } = req.params;
+  const uid = userIdStr(req.user.id);
 
   if (!mongoose.Types.ObjectId.isValid(topicId)) {
     return next(new ErrorResponse('Invalid topicId format', 400));
   }
 
-  const quizCompletion = await getTopicQuizCompletionStatus(req.user.id, topicId);
+  const quizCompletion = await appCache.readThrough(
+    appCache.progressEligibilityKey(uid, topicId),
+    appCache.TTL_PROGRESS,
+    () => getTopicQuizCompletionStatus(uid, topicId)
+  );
 
   res.status(200).json({
     success: true,
@@ -115,6 +160,8 @@ exports.completeTopic = asyncHandler(async (req, res, next) => {
   if (!result.progress && result.quizCompletion) {
     return next(new ErrorResponse(result.quizCompletion.message, 400));
   }
+
+  await appCache.invalidateUserProgress(userIdStr(req.user.id));
 
   res.status(200).json({
     success: true,

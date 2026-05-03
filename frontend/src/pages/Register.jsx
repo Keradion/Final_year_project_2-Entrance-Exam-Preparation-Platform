@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { registerUser, verifyEmail } from '../services/auth';
 import { AuthContext } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { Eye, EyeOff, ShieldCheck, Mail, Lock, Phone, User, ArrowRight, ArrowLeft, BookOpen, CheckCircle, FlaskConical, Globe } from 'lucide-react';
 
 const FIELD_NAME_MAP = {
@@ -112,7 +113,7 @@ const Register = () => {
           /* Step 1: Account Information */
           <div className="w-full max-w-[800px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Form Panel */}
-            <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+            <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
               <div className="mb-stack-lg flex justify-between items-end">
                 <div>
                   <h3 className="text-2xl font-semibold text-on-surface mb-2">Create Account</h3>
@@ -122,7 +123,7 @@ const Register = () => {
                   <p className="text-[10px] font-black text-primary-container uppercase tracking-widest">Progress</p>
                   <div className="flex gap-1 mt-1">
                     <div className="w-8 h-1.5 rounded-full bg-primary-container"></div>
-                    <div className="w-8 h-1.5 rounded-full bg-slate-100"></div>
+                    <div className="w-8 h-1.5 rounded-full bg-outline/20"></div>
                   </div>
                 </div>
               </div>
@@ -273,7 +274,7 @@ const Register = () => {
                <p className="text-on-surface-variant">Select your primary area of focus.</p>
             </div>
 
-            <div className="bg-white rounded-2xl border border-outline-variant p-10 shadow-xl mb-12">
+            <div className="bg-card rounded-2xl border border-outline-variant p-10 shadow-xl mb-12">
                <div className="max-w-xl mx-auto">
                   <div className="space-y-6">
                      <div className="flex items-center gap-4 mb-4">
@@ -323,7 +324,7 @@ const Register = () => {
         ) : (
           /* Step 3: Verification */
           <div className="w-full max-w-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white rounded-2xl border border-outline-variant p-stack-lg shadow-xl text-center">
+            <div className="bg-card rounded-2xl border border-outline-variant p-stack-lg shadow-xl text-center">
               <div className="w-20 h-20 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container mx-auto mb-8">
                 <ShieldCheck size={40} />
               </div>
@@ -378,7 +379,8 @@ const Register = () => {
                     const response = await verifyEmail({ email: verificationEmail, code });
                     
                     if (response && response.data && response.data.token) {
-                      login(response.data.token, response.data.user);
+                      const { user, token } = response.data;
+                      login(token, user);
                       navigate('/dashboard');
                     } else {
                       navigate('/login', { state: { message: 'Registration completed. Please sign in.' } });

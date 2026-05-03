@@ -8,6 +8,10 @@ const {
   updateQuizProblem,
   deleteQuizProblem,
   getQuizzesByTopic,
+  getQuiz,
+  startQuizAttempt,
+  submitQuizAttempt,
+  resetQuizAttempt,
   getQuizScore,
   validateQuizAnswer
 } = require('../controllers/quizController');
@@ -22,8 +26,18 @@ router.route('/')
   .post(protect, authorize('teacher'), createQuiz);
 
 router.route('/:quizId')
+  .get(protect, getQuiz)
   .put(protect, authorize('teacher', 'admin'), updateQuiz)
   .delete(protect, authorize('teacher', 'admin'), deleteQuiz);
+
+router.route('/:quizId/start')
+  .post(protect, authorize('student'), startQuizAttempt);
+
+router.route('/:quizId/submit')
+  .post(protect, authorize('student'), submitQuizAttempt);
+
+router.route('/:quizId/reset')
+  .post(protect, authorize('student'), resetQuizAttempt);
 
 router.route('/:quizId/problems')
   .post(protect, authorize('teacher'), addQuizProblem);

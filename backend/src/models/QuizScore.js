@@ -19,12 +19,25 @@ const quizScoreSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['in-progress', 'completed'],
-    default: 'in-progress'
+    enum: ['not-started', 'in-progress', 'completed', 'reset'],
+    default: 'not-started'
+  },
+  startTime: {
+    type: Date
+  },
+  endTime: {
+    type: Date
   },
   attemptDate: {
     type: Date,
     default: Date.now
+  },
+  answers: [{
+    problemId: String,
+    answer: String
+  }],
+  detailedResults: {
+    type: Schema.Types.Mixed
   }
 }, { timestamps: true });
 

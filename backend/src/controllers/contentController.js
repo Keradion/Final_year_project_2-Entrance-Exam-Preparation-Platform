@@ -2,6 +2,7 @@ const contentService = require('../services/contentService');
 const mongoose = require('mongoose');
 const { Chapter, Topic } = require('../models');
 const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
+const appCache = require('../services/appCache');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -47,6 +48,7 @@ class ContentController {
       }
 
       const chapter = await contentService.createChapter(chapterData, resolvedSubjectId);
+      await appCache.invalidateChaptersForSubject(resolvedSubjectId);
       await this.notifyStudentsOfSubjectUpdate(
         resolvedSubjectId,
         'Subject content updated',
@@ -70,7 +72,11 @@ class ContentController {
         return res.status(400).json({ message: 'Invalid subject id format.' });
       }
 
-      const chapters = await contentService.getChaptersBySubject(subjectId);
+      const chapters = await appCache.readThrough(
+        appCache.chaptersBySubjectKey(subjectId),
+        appCache.TTL_CONTENT,
+        () => contentService.getChaptersBySubject(subjectId)
+      );
       res.status(200).json(chapters);
     } catch (error) {
       next(error);
@@ -125,6 +131,7 @@ class ContentController {
       }
 
       const topic = await contentService.createTopic(topicData, resolvedChapterId);
+      await appCache.invalidateTopicsForChapter(resolvedChapterId);
       const chapterDoc = await Chapter.findById(resolvedChapterId).select('subject');
       if (chapterDoc?.subject) {
         await this.notifyStudentsOfSubjectUpdate(
@@ -158,6 +165,9 @@ class ContentController {
       if (!chapter) {
         return res.status(404).json({ message: 'Chapter not found.' });
       }
+      if (chapter.subject) {
+        await appCache.invalidateChaptersForSubject(chapter.subject);
+      }
       res.status(200).json(chapter);
     } catch (error) {
       next(error);
@@ -179,6 +189,9 @@ class ContentController {
       if (!chapter) {
         return res.status(404).json({ message: 'Chapter not found.' });
       }
+      if (chapter.subject) {
+        await appCache.invalidateChapterSubtree(String(chapter.subject), id);
+      }
       res.status(200).json({ message: 'Chapter deleted successfully' });
     } catch (error) {
       next(error);
@@ -197,7 +210,11 @@ class ContentController {
         return res.status(400).json({ message: 'Invalid chapter id format.' });
       }
 
-      const topics = await contentService.getTopicsByChapter(chapterId);
+      const topics = await appCache.readThrough(
+        appCache.topicsByChapterKey(chapterId),
+        appCache.TTL_CONTENT,
+        () => contentService.getTopicsByChapter(chapterId)
+      );
       res.status(200).json(topics);
     } catch (error) {
       next(error);
@@ -244,6 +261,7 @@ class ContentController {
       if (!topic) {
         return res.status(404).json({ message: 'Topic not found.' });
       }
+      await appCache.invalidateTopicsForChapter(topic.chapter);
       const chapterDoc = await Chapter.findById(topic.chapter).select('subject');
       if (chapterDoc?.subject) {
         await this.notifyStudentsOfSubjectUpdate(
@@ -273,6 +291,9 @@ class ContentController {
       const topic = await contentService.deleteTopic(topicId);
       if (!topic) {
         return res.status(404).json({ message: 'Topic not found.' });
+      }
+      if (existingTopic?.chapter) {
+        await appCache.invalidateTopicsForChapter(existingTopic.chapter);
       }
       if (existingTopic?.chapter) {
         const chapterDoc = await Chapter.findById(existingTopic.chapter).select('subject');

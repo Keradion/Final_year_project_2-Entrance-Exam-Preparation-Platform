@@ -5,6 +5,7 @@ const Answer = require('../models/Answer');
 const mongoose = require('mongoose');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
+const appCache = require('../services/appCache');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),
@@ -253,6 +254,8 @@ exports.validateExamAnswer = asyncHandler(async (req, res, next) => {
             submittedAnswer,
             isCorrect,
         });
+
+        await appCache.invalidateUserProgress(String(studentId));
 
         res.status(200).json({
             success: true,

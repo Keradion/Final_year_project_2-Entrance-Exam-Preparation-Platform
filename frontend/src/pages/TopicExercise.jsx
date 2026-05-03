@@ -12,7 +12,7 @@ const TopicExercise = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [exerciseFeedback, setExerciseFeedback] = useState({});
-  const [isSubmittingAttempt, setIsSubmittingAttempt] = useState(false);
+  const [checkingExerciseId, setCheckingExerciseId] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
 
   const [newExercise, setNewExercise] = useState({
@@ -162,37 +162,35 @@ const TopicExercise = () => {
     }
   };
 
-  const handleSubmitExerciseAttempt = async () => {
-    const pendingExercises = exercises.filter((ex) => !exerciseFeedback[ex._id] || !exerciseFeedback[ex._id].isCorrect);
-    const unanswered = pendingExercises.filter((ex) => selectedAnswers[ex._id] === undefined);
-    if (unanswered.length > 0) {
-      return showToast('Please answer all pending exercises before submitting.', 'error');
-    }
-  
+  const handleConfirmExerciseAnswer = async (ex) => {
+    const id = ex._id;
+    const idx = selectedAnswers[id];
+    if (!isStudent || idx === undefined) return;
+
+    const prevFb = exerciseFeedback[id];
+    if (prevFb?.isCorrect) return;
+    if (prevFb && !prevFb.isCorrect && prevFb.attemptedSelection === idx) return;
+
     try {
-      setIsSubmittingAttempt(true);
-      const results = await Promise.all(
-        pendingExercises.map(async (ex) => {
-          const res = await api.post(`/exercises/${ex._id}/submit`, {
-            submittedAnswer: selectedAnswers[ex._id],
-          });
-          return [ex._id, {
-          isCorrect: res.data?.isCorrect,
-          correctAnswer: res.data?.correctAnswer,
-          correctOption: res.data?.correctOption,
-          hint: res.data?.hint,
-          }];
-        })
-      );
+      setCheckingExerciseId(id);
+      const res = await api.post(`/exercises/${id}/submit`, {
+        submittedAnswer: idx,
+      });
+      const data = res.data;
       setExerciseFeedback((prev) => ({
         ...prev,
-        ...Object.fromEntries(results),
+        [id]: {
+          isCorrect: Boolean(data?.isCorrect),
+          correctAnswer: data?.correctAnswer,
+          correctOption: data?.correctOption,
+          hint: data?.hint,
+          attemptedSelection: idx,
+        },
       }));
-      showToast('Exercise attempt submitted.');
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to submit attempt.', 'error');
+      showToast(err.response?.data?.message || 'Failed to check answer.', 'error');
     } finally {
-      setIsSubmittingAttempt(false);
+      setCheckingExerciseId(null);
     }
   };
 
@@ -338,7 +336,9 @@ const TopicExercise = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-2">
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Practice Lab' : 'Exercise Inventory'} ({exercises.length})</h4>
           {isStudent && exercises.length > 0 && (
-            <p className="text-xs text-on-surface-variant font-semibold">Answer every pending question, then submit at the end.</p>
+            <p className="text-xs text-on-surface-variant font-semibold">
+              Pick a choice, then press <span className="text-on-surface">Check answer</span> on the bottom-right of that question. Change your choice after a wrong attempt, then check again.
+            </p>
           )}
         </div>
         
@@ -412,8 +412,14 @@ const TopicExercise = () => {
                     <button
                       key={idx}
                       type="button"
-                      disabled={!isStudent || (hasFeedback && feedback.isCorrect)}
-                      onClick={() => setSelectedAnswers((prev) => ({ ...prev, [ex._id]: idx }))}
+                      disabled={
+                        !isStudent
+                        || (hasFeedback && feedback.isCorrect)
+                        || checkingExerciseId === ex._id
+                      }
+                      onClick={() =>
+                        setSelectedAnswers((prev) => ({ ...prev, [ex._id]: idx }))
+                      }
                       className={`p-4 rounded-xl border flex items-center gap-4 transition-all text-left ${
                         isStudent
                           ? hasFeedback
@@ -436,6 +442,31 @@ const TopicExercise = () => {
                     </button>
                   ))}
                 </div>
+                {isStudent && !feedback?.isCorrect && (
+                  <div className="pl-14 mt-4 flex justify-end items-center gap-3 flex-wrap">
+                    {checkingExerciseId === ex._id && (
+                      <span className="text-xs text-on-surface-variant font-semibold">
+                        Checking…
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleConfirmExerciseAnswer(ex)}
+                      disabled={
+                        selectedAnswers[ex._id] === undefined
+                        || checkingExerciseId === ex._id
+                        || Boolean(
+                          hasFeedback &&
+                            !feedback.isCorrect &&
+                            feedback.attemptedSelection === selectedAnswers[ex._id]
+                        )
+                      }
+                      className="bg-primary-container text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:brightness-110 disabled:opacity-45 disabled:pointer-events-none shadow-lg shadow-primary-container/20 shrink-0"
+                    >
+                      Check answer
+                    </button>
+                  </div>
+                )}
                 {isStudent && hasFeedback && (
                   <div className="pl-14 mt-5">
                       <div className={`rounded-xl border px-5 py-4 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
@@ -453,30 +484,28 @@ const TopicExercise = () => {
                 })()}
               </div>
             ))}
-            {isStudent && (
-              <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur border border-outline-variant rounded-2xl p-5 shadow-[0px_12px_32px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <p className="text-sm font-black text-on-surface">Ready to check your answers?</p>
-                  <p className="text-xs text-on-surface-variant mt-1">
-                    Submit after completing the full exercise set. Incorrect answers can be retried.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {Object.values(exerciseFeedback).some((f) => f && !f.isCorrect) && (
-                    <button onClick={handleRetryIncorrectExercises} className="px-5 py-3 rounded-xl border border-outline/20 text-xs font-bold hover:bg-surface transition-colors">
-                      Retry Incorrect
-                    </button>
-                  )}
+            {isStudent &&
+              exercises.length > 0 &&
+              Object.values(exerciseFeedback).some((f) => f && !f.isCorrect) && (
+                <div className="flex justify-end pt-2">
                   <button
-                    onClick={handleSubmitExerciseAttempt}
-                    disabled={isSubmittingAttempt || exercises.every((ex) => exerciseFeedback[ex._id]?.isCorrect)}
-                    className="bg-primary-container text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-primary-container/20"
+                    type="button"
+                    onClick={handleRetryIncorrectExercises}
+                    className="px-5 py-3 rounded-xl border border-outline/20 text-xs font-bold hover:bg-surface transition-colors"
                   >
-                    {isSubmittingAttempt ? 'Submitting...' : 'Submit Attempt'}
+                    Retry incorrect questions
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            {isStudent &&
+              exercises.length > 0 &&
+              exercises.every((ex) => exerciseFeedback[ex._id]?.isCorrect) && (
+                <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 px-6 py-4 text-center">
+                  <p className="text-sm font-bold text-emerald-800">
+                    You&apos;ve solved every exercise in this topic. Well done!
+                  </p>
+                </div>
+              )}
           </div>
         ) : (
           <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-32 text-center opacity-40">

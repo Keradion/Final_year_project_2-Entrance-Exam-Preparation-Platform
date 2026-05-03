@@ -3,6 +3,7 @@ const QuizProblem = require('../models/QuizProblem');
 const ExerciseProblem = require('../models/ExerciseProblem');
 const ExamQuestion = require('../models/ExamQuestion');
 const QuizScore = require('../models/QuizScore');
+const appCache = require('../services/appCache');
 
 const questionModels = {
     QuizProblem,
@@ -48,6 +49,8 @@ exports.submitAnswer = async (req, res) => {
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
     }
+
+    await appCache.invalidateUserProgress(String(studentId));
 
     res.status(201).json({
         success: true,

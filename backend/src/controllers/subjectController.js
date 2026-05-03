@@ -1,7 +1,7 @@
-
 const subjectService = require('../services/subjectService');
 const mongoose = require('mongoose');
 const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
+const appCache = require('../services/appCache');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -41,6 +41,7 @@ class SubjectController {
           return res.status(400).json({ success: false, message: 'Email is required.' });
         }
         const result = await subjectService.inviteAndAssignTeacherByEmail(subjectId, email, firstName, lastName);
+        await appCache.invalidateSubjectRecord(subjectId);
         res.status(200).json(result);
       } catch (error) {
         next(error);
@@ -65,6 +66,7 @@ class SubjectController {
 
       // Ensure gradeLevel is a string if the model expects it, though Mongoose handles this
       const subject = await subjectService.createSubject(req.body);
+      await appCache.invalidateSubjectsCatalog();
       await notifyStudentsOfSubjectUpdate(
         subject._id,
         'New subject available',
@@ -84,7 +86,11 @@ class SubjectController {
    */
   async getAllSubjects(req, res, next) {
     try {
-      const subjects = await subjectService.getAllSubjects();
+      const subjects = await appCache.readThrough(
+        appCache.subjectsListKey(),
+        appCache.TTL_CONTENT,
+        () => subjectService.getAllSubjects()
+      );
       res.status(200).json(subjects);
     } catch (error) {
       next(error);
@@ -104,9 +110,14 @@ class SubjectController {
       }
 
       // URL parameters are available in req.params.
-      const subject = await subjectService.getSubjectById(req.params.id);
+      const id = req.params.id;
+      const subject = await appCache.readThrough(
+        appCache.subjectByIdKey(id),
+        appCache.TTL_CONTENT,
+        () => subjectService.getSubjectById(id),
+        { skipEmptyCache: true }
+      );
       if (!subject) {
-        // If the service returns null, it means the subject wasn't found.
         return res.status(404).json({ success: false, message: 'Subject not found' });
       }
       res.status(200).json(subject);
@@ -135,10 +146,12 @@ class SubjectController {
         });
       }
 
-      const subject = await subjectService.updateSubject(req.params.id, req.body);
+      const sid = req.params.id;
+      const subject = await subjectService.updateSubject(sid, req.body);
       if (!subject) {
         return res.status(404).json({ success: false, message: 'Subject not found' });
       }
+      await appCache.invalidateSubjectRecord(sid);
       res.status(200).json(subject);
     } catch (error) {
       next(error);
@@ -158,10 +171,12 @@ class SubjectController {
         });
       }
 
-      const subject = await subjectService.deleteSubject(req.params.id);
+      const sid = req.params.id;
+      const subject = await subjectService.deleteSubject(sid);
       if (!subject) {
         return res.status(404).json({ success: false, message: 'Subject not found' });
       }
+      await appCache.invalidateSubjectRecord(sid);
       // A 204 No Content response is standard for a successful deletion where no body is sent back.
       res.status(204).send();
     } catch (error) {
@@ -185,6 +200,7 @@ class SubjectController {
       }
 
       const subject = await subjectService.assignTeacherToSubject(subjectId, teacherId);
+      await appCache.invalidateSubjectRecord(subjectId);
       res.status(200).json(subject);
     } catch (error) {
       // The service layer throws errors with status codes, which will be handled

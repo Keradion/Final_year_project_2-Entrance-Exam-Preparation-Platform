@@ -14,6 +14,7 @@ import {
   saveGeminiApiKey,
   removeGeminiApiKey,
 } from '../services/auth';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Profile = () => {
   const { user, setUser, logout } = useContext(AuthContext);
@@ -168,20 +169,23 @@ const Profile = () => {
 
   return (
     <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
-      <header className="py-6 px-8 max-w-[1000px] mx-auto w-full flex justify-between items-center">
+      <header className="py-6 px-8 max-w-[1000px] mx-auto w-full flex justify-between items-center gap-4 flex-wrap">
         <Link to={getDashboardLink()} className="text-on-surface-variant hover:text-primary-container flex items-center gap-2 font-semibold transition-colors">
           <ArrowLeft size={20} /> Back to Dashboard
         </Link>
-        <button onClick={logout} className="text-error hover:bg-error/5 px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-colors">
-          <LogOut size={18} /> Logout
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <button onClick={logout} className="text-error hover:bg-error/5 px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-colors">
+            <LogOut size={18} /> Logout
+          </button>
+        </div>
       </header>
 
       <main className="flex-grow flex items-center justify-center py-6 px-6">
         <div className="w-full max-w-[800px] space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Identity Configuration */}
-          <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+          <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
             <div className="mb-stack-lg flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center gap-6">
               <div>
                 <h3 className="text-2xl font-semibold text-on-surface mb-2">Profile Details</h3>
@@ -280,7 +284,7 @@ const Profile = () => {
           </div>
 
           {/* Password Update Card */}
-          <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+          <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
             <div className="mb-stack-lg">
               <h3 className="text-2xl font-semibold text-on-surface mb-2">Change Password</h3>
               <p className="text-body-md text-on-surface-variant">Keep your account secure.</p>
@@ -369,7 +373,7 @@ const Profile = () => {
 
           {/* AI Tutor Settings (Students Only) */}
           {user?.role === 'student' && (
-            <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+            <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
               <div className="mb-stack-lg flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-2xl font-semibold text-on-surface mb-2">AI Tutor Settings</h3>
@@ -438,7 +442,7 @@ const Profile = () => {
                       type="button"
                       onClick={handleRemoveGeminiKey}
                       disabled={isSavingAiKey}
-                      className="px-8 bg-white border border-outline/20 text-error py-3 rounded-lg font-semibold text-md hover:bg-error/5 transition-all disabled:opacity-50"
+                      className="px-8 bg-card border border-outline/20 text-error py-3 rounded-lg font-semibold text-md hover:bg-error/5 transition-all disabled:opacity-50"
                     >
                       Remove Key
                     </button>
@@ -450,7 +454,7 @@ const Profile = () => {
 
           {/* Academic Stream (Students Only) */}
           {user?.role === 'student' && (
-            <div className="bg-white rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+            <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
                   <h3 className="text-2xl font-semibold text-on-surface mb-2">Academic Stream</h3>
@@ -464,7 +468,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={() => window.location.href = `mailto:support@entranceexamprep.com?subject=Stream Change Request - ${user?.firstName} ${user?.lastName}`}
-                  className="px-6 py-3 bg-white border-2 border-outline-variant rounded-xl text-on-surface font-bold text-sm hover:border-primary-container hover:text-primary-container transition-all flex items-center gap-3 group"
+                  className="px-6 py-3 bg-card border-2 border-outline-variant rounded-xl text-on-surface font-bold text-sm hover:border-primary-container hover:text-primary-container transition-all flex items-center gap-3 group"
                 >
                   <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
                   Request Stream Change

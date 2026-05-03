@@ -15,7 +15,13 @@ const TopicQuiz = () => {
   const [isSubmittingAttempt, setIsSubmittingAttempt] = useState(false);
 
   // Quiz Meta State
-  const [quizMeta, setQuizMeta] = useState({ title: '', description: '' });
+  const [quizMeta, setQuizMeta] = useState({ title: '', description: '', duration: 30 });
+
+  // Student Attempt State
+  const [attemptStarted, setAttemptStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0); // in seconds
+  const [quizResults, setQuizResults] = useState(null);
+  const [isStarting, setIsStarting] = useState(false);
   
   // New Problem State
   const [newProblem, setNewProblem] = useState({
@@ -51,7 +57,28 @@ const TopicQuiz = () => {
     try {
       setLoading(true);
       const res = await api.get(`/quizzes/${quizId}`);
-      setActiveQuiz(res.data.data);
+      const quizData = res.data.data;
+      setActiveQuiz(quizData);
+      
+      // If student has already completed the quiz, show the result only
+      if (isStudent && quizData.userScore) {
+        setQuizResults(quizData.userScore);
+        
+        // If they passed, jump straight to review
+        if (quizData.userScore.score >= 50) {
+          setAttemptStarted(true);
+        }
+        
+        // Map answers if they exist (to show in the results view)
+        if (quizData.userScore.answers) {
+          const answerMap = {};
+          quizData.userScore.answers.forEach(ans => {
+            answerMap[ans.problemId] = ans.answer;
+          });
+          setSelectedQuizAnswers(answerMap);
+          setQuizFeedback(quizData.userScore.detailedResults || {});
+        }
+      }
     } catch (err) {
       showToast('Failed to load quiz details', 'error');
     } finally {
@@ -63,6 +90,51 @@ const TopicQuiz = () => {
     if (topic?._id) fetchQuizzes();
   }, [topic?._id]);
 
+  useEffect(() => {
+    let timer;
+    if (attemptStarted && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            handleSubmitQuizAttempt(true); // Auto submit when time is up
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [attemptStarted, timeLeft]);
+
+  // FR. 4: Reset if closed in between
+  useEffect(() => {
+    const handleBeforeUnload = async (e) => {
+      if (attemptStarted && !quizResults) {
+        // We can't really await here, but we can try a beacon or just let the backend handle it on next start
+        // Actually, the requirement says "if the quiz has closed in between reset the score to zero"
+        // Let's use navigator.sendBeacon if possible
+        if (activeQuiz) {
+          const url = `${api.defaults.baseURL}/quizzes/${activeQuiz._id}/reset`;
+          const token = localStorage.getItem('token');
+          // sendBeacon doesn't support headers easily, but we can pass token in URL or just hope the session persists
+          // For now, let's just use a simple fetch with keepalive
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            keepalive: true
+          });
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [attemptStarted, quizResults, activeQuiz]);
+
   const handleCreateQuiz = async () => {
     if (!quizMeta.title.trim()) {
       return showToast('Quiz title is required.', 'error');
@@ -72,11 +144,12 @@ const TopicQuiz = () => {
       const res = await api.post('/quizzes', { 
         title: quizMeta.title.trim(),
         description: quizMeta.description.trim(),
+        duration: quizMeta.duration,
         topic: topic._id 
       });
       showToast('Assessment container initialized successfully!');
       setActiveQuiz({ ...res.data.data, problems: [] });
-      setQuizMeta({ title: '', description: '' });
+      setQuizMeta({ title: '', description: '', duration: 30 });
       fetchQuizzes();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to create quiz container.';
@@ -164,10 +237,11 @@ const TopicQuiz = () => {
     try {
       await api.put(`/quizzes/${activeQuiz._id}`, {
         title: quizMeta.title.trim(),
-        description: quizMeta.description.trim()
+        description: quizMeta.description.trim(),
+        duration: quizMeta.duration
       });
       showToast('Quiz updated successfully!');
-      setActiveQuiz({ ...activeQuiz, title: quizMeta.title, description: quizMeta.description });
+      setActiveQuiz({ ...activeQuiz, title: quizMeta.title, description: quizMeta.description, duration: quizMeta.duration });
       setEditingId(null);
     } catch (err) {
       showToast('Update failed', 'error');
@@ -206,37 +280,76 @@ const TopicQuiz = () => {
     }
   };
 
-  const handleSubmitQuizAttempt = async () => {
-    const pendingProblems = (activeQuiz?.problems || []).filter((prob) => !quizFeedback[prob._id] || !quizFeedback[prob._id].isCorrect);
-    const unanswered = pendingProblems.filter((prob) => !selectedQuizAnswers[prob._id]);
-    if (unanswered.length > 0) {
-      return showToast('Please answer all pending quiz questions before submitting.', 'error');
+  const handleStartQuiz = async () => {
+    try {
+      setIsStarting(true);
+      const res = await api.post(`/quizzes/${activeQuiz._id}/start`);
+      setAttemptStarted(true);
+      setTimeLeft((activeQuiz.duration || 30) * 60);
+      setSelectedQuizAnswers({});
+      setQuizFeedback({});
+      setQuizResults(null);
+      showToast('Quiz started! Good luck.');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to start quiz.', 'error');
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleSubmitQuizAttempt = async (isAutoSubmit = false) => {
+    // Check if all questions are answered
+    const unansweredCount = activeQuiz.problems.filter(p => !selectedQuizAnswers[p._id]).length;
+    
+    // Only block if it's a manual submit and there are unanswered questions
+    if (!isAutoSubmit && unansweredCount > 0) {
+      showToast(`Please answer all questions before submitting. (${unansweredCount} remaining)`, 'error');
+      return;
     }
 
     try {
       setIsSubmittingAttempt(true);
-      const results = await Promise.all(
-        pendingProblems.map(async (prob) => {
-          const res = await api.post(`/quizzes/problems/${prob._id}/validate`, {
-            submittedAnswer: selectedQuizAnswers[prob._id],
-          });
-          return [prob._id, {
-            isCorrect: res.data?.isCorrect,
-            correctAnswer: res.data?.correctAnswer,
-            answerExplanation: res.data?.answerExplanation,
-          }];
-        })
-      );
-      setQuizFeedback((prev) => ({
-        ...prev,
-        ...Object.fromEntries(results),
+      const formattedAnswers = Object.entries(selectedQuizAnswers).map(([problemId, submittedAnswer]) => ({
+        problemId,
+        submittedAnswer
       }));
-      showToast('Quiz attempt submitted.');
+
+      const res = await api.post(`/quizzes/${activeQuiz._id}/submit`, {
+        answers: formattedAnswers
+      });
+
+      const { score, detailedResults, message } = res.data.data;
+      setQuizResults(res.data.data);
+      
+      if (detailedResults) {
+        // results is a map in the model, but might be an array in the return of submit
+        // let's check the backend controller
+        const feedbackObj = {};
+        if (Array.isArray(detailedResults)) {
+          detailedResults.forEach(r => {
+            feedbackObj[r.problemId] = r;
+          });
+        } else {
+          Object.assign(feedbackObj, detailedResults);
+        }
+        setQuizFeedback(feedbackObj);
+      }
+
+      // Trigger sidebar/dashboard progress refresh
+      window.dispatchEvent(new CustomEvent('student-progress-refresh'));
+      
+      showToast(message || 'Assessment submitted successfully!', score >= 50 ? 'success' : 'error');
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to submit quiz attempt.', 'error');
     } finally {
       setIsSubmittingAttempt(false);
     }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleRetryIncorrectQuiz = () => {
@@ -257,14 +370,150 @@ const TopicQuiz = () => {
   };
 
   if (activeQuiz) {
+    if (isStudent && !attemptStarted && !quizResults) {
+      return (
+        <div className="py-20 flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500">
+           <div className="w-24 h-24 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container border border-primary-container/20">
+             <BrainCircuit size={48} />
+           </div>
+           <div className="text-center space-y-4 max-w-md">
+             <h2 className="text-3xl font-bold text-on-surface">{activeQuiz.title}</h2>
+             <p className="text-on-surface-variant font-medium">{activeQuiz.description || 'No instructions provided.'}</p>
+             <div className="flex items-center justify-center gap-6 mt-6">
+                <div className="text-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-outline">Duration</p>
+                  <p className="text-lg font-bold text-on-surface">{activeQuiz.duration} mins</p>
+                </div>
+                <div className="w-px h-8 bg-outline/10"></div>
+                <div className="text-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-outline">Questions</p>
+                  <p className="text-lg font-bold text-on-surface">{activeQuiz.problems?.length || 0}</p>
+                </div>
+             </div>
+           </div>
+            {quizResults ? (
+              <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700">
+                 <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 ${quizResults.score >= 50 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
+                   {quizResults.score >= 50 ? <CheckCircle2 size={40} /> : <BrainCircuit size={40} />}
+                 </div>
+                 <div className={`border px-6 sm:px-10 py-6 rounded-3xl text-center shadow-sm ${quizResults.score >= 50 ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-amber-500/5 border-amber-500/10'}`}>
+                   <p className={`${quizResults.score >= 50 ? 'text-emerald-600' : 'text-amber-600'} font-black uppercase tracking-[0.2em] text-[10px] mb-2`}>
+                     Status: {quizResults.score >= 50 ? 'Assessment Passed' : 'Retry Required'}
+                   </p>
+                   <p className="text-on-surface font-bold text-xl sm:text-2xl">
+                     {quizResults.score >= 50 ? 'Congratulations!' : 'Almost There!'}
+                   </p>
+                   <p className="text-on-surface-variant text-sm mt-2 max-w-sm">
+                     You have already taken this assessment. Your latest score was <strong className={quizResults.score >= 50 ? 'text-emerald-700' : 'text-amber-700'}>{Math.round(quizResults.score)}%</strong>.
+                     {quizResults.score >= 50 ? ' A confirmation email has been sent.' : ' You need at least 50% to pass and complete this topic.'}
+                   </p>
+                 </div>
+                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full justify-center">
+                    <button 
+                      onClick={() => setAttemptStarted(true)}
+                      className="w-full sm:w-auto bg-white border border-outline/20 text-on-surface px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-surface transition-all shadow-sm"
+                    >
+                      Review Responses
+                    </button>
+                    {quizResults.score < 50 ? (
+                      <button 
+                        onClick={handleStartQuiz}
+                        disabled={isStarting}
+                        className="w-full sm:w-auto bg-primary-container text-white px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary-container/20"
+                      >
+                        {isStarting ? 'Preparing...' : 'Retry Assessment'}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => setActiveQuiz(null)}
+                        className="w-full sm:w-auto bg-primary-container text-white px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary-container/20"
+                      >
+                        Return to Curriculum
+                      </button>
+                    )}
+                 </div>
+              </div>
+            ) : (
+              <button 
+                onClick={handleStartQuiz}
+                disabled={isStarting}
+                className="w-full sm:w-auto bg-primary-container text-on-primary px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-50"
+              >
+                {isStarting ? 'Preparing...' : 'Start Assessment'}
+              </button>
+            )}
+           <button onClick={() => setActiveQuiz(null)} className="text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors">
+             Maybe Later
+           </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="py-6 space-y-8 animate-in fade-in duration-500">
-        <button 
-          onClick={() => { setActiveQuiz(null); fetchQuizzes(); }}
-          className="flex items-center gap-2 text-outline hover:text-on-surface font-bold text-xs uppercase tracking-widest transition-colors mb-4"
-        >
-          <ChevronLeft size={16} /> Back to {isStudent ? 'Assessments' : 'Quizzes'}
-        </button>
+      <div className="py-6 space-y-8 animate-in fade-in duration-500 relative">
+        <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-md py-4 -mx-4 px-4 border-b border-outline/5 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
+          <button 
+            onClick={() => { setActiveQuiz(null); fetchQuizzes(); }}
+            disabled={attemptStarted}
+            className={`flex items-center gap-2 text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors ${attemptStarted ? 'opacity-20 pointer-events-none' : ''}`}
+          >
+            <ChevronLeft size={16} /> <span className="hidden xs:inline">Back to {isStudent ? 'Assessments' : 'Quizzes'}</span>
+            <span className="xs:hidden">Back</span>
+          </button>
+          {isStudent && attemptStarted && (
+            <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+              {!quizResults ? (
+                <>
+                  <div className="flex items-center gap-2 sm:gap-4 bg-error/5 border border-error/10 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm">
+                    <p className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-error/60">Time</p>
+                    <p className={`text-sm sm:text-lg font-mono font-bold ${timeLeft < 60 ? 'text-error animate-pulse' : 'text-on-surface'}`}>{formatTime(timeLeft)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleSubmitQuizAttempt(false)}
+                    disabled={isSubmittingAttempt}
+                    className="flex items-center gap-2 bg-primary-container text-on-primary px-4 sm:px-8 py-2 sm:py-3 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 disabled:opacity-50 transition-all shadow-lg shadow-primary-container/20"
+                  >
+                    {isSubmittingAttempt ? '...' : 'Submit'}
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-4 bg-emerald-500/5 border border-emerald-500/10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm">
+                  <p className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-emerald-600">Result</p>
+                  <p className="text-sm sm:text-lg font-black text-on-surface">{Math.round(quizResults.score)}%</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {isStudent && quizResults && (
+          <div className={`p-6 sm:p-8 rounded-2xl border ${quizResults.score >= 50 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-error/5 border-error/20'} animate-in slide-in-from-top-4 duration-500`}>
+             <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 flex items-center justify-center text-2xl sm:text-3xl font-black ${quizResults.score >= 50 ? 'border-emerald-500/20 text-emerald-600 bg-white' : 'border-error/20 text-error bg-white'}`}>
+                  {Math.round(quizResults.score)}%
+                </div>
+                <div className="flex-grow space-y-2 text-center md:text-left">
+                  <h3 className={`text-xl sm:text-2xl font-bold ${quizResults.score >= 50 ? 'text-emerald-700' : 'text-error'}`}>
+                    {quizResults.score >= 50 ? 'Assessment Passed!' : 'Retry Required'}
+                  </h3>
+                  <p className="text-sm sm:text-base text-on-surface-variant font-medium">{quizResults.message}</p>
+                </div>
+                {quizResults.score < 50 && (
+                  <button 
+                    onClick={handleStartQuiz}
+                    className="w-full sm:w-auto bg-error text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-error/20"
+                  >
+                    Retry Quiz
+                  </button>
+                )}
+                {quizResults.score >= 50 && (
+                  <div className="w-full sm:w-auto justify-center bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                    <CheckCircle2 size={16} /> Topic Completed
+                  </div>
+                )}
+             </div>
+          </div>
+        )}
 
         <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-10`}>
           {/* Problem Creator or Meta Editor */}
@@ -274,7 +523,7 @@ const TopicQuiz = () => {
                <div className="space-y-6 animate-in slide-in-from-top-2">
                  <h3 className="text-2xl font-bold text-on-surface mb-6">Edit Quiz Details</h3>
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Quiz Title</label>
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Quiz Title</label>
                    <input 
                      value={quizMeta.title} 
                      onChange={e => setQuizMeta({...quizMeta, title: e.target.value})}
@@ -282,12 +531,21 @@ const TopicQuiz = () => {
                    />
                  </div>
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Description</label>
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Description</label>
                    <textarea 
                      value={quizMeta.description} 
                      onChange={e => setQuizMeta({...quizMeta, description: e.target.value})}
                      className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-medium text-on-surface focus:border-primary-container outline-none"
                      rows="3"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Duration (minutes)</label>
+                   <input 
+                     type="number"
+                     value={quizMeta.duration} 
+                     onChange={e => setQuizMeta({...quizMeta, duration: parseInt(e.target.value) || 0})}
+                     className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface focus:border-primary-container outline-none"
                    />
                  </div>
                  <div className="flex gap-3">
@@ -303,7 +561,7 @@ const TopicQuiz = () => {
                        <h3 className="text-2xl font-bold text-on-surface">{editingProblemId ? 'Edit Question' : 'Add Question'}</h3>
                        {!editingProblemId && (
                          <button 
-                           onClick={() => { setEditingId(activeQuiz._id); setQuizMeta({ title: activeQuiz.title, description: activeQuiz.description }); }}
+                           onClick={() => { setEditingId(activeQuiz._id); setQuizMeta({ title: activeQuiz.title, description: activeQuiz.description, duration: activeQuiz.duration }); }}
                            className="p-1.5 rounded-lg text-outline hover:text-primary-container hover:bg-primary-container/5 transition-all"
                          >
                            <Edit2 size={16} />
@@ -319,7 +577,7 @@ const TopicQuiz = () => {
 
                <div className="space-y-6">
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Question Text</label>
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Question Text</label>
                    <textarea 
                      value={newProblem.questionText} 
                      onChange={e => setNewProblem({...newProblem, questionText: e.target.value})} 
@@ -330,7 +588,7 @@ const TopicQuiz = () => {
                  </div>
  
                  <div className="space-y-4">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Choices & Correct Answer</label>
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Choices & Correct Answer</label>
                    <div className="grid grid-cols-1 gap-3">
                      {newProblem.choices.map((choice, i) => (
                        <div key={choice.value} className="flex items-center gap-4">
@@ -360,7 +618,7 @@ const TopicQuiz = () => {
                  </div>
  
                  <div className="space-y-2">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Answer Explanation (Optional)</label>
+                   <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Answer Explanation (Optional)</label>
                    <textarea 
                      value={newProblem.answerExplanation} 
                      onChange={e => setNewProblem({...newProblem, answerExplanation: e.target.value})} 
@@ -396,23 +654,7 @@ const TopicQuiz = () => {
           {/* Current Problems List */}
           <div className="space-y-6">
              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-2">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Assessment Problems' : 'Quiz Questions'} ({activeQuiz.problems?.length || 0})</h4>
-                {isStudent && activeQuiz.problems?.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    {Object.values(quizFeedback).some((f) => f && !f.isCorrect) && (
-                      <button onClick={handleRetryIncorrectQuiz} className="px-4 py-2 rounded-lg border border-outline/20 text-xs font-bold">
-                        Retry Incorrect
-                      </button>
-                    )}
-                    <button
-                      onClick={handleSubmitQuizAttempt}
-                      disabled={isSubmittingAttempt || activeQuiz.problems.every((prob) => quizFeedback[prob._id]?.isCorrect)}
-                      className="bg-primary-container text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-50"
-                    >
-                      {isSubmittingAttempt ? 'Submitting...' : 'Submit Quiz'}
-                    </button>
-                  </div>
-                )}
+                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Assessment Problems' : 'Quiz Questions'} ({activeQuiz.problems?.length || 0})</h4>
              </div>
              
              {activeQuiz.problems?.length > 0 ? (
@@ -421,78 +663,94 @@ const TopicQuiz = () => {
                   const feedback = quizFeedback[prob._id];
                   const hasFeedback = Boolean(feedback);
                   return (
-                   <div key={prob._id} className="bg-white rounded-xl border border-outline-variant p-6 shadow-sm group">
-                     <div className="flex justify-between items-start gap-4 mb-4">
-                        <div className="flex gap-4">
-                           <div className="w-8 h-8 bg-surface rounded-lg flex items-center justify-center text-[10px] font-black text-outline border border-outline/5">
-                             {idx + 1}
+                    <div key={prob._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 shadow-sm group">
+                      <div className="flex justify-between items-start gap-4 mb-4">
+                         <div className="flex gap-3 sm:gap-4">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-surface rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black text-outline border border-outline/5 shrink-0">
+                              {idx + 1}
+                            </div>
+                            <p className="font-bold text-sm sm:text-base text-on-surface leading-tight">{prob.questionText}</p>
+                         </div>
+                         {!isStudent && (
+                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                             <button 
+                               onClick={() => handleEditProblem(prob)} 
+                               className="text-outline hover:text-primary-container p-1.5 hover:bg-primary-container/5 rounded-lg"
+                               title="Edit Question"
+                             >
+                               <Edit2 size={16} />
+                             </button>
+                             <button 
+                               onClick={() => handleDeleteProblem(prob._id)} 
+                               className="text-outline hover:text-error p-1.5 hover:bg-error/5 rounded-lg"
+                               title="Delete Question"
+                             >
+                               <Trash2 size={16} />
+                             </button>
                            </div>
-                           <p className="font-bold text-on-surface leading-tight">{prob.questionText}</p>
-                        </div>
-                        {!isStudent && (
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                            <button 
-                              onClick={() => handleEditProblem(prob)} 
-                              className="text-outline hover:text-primary-container p-1.5 hover:bg-primary-container/5 rounded-lg"
-                              title="Edit Question"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteProblem(prob._id)} 
-                              className="text-outline hover:text-error p-1.5 hover:bg-error/5 rounded-lg"
-                              title="Delete Question"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        )}
-                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-12">
-                        {prob.choices.map(c => (
-                          <button
-                            key={c.value}
-                            type="button"
-                            disabled={!isStudent || (hasFeedback && feedback.isCorrect)}
-                            onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [prob._id]: c.value }))}
-                            className={`px-3 py-2 rounded-lg border text-[10px] font-bold text-left ${
-                              isStudent
-                                ? hasFeedback
-                                  ? c.value === feedback.correctAnswer
-                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
-                                    : selectedQuizAnswers[prob._id] === c.value
-                                      ? 'bg-error/5 border-error/20 text-error'
-                                      : 'bg-surface/50 border-outline/5 text-outline'
-                                  : selectedQuizAnswers[prob._id] === c.value
-                                    ? 'bg-primary-container/5 border-primary-container/20 text-primary-container'
-                                    : 'bg-surface/50 border-outline/5 text-outline hover:border-primary-container/20'
-                                : c.value === prob.correctAnswer
-                                  ? 'bg-primary-container/5 border-primary-container/20 text-primary-container'
-                                  : 'bg-surface/50 border-outline/5 text-outline'
-                            }`}
-                          >
-                            {c.value}: {c.text}
-                          </button>
-                        ))}
-                     </div>
-                     {isStudent && hasFeedback && (
-                      <div className={`ml-12 mt-4 rounded-xl border px-4 py-3 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
-                        <p className="text-xs font-bold">
-                          {feedback.isCorrect ? 'Correct answer.' : `Incorrect. Correct answer: ${feedback.correctAnswer}`}
-                        </p>
-                        {!feedback.isCorrect && feedback.answerExplanation && (
-                          <p className="text-xs mt-1 opacity-80">{feedback.answerExplanation}</p>
-                        )}
+                         )}
                       </div>
-                     )}
-                   </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:pl-12">
+                         {prob.choices.map(c => (
+                           <button
+                             key={c.value}
+                             type="button"
+                             disabled={!isStudent || !attemptStarted || hasFeedback}
+                             onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [prob._id]: c.value }))}
+                             className={`px-3 py-2 rounded-lg border text-[11px] sm:text-xs font-bold text-left transition-all ${
+                               isStudent
+                                 ? hasFeedback
+                                   ? c.value === feedback.correctAnswer
+                                     ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
+                                     : selectedQuizAnswers[prob._id] === c.value
+                                       ? 'bg-error/5 border-error/20 text-error'
+                                       : 'bg-surface/50 border-outline/5 text-outline'
+                                   : selectedQuizAnswers[prob._id] === c.value
+                                     ? 'bg-primary-container/5 border-primary-container/20 text-primary-container'
+                                     : 'bg-surface/50 border-outline/5 text-outline hover:border-primary-container/20'
+                                 : c.value === prob.correctAnswer
+                                   ? 'bg-primary-container/5 border-primary-container/20 text-primary-container'
+                                   : 'bg-surface/50 border-outline/5 text-outline'
+                             }`}
+                           >
+                             {c.value}: {c.text}
+                           </button>
+                         ))}
+                      </div>
+                      {isStudent && hasFeedback && (
+                       <div className={`sm:ml-12 mt-4 rounded-xl border px-4 py-3 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
+                         <p className="text-xs sm:text-sm font-bold">
+                           {feedback.isCorrect ? 'Correct answer.' : `Incorrect. Correct answer: ${feedback.correctAnswer}`}
+                         </p>
+                         {!feedback.isCorrect && feedback.answerExplanation && (
+                           <p className="text-[10px] sm:text-xs mt-1 opacity-80">{feedback.answerExplanation}</p>
+                         )}
+                       </div>
+                      )}
+                    </div>
                   );
                  })}
+                 
+                 {isStudent && attemptStarted && !quizResults && activeQuiz.problems?.length > 0 && (
+                   <div className="mt-12 pt-10 border-t border-outline/5 flex flex-col items-center gap-6">
+                     <div className="text-center space-y-2">
+                       <h5 className="text-lg font-bold text-on-surface">Ready to finish?</h5>
+                       <p className="text-sm text-on-surface-variant max-w-xs mx-auto">Make sure you've answered all questions. You cannot change your answers after submitting.</p>
+                     </div>
+                     <button
+                       onClick={() => handleSubmitQuizAttempt(false)}
+                       disabled={isSubmittingAttempt}
+                       className="w-full sm:w-auto bg-primary-container text-white px-12 py-4 rounded-xl font-bold text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-50"
+                     >
+                       {isSubmittingAttempt ? 'Submitting...' : 'Complete & Submit Assessment'}
+                     </button>
+                   </div>
+                 )}
                </div>
              ) : (
                <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-32 text-center opacity-40">
                   <ListChecks size={48} className="mx-auto mb-4 text-outline" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">No questions added yet.</p>
+                  <p className="text-sm font-bold uppercase tracking-widest text-on-surface-variant">No questions added yet.</p>
                </div>
              )}
           </div>
@@ -525,7 +783,7 @@ const TopicQuiz = () => {
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Quiz Title</label>
+              <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Quiz Title</label>
               <input 
                 value={quizMeta.title} 
                 onChange={e => setQuizMeta({...quizMeta, title: e.target.value})} 
@@ -535,13 +793,24 @@ const TopicQuiz = () => {
             </div>
             
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Instructions / Description</label>
+              <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Instructions / Description</label>
               <textarea 
                 value={quizMeta.description} 
                 onChange={e => setQuizMeta({...quizMeta, description: e.target.value})} 
                 placeholder="Guidelines for students..." 
                 rows="4" 
                 className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-medium text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm" 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Duration (minutes)</label>
+              <input 
+                type="number"
+                value={quizMeta.duration} 
+                onChange={e => setQuizMeta({...quizMeta, duration: parseInt(e.target.value) || 0})} 
+                placeholder="30" 
+                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm" 
               />
             </div>
 
@@ -558,7 +827,7 @@ const TopicQuiz = () => {
 
         {/* Existing Quizzes */}
         <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline px-2">{isStudent ? 'Knowledge Assessments' : 'Published Quizzes'} ({quizzes.length})</h4>
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-outline px-2">{isStudent ? 'Knowledge Assessments' : 'Published Quizzes'} ({quizzes.length})</h4>
           {loading ? (
             <div className="flex justify-center py-20 bg-white rounded-xl border border-outline/5"><div className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></div></div>
           ) : quizzes.length > 0 ? (
@@ -567,25 +836,47 @@ const TopicQuiz = () => {
                 <div 
                   key={q._id} 
                   onClick={() => fetchQuizDetails(q._id)}
-                  className="p-6 bg-white border border-outline-variant rounded-xl flex justify-between items-center group cursor-pointer hover:border-primary-container hover:shadow-lg transition-all duration-300"
+                  className="p-4 sm:p-6 bg-white border border-outline-variant rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group cursor-pointer hover:border-primary-container hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all">
-                      <ListChecks size={24} />
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all shrink-0">
+                      <ListChecks size={20} className="sm:hidden" />
+                      <ListChecks size={24} className="hidden sm:block" />
                     </div>
-                    <div>
-                      <h4 className="font-bold text-on-surface text-lg">{q.title}</h4>
-                      <p className="text-sm text-on-surface-variant/60 font-medium">{isStudent ? 'Launch Assessment' : 'Click to manage questions'}</p>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-on-surface text-base sm:text-lg truncate">{q.title}</h4>
+                      {isStudent && q.userScore ? (
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${q.userScore.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
+                            {q.userScore.status === 'completed' ? (q.userScore.score >= 50 ? 'Passed' : 'Failed') : 'In Progress'}
+                          </span>
+                          <span className="text-xs sm:text-sm text-on-surface-variant/60 font-medium">
+                            {q.userScore.status === 'completed' ? `Score: ${Math.round(q.userScore.score)}%` : 'Resume Attempt'}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-on-surface-variant/60 font-medium">{isStudent ? 'Launch Assessment' : 'Click to manage questions'}</p>
+                      )}
                     </div>
                   </div>
-                  {!isStudent && (
-                    <button 
-                      onClick={(e) => handleDeleteQuiz(q._id, e)} 
-                      className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all p-2.5 hover:bg-error/5 rounded-lg"
-                    >
-                      <Trash2 size={20}/>
-                    </button>
-                  )}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-0 pt-3 sm:pt-0">
+                    {isStudent && q.userScore?.status === 'completed' && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 rounded-lg border border-emerald-500/10 text-emerald-600 text-[10px] sm:text-xs font-bold">
+                        <CheckCircle2 size={14} /> Completed
+                      </div>
+                    )}
+                    {!isStudent && (
+                      <button 
+                        onClick={(e) => handleDeleteQuiz(q._id, e)} 
+                        className="text-outline hover:text-error p-2 hover:bg-error/5 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={18}/>
+                      </button>
+                    )}
+                    <div className="sm:hidden text-primary-container font-black text-[10px] uppercase tracking-widest">
+                      {isStudent ? (q.userScore?.status === 'completed' ? 'View' : 'Start') : 'Manage'} →
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
