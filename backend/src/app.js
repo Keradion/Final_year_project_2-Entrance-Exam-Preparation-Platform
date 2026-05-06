@@ -8,12 +8,53 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+const configuredOrigins = String(process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const allowVercelPreviewOrigins = process.env.ALLOW_VERCEL_PREVIEW_ORIGINS !== 'false';
+
+const isAllowedOrigin = (origin) => {
+  const normalizedOrigin = String(origin || '').trim().replace(/\/$/, '');
+  if (!normalizedOrigin) {
+    return false;
+  }
+
+  if (configuredOrigins.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  if (!allowVercelPreviewOrigins) {
+    return false;
+  }
+
+  try {
+    const { hostname } = new URL(normalizedOrigin);
+    return hostname.endsWith('.vercel.app');
+  } catch (error) {
+    return false;
+  }
+};
+
 // Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow non-browser and same-origin requests with no Origin header.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    logger.warn('Blocked by CORS policy', { origin });
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
