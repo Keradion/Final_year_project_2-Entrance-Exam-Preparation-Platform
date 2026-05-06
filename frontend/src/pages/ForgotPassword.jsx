@@ -22,7 +22,9 @@ const ForgotPassword = () => {
       const response = await requestPasswordReset({ email: data.email });
       setMessage(response?.data?.message || response?.message || 'If any account exists for this email, a reset link will be sent.');
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not process your request.');
+      const apiMessage = err.response?.data?.message;
+      const validationMessage = err.response?.data?.errors?.[0]?.msg;
+      setError(apiMessage || validationMessage || 'Could not process your request.');
     }
   };
 
