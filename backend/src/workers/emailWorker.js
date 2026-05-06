@@ -31,6 +31,8 @@ const getTransporter = () => {
     host,
     port,
     secure: port === 465,
+    // Render and similar hosts may not have IPv6 egress; prefer IPv4 for SMTP.
+    family: Number(process.env.EMAIL_IP_FAMILY || 4),
     auth: {
       user,
       pass,
