@@ -10,9 +10,34 @@
  *      by sourcing them from environment variables for better security and flexibility.
  */
 
-const connection = {
-  host: process.env.REDIS_HOST || '127.0.0.1', // Default to localhost if not specified
-  port: process.env.REDIS_PORT || 6379,       // Default Redis port
-};
+function buildConnection() {
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) {
+    const parsed = new URL(redisUrl);
+    const connection = {
+      host: parsed.hostname,
+      port: Number(parsed.port || 6379),
+    };
+
+    if (parsed.username) {
+      connection.username = decodeURIComponent(parsed.username);
+    }
+    if (parsed.password) {
+      connection.password = decodeURIComponent(parsed.password);
+    }
+    if (parsed.protocol === 'rediss:') {
+      connection.tls = {};
+    }
+
+    return connection;
+  }
+
+  return {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: Number(process.env.REDIS_PORT || 6379),
+  };
+}
+
+const connection = buildConnection();
 
 module.exports = { connection };

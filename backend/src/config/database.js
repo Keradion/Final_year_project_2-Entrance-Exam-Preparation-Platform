@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 async function connectDB() {
   try {
-    const mongoURI = process.env.DATABASE_URL;
+    const mongoURI = process.env.MONGODB_URI || process.env.DATABASE_URL;
     
     if (!mongoURI) {
-      throw new Error('DATABASE_URL is not defined in environment variables');
+      throw new Error('MONGODB_URI or DATABASE_URL is not defined in environment variables');
     }
 
     await mongoose.connect(mongoURI, {
