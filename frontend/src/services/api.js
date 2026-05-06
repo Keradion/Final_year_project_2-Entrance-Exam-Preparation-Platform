@@ -1,7 +1,22 @@
 import axios from 'axios';
 
 const DEFAULT_API_BASE_URL = 'https://final-year-project-2-entrance-exam.onrender.com/api';
-const envApiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').trim();
+const normalizeApiBaseUrl = (rawValue) => {
+  const raw = String(rawValue || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  // Handle misconfigured env values like:
+  // "VITE_API_BASE_URL=https://example.com/api"
+  const withoutKey = raw.replace(/^VITE_API_BASE_URL\s*=\s*/i, '');
+  // Repair accidental single-slash protocol (https:/example.com -> https://example.com)
+  const fixedProtocol = withoutKey.replace(/^https:\/(?!\/)/i, 'https://').replace(/^http:\/(?!\/)/i, 'http://');
+
+  return fixedProtocol.replace(/\/$/, '');
+};
+
+const envApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 const isBrowser = typeof window !== 'undefined';
 const isLocalFrontend =
   isBrowser &&
