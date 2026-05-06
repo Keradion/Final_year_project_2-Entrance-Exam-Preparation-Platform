@@ -19,6 +19,7 @@ const { connection } = require('../config/bullmq');
 
 const getTransporter = () => {
   const host = process.env.EMAIL_HOST;
+  const hostV4 = process.env.EMAIL_HOST_IPV4;
   const port = Number(process.env.EMAIL_PORT || 587);
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASSWORD;
@@ -28,11 +29,14 @@ const getTransporter = () => {
   }
 
   return nodemailer.createTransport({
-    host,
+    host: hostV4 || host,
     port,
     secure: port === 465,
-    // Render and similar hosts may not have IPv6 egress; prefer IPv4 for SMTP.
-    family: Number(process.env.EMAIL_IP_FAMILY || 4),
+    tls: hostV4
+      ? {
+          servername: host,
+        }
+      : undefined,
     auth: {
       user,
       pass,

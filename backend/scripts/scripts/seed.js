@@ -22,7 +22,7 @@ const {
  * How to run:
  * 1. Make sure your MongoDB server is running.
  * 2. Make sure your .env file is correctly configured with the DATABASE_URL.
- * 3. From the 'backend' directory, run: `node scripts/seed.js`
+ * 3. From the 'backend' directory, run: `npm run seed`
  *
  * ==================================================================================
  */

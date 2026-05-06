@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node scripts/seed.js",
+    "seed": "node scripts/scripts/seed.js",
     "test:redis": "node scripts/testRedis.js",
     "test": "cross-env NODE_ENV=test REDIS_ENABLED=false mocha --require @babel/register test/**/*.js --exit"
   },
