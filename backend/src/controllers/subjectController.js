@@ -89,7 +89,8 @@ class SubjectController {
       const subjects = await appCache.readThrough(
         appCache.subjectsListKey(),
         appCache.TTL_CONTENT,
-        () => subjectService.getAllSubjects()
+        () => subjectService.getAllSubjects(),
+        { skipEmptyArray: true }
       );
       res.status(200).json(subjects);
     } catch (error) {

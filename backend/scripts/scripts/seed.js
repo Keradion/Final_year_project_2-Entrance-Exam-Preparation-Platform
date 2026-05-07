@@ -190,6 +190,16 @@ const seedDatabase = async () => {
     });
     console.log('Chemistry subject, chapter, topic, and content created.');
 
+    try {
+      const { connectRedis } = require('../../src/config/redis');
+      const appCache = require('../../src/services/appCache');
+      await connectRedis().catch(() => {});
+      await appCache.invalidateSubjectsCatalog();
+      console.log('Subjects catalogue cache invalidated (if Redis is available).');
+    } catch (_err) {
+      /* ignore cache invalidation failures */
+    }
+
     console.log('\n✅ Database seeding completed successfully!');
   } catch (error) {
     console.error('❌ Error seeding database:', error);

@@ -40,6 +40,14 @@ import {
   getSubjectProgress
 } from './services/engagement';
 
+/** Match seed/UI variants like "12" vs "Grade 12". */
+const gradeMatchesFilter = (subjectGrade, selectedGrade) => {
+  const g = String(subjectGrade ?? '').replace(/\D/g, '');
+  const s = String(selectedGrade ?? '').replace(/\D/g, '');
+  if (g && s) return g === s;
+  return String(subjectGrade) === String(selectedGrade);
+};
+
 // Student Layout Component with Persistent Sidebar
 const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
   const { user, logout } = useContext(AuthContext);
@@ -105,7 +113,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
           return acc;
         }, {});
         setNavSubjects(subjectsList.filter((subject) =>
-          String(subject.gradeLevel) === String(selectedGrade) &&
+          gradeMatchesFilter(subject.gradeLevel, selectedGrade) &&
           (!subject.stream || subject.stream === user?.stream)
         ).map((subject) => ({
           ...subject,
@@ -1089,7 +1097,7 @@ const Dashboard = ({ selectedGrade }) => {
         const subjectsList = Array.isArray(response.data) ? response.data : (response.data.data || []);
         const filtered = subjectsList.filter(
           (s) =>
-            String(s.gradeLevel) === String(selectedGrade) &&
+            gradeMatchesFilter(s.gradeLevel, selectedGrade) &&
             (!s.stream || s.stream === user?.stream),
         );
         setSubjects(filtered);

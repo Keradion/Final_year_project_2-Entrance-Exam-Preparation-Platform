@@ -73,10 +73,10 @@ function progressEligibilityKey(userId, topicId) {
  * @param {string} key
  * @param {number} ttlSeconds
  * @param {() => Promise<any>} loader
- * @param {{ skipEmptyCache?: boolean }} [options]
+ * @param {{ skipEmptyCache?: boolean, skipEmptyArray?: boolean }} [options]
  */
 async function readThrough(key, ttlSeconds, loader, options = {}) {
-  const { skipEmptyCache } = options;
+  const { skipEmptyCache, skipEmptyArray } = options;
   const client = getRedisClient();
   if (!client) {
     return loader();
@@ -85,7 +85,9 @@ async function readThrough(key, ttlSeconds, loader, options = {}) {
     const raw = await client.get(key);
     if (raw !== undefined && raw !== null) {
       const parsed = JSON.parse(raw);
-      if (skipEmptyCache && parsed === null) {
+      const emptyArrayMiss =
+        skipEmptyArray && Array.isArray(parsed) && parsed.length === 0;
+      if (emptyArrayMiss || (skipEmptyCache && parsed === null)) {
         await client.del(key).catch(() => {});
       } else if (!skipEmptyCache || parsed != null) {
         return parsed;

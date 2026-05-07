@@ -31,6 +31,13 @@ import {
   askQuestion
 } from '../services/engagement';
 
+const gradeMatchesFilter = (subjectGrade, selectedGrade) => {
+  const g = String(subjectGrade ?? '').replace(/\D/g, '');
+  const s = String(selectedGrade ?? '').replace(/\D/g, '');
+  if (g && s) return g === s;
+  return String(subjectGrade) === String(selectedGrade);
+};
+
 const StudentDashboard = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -53,7 +60,7 @@ const StudentDashboard = () => {
         const subjectsList = Array.isArray(response.data) ? response.data : (response.data.data || []);
         
         const filtered = subjectsList.filter(s => 
-          String(s.gradeLevel) === String(user.gradeLevel) && 
+          gradeMatchesFilter(s.gradeLevel, user.gradeLevel) && 
           (!s.stream || s.stream === user.stream)
         );
         setSubjects(filtered);
