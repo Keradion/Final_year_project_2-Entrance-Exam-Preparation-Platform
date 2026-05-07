@@ -1,6 +1,36 @@
 // backend/src/services/emailService.js
 const nodemailer = require('nodemailer');
 
+const sendViaBrevoApi = async (to, subject, body, html) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  if (!apiKey || !fromEmail) {
+    return false;
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': apiKey,
+    },
+    body: JSON.stringify({
+      sender: { email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      textContent: body,
+      htmlContent: html,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error: ${response.status} ${errorBody}`);
+  }
+
+  return true;
+};
+
 const getTransporter = () => {
   const host = process.env.EMAIL_HOST;
   const hostV4 = process.env.EMAIL_HOST_IPV4;
@@ -29,6 +59,11 @@ const getTransporter = () => {
 };
 
 const sendDirectEmail = async (to, subject, body, html) => {
+  if (process.env.BREVO_API_KEY) {
+    await sendViaBrevoApi(to, subject, body, html);
+    return;
+  }
+
   const transporter = getTransporter();
 
   if (!transporter) {

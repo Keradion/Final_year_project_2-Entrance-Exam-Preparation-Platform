@@ -3,6 +3,36 @@ const { Worker } = require('bullmq');
 const nodemailer = require('nodemailer');
 const { connection } = require('../config/bullmq');
 
+const sendViaBrevoApi = async (to, subject, body, html) => {
+  const apiKey = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  if (!apiKey || !fromEmail) {
+    return false;
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': apiKey,
+    },
+    body: JSON.stringify({
+      sender: { email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      textContent: body,
+      htmlContent: html,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error: ${response.status} ${errorBody}`);
+  }
+
+  return true;
+};
+
 /**
  * What: This file defines the worker that processes jobs from the 'email' queue.
  * Why: A worker is a background process that listens for and executes jobs from a queue.
@@ -57,6 +87,11 @@ const emailWorker = new Worker(
 
     try {
       console.log(`✉️ Sending email to: ${to} (Subject: ${subject})`);
+      if (process.env.BREVO_API_KEY) {
+        await sendViaBrevoApi(to, subject, body, html);
+        console.log(`✅ Email sent successfully to: ${to} (Brevo API)`);
+        return;
+      }
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to,
