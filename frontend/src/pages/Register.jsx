@@ -268,10 +268,9 @@ const Register = () => {
           <div className="w-full max-w-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-12">
                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-                  Step 02: Academic Configuration
+                  Step 02: Stream Selection
                </div>
-               <h2 className="text-4xl font-bold text-on-surface mb-3">Your Academic Path</h2>
-               <p className="text-on-surface-variant">Select your primary area of focus.</p>
+               <h2 className="text-4xl font-bold text-on-surface mb-3">Select your stream</h2>
             </div>
 
             <div className="bg-card rounded-2xl border border-outline-variant p-10 shadow-xl mb-12">
