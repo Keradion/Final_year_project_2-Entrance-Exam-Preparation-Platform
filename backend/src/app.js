@@ -176,14 +176,22 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  logger.error('Unhandled application error', {
+  const logMeta = {
     name: err.name,
     message: err.message || 'Unknown error',
-    status: err.status || err.statusCode || 500,
     method: req.method,
     path: req.originalUrl,
     stack: err.stack,
-  });
+  };
+
+  const logAndRespond = (status, body) => {
+    if (status >= 500) {
+      logger.error('Unhandled application error', { ...logMeta, status });
+    } else {
+      logger.warn('Request rejected', { ...logMeta, status });
+    }
+    return res.status(status).json(body);
+  };
 
   // Best-effort local error log; never fail request handling if file path is unavailable.
   try {
@@ -204,7 +212,7 @@ app.use((err, req, res, next) => {
 
   // Mongoose/ObjectId casting issues (e.g., invalid :id in URL)
   if (err.name === 'CastError') {
-    return res.status(400).json({
+    return logAndRespond(400, {
       success: false,
       message: `Invalid ${err.path || 'id'} format.`,
       error: `Invalid ${err.path || 'id'} format.`,
@@ -220,7 +228,7 @@ app.use((err, req, res, next) => {
       message: validationErr.message,
     }));
 
-    return res.status(400).json({
+    return logAndRespond(400, {
       success: false,
       message: 'Validation failed.',
       error: 'Validation failed.',
@@ -233,7 +241,7 @@ app.use((err, req, res, next) => {
   // Mongo duplicate key errors
   if (err.code === 11000) {
     const duplicateField = Object.keys(err.keyPattern || {})[0] || 'field';
-    return res.status(409).json({
+    return logAndRespond(409, {
       success: false,
       message: `${duplicateField} already exists.`,
       error: `${duplicateField} already exists.`,
@@ -244,7 +252,7 @@ app.use((err, req, res, next) => {
 
   // JWT errors
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    return res.status(401).json({
+    return logAndRespond(401, {
       success: false,
       message: 'Invalid or expired authentication token.',
       error: 'Invalid or expired authentication token.',
@@ -252,10 +260,10 @@ app.use((err, req, res, next) => {
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
   }
-  
+
   // Handle custom error objects
   if (err.status && err.message) {
-    return res.status(err.status).json({
+    return logAndRespond(err.status, {
       success: false,
       message: err.message,
       error: err.message,
@@ -267,7 +275,7 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || err.status || 500;
   const message = err.message || 'Internal Server Error';
 
-  res.status(statusCode).json({
+  return logAndRespond(statusCode, {
     success: false,
     message,
     error: message,

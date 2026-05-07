@@ -7,6 +7,18 @@ const notificationService = require('./notificationService');
 const emailService = require('./emailService');
 const logger = require('../utils/logger');
 
+async function upsertPendingUserByEmail(email, payload) {
+  const options = { new: true, runValidators: true };
+  try {
+    return await PendingUser.findOneAndUpdate({ email }, { $set: payload }, { ...options, upsert: true });
+  } catch (err) {
+    if (err.code === 11000) {
+      return await PendingUser.findOneAndUpdate({ email }, { $set: payload }, options);
+    }
+    throw err;
+  }
+}
+
 class AuthService {
   getGeminiKeyEncryptionKey() {
     const secret = process.env.GEMINI_KEY_ENCRYPTION_SECRET || process.env.JWT_SECRET;
@@ -61,18 +73,32 @@ class AuthService {
         firstName, lastName, email, password, phoneNumber, profileImage,
         role: 'teacher', status: 'active', isEmailVerified: true, stream, gradeLevel
       });
-      await user.save();
+      try {
+        await user.save();
+      } catch (err) {
+        if (err.code === 11000) {
+          throw { status: 409, message: 'Email already registered' };
+        }
+        throw err;
+      }
       const token = this.generateToken(user._id);
       return { user: this.formatUserResponse(user), token, verificationRequired: false };
     }
 
-    // For students/others, create pending registration
-    await PendingUser.findOneAndDelete({ email }); // Clear any previous attempt
-    const pendingUser = new PendingUser({
-      firstName, lastName, email, password, phoneNumber, profileImage,
-      role: requestedRole, stream, gradeLevel: requestedRole === 'student' ? null : gradeLevel, verificationCode
+    // For students/others: single atomic upsert (avoids races between delete + insert).
+    await upsertPendingUserByEmail(email, {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      profileImage,
+      role: requestedRole,
+      stream,
+      gradeLevel: requestedRole === 'student' ? null : gradeLevel,
+      verificationCode,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
-    await pendingUser.save();
 
     // Send verification email
     await emailService.sendEmail(
@@ -126,7 +152,15 @@ class AuthService {
       isEmailVerified: true,
     });
 
-    await user.save();
+    try {
+      await user.save();
+    } catch (err) {
+      if (err.code === 11000) {
+        await PendingUser.deleteOne({ _id: pending._id }).catch(() => {});
+        throw { status: 409, message: 'Email already registered' };
+      }
+      throw err;
+    }
     await PendingUser.deleteOne({ _id: pending._id });
 
     const token = this.generateToken(user._id);
