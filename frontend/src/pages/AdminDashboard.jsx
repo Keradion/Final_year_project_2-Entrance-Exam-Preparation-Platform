@@ -254,21 +254,21 @@ const AdminDashboard = () => {
 
       <div className="flex-grow flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-           <div className="flex items-center gap-3">
-             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2">
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-3 sm:px-4 lg:px-gutter flex items-center justify-between gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+             <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2 shrink-0 rounded-lg hover:bg-surface" aria-label="Open menu">
                <Menu size={24} />
              </button>
-            <h2 className="text-xl font-semibold text-on-surface">{activeSectionLabel}</h2>
+            <h2 className="text-base sm:text-xl font-semibold text-on-surface truncate min-w-0">{activeSectionLabel}</h2>
            </div>
            
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-1 sm:gap-4 shrink-0">
              <ThemeToggle />
              <div className="text-right hidden sm:block">
                <p className="text-sm font-semibold">{user?.firstName || 'Admin'}</p>
                 <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">Admin</p>
              </div>
-             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity">
+             <Link to="/profile" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0">
                 {user?.profileImage ? (
                   <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 ) : (

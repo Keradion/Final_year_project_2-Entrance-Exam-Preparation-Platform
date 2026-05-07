@@ -174,8 +174,8 @@ const TeacherLayout = () => {
       )}
 
       <div className="flex-grow flex flex-col min-w-0 min-h-0">
-        <header className="h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-3 sm:px-4 lg:px-gutter flex items-center justify-between gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
@@ -184,18 +184,18 @@ const TeacherLayout = () => {
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-xl font-semibold tracking-tight text-on-surface truncate">
+            <h2 className="text-base sm:text-xl font-semibold tracking-tight text-on-surface truncate min-w-0">
               {headerTitle}
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4 shrink-0">
             <ThemeToggle />
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowNotifications((v) => !v)}
-                className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
                 title="Notifications"
               >
                 <Bell size={18} />
@@ -206,7 +206,7 @@ const TeacherLayout = () => {
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-[320px] max-h-[360px] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-50">
+                <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
                   <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
                     <p className="text-sm font-semibold">Notifications</p>
                     <span className="text-xs text-on-surface-variant">
@@ -247,7 +247,7 @@ const TeacherLayout = () => {
             </div>
             <Link
               to="/profile"
-              className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0"
               title="Open profile"
             >
               {user?.profileImage ? (

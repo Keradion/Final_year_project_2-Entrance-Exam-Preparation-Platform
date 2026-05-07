@@ -809,25 +809,30 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
       )}
 
       <div className="flex-grow flex flex-col min-h-0 min-w-0">
-        <header className="h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-           <div className="flex items-center gap-3">
-             <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2"><Menu size={24} /></button>
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-3 sm:px-4 lg:px-gutter flex items-center justify-between gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+             <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2 shrink-0 rounded-lg hover:bg-surface -ml-1" aria-label="Open menu">
+               <Menu size={24} />
+             </button>
              {userRole === 'student' && (
-               <div className="relative">
+               <div className="relative min-w-0 flex-1 sm:flex-initial max-w-[min(14rem,calc(100vw-11rem))] sm:max-w-none">
                  <button
                    type="button"
                    onClick={() => setShowGradeMenu((value) => !value)}
-                   className="min-w-[160px] bg-surface border border-outline/10 rounded-2xl px-4 py-2.5 shadow-sm hover:border-primary-container/30 hover:bg-card transition-all flex items-center justify-between gap-3"
+                   className="w-full min-w-0 bg-surface border border-outline/10 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm hover:border-primary-container/30 hover:bg-card transition-all flex items-center justify-between gap-2"
                    title="Choose grade"
                  >
-                   <span className="text-left">
-                     <span className="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Current Grade</span>
-                     <span className="block text-sm font-black text-on-surface leading-tight">Grade {selectedGrade}</span>
+                   <span className="text-left min-w-0 truncate">
+                     <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-on-surface-variant leading-tight">Current Grade</span>
+                     <span className="block text-xs sm:text-sm font-black text-on-surface leading-tight truncate mt-0 sm:mt-px">
+                       <span className="sm:hidden">G{selectedGrade}</span>
+                       <span className="hidden sm:inline">Grade {selectedGrade}</span>
+                     </span>
                    </span>
-                   <span className="w-7 h-7 rounded-lg bg-primary-container/10 text-primary-container flex items-center justify-center text-xs font-black">▾</span>
+                   <span className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-primary-container/10 text-primary-container flex items-center justify-center text-[10px] font-black">▾</span>
                  </button>
                  {showGradeMenu && (
-                   <div className="absolute left-0 top-14 w-56 bg-white border border-outline-variant rounded-2xl shadow-[0px_12px_32px_rgba(0,0,0,0.12)] p-2 z-50">
+                   <div className="absolute left-0 top-full mt-2 z-[60] w-56 max-w-[min(18rem,calc(100vw-2rem))] bg-white border border-outline-variant rounded-2xl shadow-[0px_12px_32px_rgba(0,0,0,0.12)] p-2">
                      <div className="px-3 py-2 border-b border-outline/10 mb-1">
                        <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">Select Grade Level</p>
                        <p className="text-xs text-on-surface-variant mt-1">Switch your dashboard and learning map.</p>
@@ -864,11 +869,12 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                </div>
              )}
            </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 shrink-0">
              <div className="relative">
                <button
+                 type="button"
                  onClick={() => setShowNotifications((v) => !v)}
-                 className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
+                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
                  title="Notifications"
                >
                  <Bell size={18} />
@@ -879,7 +885,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  )}
                </button>
                {showNotifications && (
-                 <div className="absolute right-0 mt-2 w-[320px] max-h-[360px] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-50">
+                 <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
                    <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
                      <p className="text-sm font-semibold">Notifications</p>
                      <span className="text-xs text-on-surface-variant">{notifications.length} unread</span>
@@ -906,8 +912,9 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
              </div>
              <div className="relative">
                <button
+                 type="button"
                  onClick={() => setShowBookmarks((v) => !v)}
-                 className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
+                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
                  title={userRole === 'student' ? 'My bookmarks' : 'Bookmarks'}
                >
                  <Bookmark size={18} />
@@ -918,7 +925,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  )}
                </button>
                {showBookmarks && (
-                 <div className="absolute right-0 mt-2 w-[320px] max-h-[360px] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-50">
+                 <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
                    <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
                      <p className="text-sm font-semibold">My Bookmarks</p>
                      <span className="text-xs text-on-surface-variant">{bookmarks.length} saved</span>
@@ -969,7 +976,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                <p className="text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
                <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">{user?.stream || 'Student'}</p>
              </div>
-             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity">
+             <Link to="/profile" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0">
                {user?.profileImage ? <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" /> : <CircleUserRound size={24} />}
              </Link>
            </div>

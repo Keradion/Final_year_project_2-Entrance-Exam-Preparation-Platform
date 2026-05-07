@@ -107,13 +107,13 @@ const Register = () => {
   };
 
   return (
-    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
-      <main className="flex-grow flex items-center justify-center py-12 px-6">
+    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans overflow-x-hidden">
+      <main className="flex-grow flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 w-full min-w-0 max-w-[100vw] overflow-x-hidden box-border">
         {step === 1 ? (
           /* Step 1: Account Information */
           <div className="w-full max-w-[800px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Form Panel */}
-            <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+            <div className="bg-card rounded-xl border border-outline-variant p-4 sm:p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0">
               <div className="mb-stack-lg flex justify-between items-end">
                 <div>
                   <h3 className="text-2xl font-semibold text-on-surface mb-2">Create Account</h3>
@@ -265,16 +265,16 @@ const Register = () => {
           </div>
         ) : step === 2 ? (
           /* Step 2: Stream Selection ... (kept existing code) */
-          <div className="w-full max-w-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center mb-12">
+          <div className="w-full min-w-0 max-w-[900px] animate-in fade-in slide-in-from-bottom-4 duration-500 px-0">
+            <div className="text-center mb-8 sm:mb-12 px-1">
                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 text-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
                   Step 02: Stream Selection
                </div>
-               <h2 className="text-4xl font-bold text-on-surface mb-3">Select your stream</h2>
+               <h2 className="text-2xl sm:text-4xl font-bold text-on-surface mb-3">Select your stream</h2>
             </div>
 
-            <div className="bg-card rounded-2xl border border-outline-variant p-10 shadow-xl mb-12">
-               <div className="max-w-xl mx-auto">
+            <div className="bg-card rounded-2xl border border-outline-variant p-5 sm:p-10 shadow-xl mb-8 sm:mb-12 w-full min-w-0">
+               <div className="max-w-xl mx-auto min-w-0">
                   <div className="space-y-6">
                      <div className="flex items-center gap-4 mb-4">
                         <div className="w-10 h-10 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container">
@@ -306,13 +306,14 @@ const Register = () => {
                   </div>
                </div>
 
-               <div className="mt-12 pt-10 border-t border-outline/10 flex justify-between items-center">
-                  <button onClick={() => setStep(1)} className="text-on-surface-variant hover:text-on-surface font-semibold flex items-center gap-2 transition-colors">
+               <div className="mt-8 sm:mt-12 pt-6 sm:pt-10 border-t border-outline/10 flex flex-col-reverse gap-4 sm:flex-row sm:justify-between sm:items-center">
+                  <button type="button" onClick={() => setStep(1)} className="text-on-surface-variant hover:text-on-surface font-semibold flex items-center justify-center sm:justify-start gap-2 transition-colors py-2">
                      <ArrowLeft size={18} /> Back
                   </button>
                   <button 
+                     type="button"
                      onClick={handleSubmit(onAcademicSubmit)}
-                     className="bg-primary-container text-on-primary px-12 py-4 rounded-xl font-bold text-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-3 shadow-lg shadow-primary-container/20"
+                     className="w-full sm:w-auto justify-center bg-primary-container text-on-primary px-6 sm:px-12 py-4 rounded-xl font-bold text-base sm:text-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-3 shadow-lg shadow-primary-container/20"
                   >
                      Complete Registration
                      <ArrowRight size={20} />
@@ -322,14 +323,15 @@ const Register = () => {
           </div>
         ) : (
           /* Step 3: Verification */
-          <div className="w-full max-w-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-card rounded-2xl border border-outline-variant p-stack-lg shadow-xl text-center">
-              <div className="w-20 h-20 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container mx-auto mb-8">
-                <ShieldCheck size={40} />
+          <div className="w-full min-w-0 max-w-[min(32rem,calc(100vw-2rem))] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-card rounded-2xl border border-outline-variant p-4 sm:p-stack-lg shadow-xl text-center min-w-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container mx-auto mb-6 sm:mb-8">
+                <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10" />
               </div>
-              <h2 className="text-3xl font-bold text-on-surface mb-3">Verify Your Identity</h2>
-              <p className="text-on-surface-variant mb-8">
-                We've sent a 6-digit verification code to <span className="font-bold text-on-surface">{verificationEmail}</span>. Please enter it below to activate your account.
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mb-3 px-1">Verify Your Identity</h2>
+              <p className="text-on-surface-variant mb-6 sm:mb-8 text-sm sm:text-base px-1 break-words">
+                We've sent a 6-digit verification code to{' '}
+                <span className="font-bold text-on-surface break-all">{verificationEmail}</span>. Please enter it below to activate your account.
               </p>
 
               {error && (
@@ -339,11 +341,13 @@ const Register = () => {
                 </div>
               )}
 
-              <div className="flex justify-between gap-2 mb-8">
+              <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-w-xs sm:max-w-sm mx-auto mb-6 sm:mb-8 px-1">
                 {verificationCode.map((digit, index) => (
                   <input
                     key={index}
                     id={`code-${index}`}
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
                     type="text"
                     maxLength={1}
                     value={digit}
@@ -354,16 +358,16 @@ const Register = () => {
                         newCode[index] = val;
                         setVerificationCode(newCode);
                         if (val && index < 5) {
-                          document.getElementById(`code-${index + 1}`).focus();
+                          document.getElementById(`code-${index + 1}`)?.focus();
                         }
                       }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-                        document.getElementById(`code-${index - 1}`).focus();
+                        document.getElementById(`code-${index - 1}`)?.focus();
                       }
                     }}
-                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-outline-variant rounded-lg focus:border-primary-container outline-none transition-all"
+                    className="min-w-0 w-full aspect-[4/5] max-h-14 sm:max-h-16 text-center text-lg sm:text-2xl font-bold border-2 border-outline-variant rounded-lg focus:border-primary-container outline-none transition-all"
                   />
                 ))}
               </div>
