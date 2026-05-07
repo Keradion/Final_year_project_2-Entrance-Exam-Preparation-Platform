@@ -4,9 +4,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const swaggerUi = require('swagger-ui-express');
 const logger = require('./utils/logger');
+const getOpenApiSpec = require('./docs/openapi');
 
 const app = express();
+
+const openApiDocument = getOpenApiSpec();
 
 const configuredOrigins = String(process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
@@ -37,10 +41,16 @@ const isAllowedOrigin = (origin) => {
   }
 };
 
-// Middleware
-app.use(helmet({
+// Middleware (skip Helmet on Swagger UI so bundled scripts/styles are not blocked by CSP)
+const helmetMiddleware = helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+});
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/api/docs')) {
+    return next();
+  }
+  return helmetMiddleware(req, res, next);
+});
 app.use(cors({
   origin: (origin, callback) => {
     // Allow non-browser and same-origin requests with no Origin header.
@@ -118,6 +128,24 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
   });
 });
+
+app.get('/api/docs/openapi.json', (req, res) => {
+  res.json(openApiDocument);
+});
+
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openApiDocument, {
+    customSiteTitle: 'LMS API Docs',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'list',
+      filter: true,
+      tryItOutEnabled: true,
+    },
+  })
+);
 
 // API routes
 app.use('/api/auth', require('./routes/authRoutes'));

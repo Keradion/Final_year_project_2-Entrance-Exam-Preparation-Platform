@@ -62,5 +62,3 @@ router.put(
   subjectController.assignTeacherToSubject
 );
 module.exports = router;
-
-module.exports = router;
