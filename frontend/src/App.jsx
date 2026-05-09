@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { CircleUserRound, GraduationCap, LogOut, ShieldCheck, BookOpen, ArrowRight, Menu, X, Bell, Bookmark, Search, TriangleAlert, Bot, Send, Flame, CheckSquare } from 'lucide-react';
 import { AuthProvider, AuthContext } from './context/AuthContext';
@@ -57,6 +57,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showGradeMenu, setShowGradeMenu] = useState(false);
+  const gradeMenuRef = useRef(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
@@ -96,6 +97,24 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
       navigate('/dashboard');
     }
   };
+
+  useEffect(() => {
+    if (!showGradeMenu) return undefined;
+    const onPointerDown = (e) => {
+      if (gradeMenuRef.current && !gradeMenuRef.current.contains(e.target)) {
+        setShowGradeMenu(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setShowGradeMenu(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showGradeMenu]);
 
   useEffect(() => {
     const fetchGradeSubjects = async () => {
@@ -809,18 +828,20 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
       )}
 
       <div className="flex-grow flex flex-col min-h-0 min-w-0">
-        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2.5 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
-           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2.5 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-50 shrink-0 min-w-0 py-2 sm:py-0 overflow-visible">
+           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 min-h-0 overflow-visible">
              <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-1.5 shrink-0 rounded-lg hover:bg-surface" aria-label="Open menu">
                <Menu size={22} />
              </button>
              {userRole === 'student' && (
-               <div className="relative min-w-0 max-w-full sm:max-w-[11rem] md:max-w-none">
+               <div ref={gradeMenuRef} className="relative min-w-0 max-w-full sm:max-w-[11rem] md:max-w-none isolate z-[100]">
                  <button
                    type="button"
                    onClick={() => setShowGradeMenu((value) => !value)}
                    className="w-full min-w-0 bg-surface border border-outline/10 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm hover:border-primary-container/30 hover:bg-card transition-all flex items-center justify-between gap-2"
                    title="Choose grade"
+                   aria-expanded={showGradeMenu}
+                   aria-haspopup="listbox"
                  >
                    <span className="text-left min-w-0 truncate">
                      <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-on-surface-variant leading-tight">Current Grade</span>
@@ -832,17 +853,23 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                    <span className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 rounded-lg bg-primary-container/10 text-primary-container flex items-center justify-center text-[10px] font-black">▾</span>
                  </button>
                  {showGradeMenu && (
-                   <div className="absolute left-0 top-full mt-2 z-[60] w-56 max-w-[min(18rem,calc(100vw-2rem))] bg-white border border-outline-variant rounded-2xl shadow-[0px_12px_32px_rgba(0,0,0,0.12)] p-2">
+                   <div
+                     role="listbox"
+                     aria-label="Select grade level"
+                     className="absolute left-0 top-full mt-2 z-[120] w-56 max-w-[min(18rem,calc(100vw-2rem))] bg-white border border-outline-variant rounded-2xl shadow-[0px_12px_32px_rgba(0,0,0,0.12)] p-2"
+                   >
                      <div className="px-3 py-2 border-b border-outline/10 mb-1">
                        <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">Select Grade Level</p>
                        <p className="text-xs text-on-surface-variant mt-1">Switch your dashboard and learning map.</p>
                      </div>
                      {GRADE_ITEMS.map((item) => {
-                       const isSelected = item.key === selectedGrade;
+                       const isSelected = String(item.key) === String(selectedGrade);
                        return (
                          <button
                            key={item.key}
                            type="button"
+                           role="option"
+                           aria-selected={isSelected}
                            onClick={() => handleGradeClick(item.key)}
                            className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center justify-between gap-3 ${
                              isSelected
