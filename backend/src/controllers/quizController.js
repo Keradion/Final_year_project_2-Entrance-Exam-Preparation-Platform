@@ -249,13 +249,13 @@ exports.getQuiz = asyncHandler(async (req, res, next) => {
 
     const problems = await QuizProblem.find({ quizId });
 
-    // Check for existing user score
+    // Check for existing completed attempt (QuizScore schema uses quiz + student, not quizId + studentId)
     let userScore = null;
     if (req.user && req.user.role === 'student') {
-        userScore = await QuizScore.findOne({ 
-            quizId, 
-            studentId: req.user.id,
-            status: 'completed' 
+        userScore = await QuizScore.findOne({
+            quiz: quizId,
+            student: req.user.id,
+            status: 'completed',
         });
     }
 

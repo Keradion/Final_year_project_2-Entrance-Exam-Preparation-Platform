@@ -53,31 +53,62 @@ const TopicQuiz = () => {
     }
   };
 
+  const hydrateCompletedAttempt = (userScore) => {
+    if (!userScore) return;
+    setQuizResults(userScore);
+    setAttemptStarted(false);
+    setTimeLeft(0);
+
+    const answerMap = {};
+    if (Array.isArray(userScore.answers)) {
+      userScore.answers.forEach((ans) => {
+        if (ans?.problemId != null) answerMap[String(ans.problemId)] = ans.answer;
+      });
+    }
+    setSelectedQuizAnswers(answerMap);
+
+    const dr = userScore.detailedResults;
+    const feedbackObj = {};
+    if (dr != null && typeof dr === 'object') {
+      if (Array.isArray(dr)) {
+        dr.forEach((row) => {
+          if (row?.problemId != null) feedbackObj[String(row.problemId)] = row;
+        });
+      } else {
+        Object.entries(dr).forEach(([problemId, row]) => {
+          feedbackObj[String(problemId)] = row;
+        });
+      }
+    }
+    setQuizFeedback(feedbackObj);
+  };
+
+  const resetStudentAttemptState = () => {
+    setAttemptStarted(false);
+    setQuizResults(null);
+    setSelectedQuizAnswers({});
+    setQuizFeedback({});
+    setTimeLeft(0);
+  };
+
+  const exitQuizView = () => {
+    resetStudentAttemptState();
+    setActiveQuiz(null);
+    fetchQuizzes();
+  };
+
   const fetchQuizDetails = async (quizId) => {
     try {
       setLoading(true);
+      resetStudentAttemptState();
+
       const res = await api.get(`/quizzes/${quizId}`);
       const quizData = res.data.data;
       setActiveQuiz(quizData);
-      
-      // If student has already completed the quiz, show the result only
-      if (isStudent && quizData.userScore) {
-        setQuizResults(quizData.userScore);
-        
-        // If they passed, jump straight to review
-        if (quizData.userScore.score >= 50) {
-          setAttemptStarted(true);
-        }
-        
-        // Map answers if they exist (to show in the results view)
-        if (quizData.userScore.answers) {
-          const answerMap = {};
-          quizData.userScore.answers.forEach(ans => {
-            answerMap[ans.problemId] = ans.answer;
-          });
-          setSelectedQuizAnswers(answerMap);
-          setQuizFeedback(quizData.userScore.detailedResults || {});
-        }
+
+      const us = quizData.userScore;
+      if (isStudent && us?.status === 'completed') {
+        hydrateCompletedAttempt(us);
       }
     } catch (err) {
       showToast('Failed to load quiz details', 'error');
@@ -320,17 +351,18 @@ const TopicQuiz = () => {
 
       const { score, detailedResults, message } = res.data.data;
       setQuizResults(res.data.data);
-      
+      setAttemptStarted(false);
+
       if (detailedResults) {
-        // results is a map in the model, but might be an array in the return of submit
-        // let's check the backend controller
         const feedbackObj = {};
         if (Array.isArray(detailedResults)) {
-          detailedResults.forEach(r => {
-            feedbackObj[r.problemId] = r;
+          detailedResults.forEach((r) => {
+            if (r?.problemId != null) feedbackObj[String(r.problemId)] = r;
           });
         } else {
-          Object.assign(feedbackObj, detailedResults);
+          Object.entries(detailedResults).forEach(([k, v]) => {
+            feedbackObj[String(k)] = v;
+          });
         }
         setQuizFeedback(feedbackObj);
       }
@@ -391,58 +423,15 @@ const TopicQuiz = () => {
                 </div>
              </div>
            </div>
-            {quizResults ? (
-              <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700">
-                 <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 ${quizResults.score >= 50 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
-                   {quizResults.score >= 50 ? <CheckCircle2 size={40} /> : <BrainCircuit size={40} />}
-                 </div>
-                 <div className={`border px-6 sm:px-10 py-6 rounded-3xl text-center shadow-sm ${quizResults.score >= 50 ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-amber-500/5 border-amber-500/10'}`}>
-                   <p className={`${quizResults.score >= 50 ? 'text-emerald-600' : 'text-amber-600'} font-black uppercase tracking-[0.2em] text-[10px] mb-2`}>
-                     Status: {quizResults.score >= 50 ? 'Assessment Passed' : 'Retry Required'}
-                   </p>
-                   <p className="text-on-surface font-bold text-xl sm:text-2xl">
-                     {quizResults.score >= 50 ? 'Congratulations!' : 'Almost There!'}
-                   </p>
-                   <p className="text-on-surface-variant text-sm mt-2 max-w-sm">
-                     You have already taken this assessment. Your latest score was <strong className={quizResults.score >= 50 ? 'text-emerald-700' : 'text-amber-700'}>{Math.round(quizResults.score)}%</strong>.
-                     {quizResults.score >= 50 ? ' A confirmation email has been sent.' : ' You need at least 50% to pass and complete this topic.'}
-                   </p>
-                 </div>
-                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full justify-center">
-                    <button 
-                      onClick={() => setAttemptStarted(true)}
-                      className="w-full sm:w-auto bg-white border border-outline/20 text-on-surface px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-surface transition-all shadow-sm"
-                    >
-                      Review Responses
-                    </button>
-                    {quizResults.score < 50 ? (
-                      <button 
-                        onClick={handleStartQuiz}
-                        disabled={isStarting}
-                        className="w-full sm:w-auto bg-primary-container text-white px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary-container/20"
-                      >
-                        {isStarting ? 'Preparing...' : 'Retry Assessment'}
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => setActiveQuiz(null)}
-                        className="w-full sm:w-auto bg-primary-container text-white px-8 py-3.5 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary-container/20"
-                      >
-                        Return to Curriculum
-                      </button>
-                    )}
-                 </div>
-              </div>
-            ) : (
-              <button 
+            <button 
+                type="button"
                 onClick={handleStartQuiz}
                 disabled={isStarting}
-                className="w-full sm:w-auto bg-primary-container text-on-primary px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-50"
+                className="w-full sm:w-auto bg-primary-container text-on-primary px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary-container/20 hover:scale-105 transition-all disabled:opacity-50 min-h-11"
               >
                 {isStarting ? 'Preparing...' : 'Start Assessment'}
               </button>
-            )}
-           <button onClick={() => setActiveQuiz(null)} className="text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors">
+           <button type="button" onClick={exitQuizView} className="text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors">
              Maybe Later
            </button>
         </div>
@@ -453,35 +442,38 @@ const TopicQuiz = () => {
       <div className="py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in fade-in duration-500 relative w-full min-w-0 overflow-x-hidden">
         <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-md py-3 sm:py-4 -mx-3 px-3 sm:-mx-4 sm:px-4 border-b border-outline/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 transition-all min-w-0">
           <button 
-            onClick={() => { setActiveQuiz(null); fetchQuizzes(); }}
-            disabled={attemptStarted}
-            className={`flex items-center gap-2 text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors shrink-0 min-h-11 ${attemptStarted ? 'opacity-20 pointer-events-none' : ''}`}
+            type="button"
+            onClick={exitQuizView}
+            disabled={attemptStarted && !quizResults}
+            className={`flex items-center gap-2 text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors shrink-0 min-h-11 ${attemptStarted && !quizResults ? 'opacity-20 pointer-events-none' : ''}`}
           >
             <ChevronLeft size={16} /> <span className="hidden sm:inline">Back to {isStudent ? 'Assessments' : 'Quizzes'}</span>
             <span className="sm:hidden">Back</span>
           </button>
-          {isStudent && attemptStarted && (
+          {isStudent && quizResults && (
+            <div className={`flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm border shrink-0 ${
+              quizResults.score >= 50 ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-error/5 border-error/10'
+            }`}>
+              <p className={`text-[10px] sm:text-sm font-black uppercase tracking-widest ${quizResults.score >= 50 ? 'text-emerald-600' : 'text-error'}`}>
+                {quizResults.score >= 50 ? 'Passed' : 'Submitted'}
+              </p>
+              <p className="text-sm sm:text-lg font-black text-on-surface">{Math.round(quizResults.score)}%</p>
+            </div>
+          )}
+          {isStudent && attemptStarted && !quizResults && (
             <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
-              {!quizResults ? (
-                <>
-                  <div className="flex items-center gap-2 sm:gap-4 bg-error/5 border border-error/10 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm">
-                    <p className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-error/60">Time</p>
-                    <p className={`text-sm sm:text-lg font-mono font-bold ${timeLeft < 60 ? 'text-error animate-pulse' : 'text-on-surface'}`}>{formatTime(timeLeft)}</p>
-                  </div>
-                  <button
-                    onClick={() => handleSubmitQuizAttempt(false)}
-                    disabled={isSubmittingAttempt}
-                    className="flex items-center gap-2 bg-primary-container text-on-primary px-4 sm:px-8 py-2 sm:py-3 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 disabled:opacity-50 transition-all shadow-lg shadow-primary-container/20"
-                  >
-                    {isSubmittingAttempt ? '...' : 'Submit'}
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-center gap-4 bg-emerald-500/5 border border-emerald-500/10 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm">
-                  <p className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-emerald-600">Result</p>
-                  <p className="text-sm sm:text-lg font-black text-on-surface">{Math.round(quizResults.score)}%</p>
-                </div>
-              )}
+              <div className="flex items-center gap-2 sm:gap-4 bg-error/5 border border-error/10 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full shadow-sm">
+                <p className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-error/60">Time</p>
+                <p className={`text-sm sm:text-lg font-mono font-bold ${timeLeft < 60 ? 'text-error animate-pulse' : 'text-on-surface'}`}>{formatTime(timeLeft)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSubmitQuizAttempt(false)}
+                disabled={isSubmittingAttempt}
+                className="flex items-center gap-2 bg-primary-container text-on-primary px-4 sm:px-8 py-2 sm:py-3 rounded-xl font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:brightness-110 disabled:opacity-50 transition-all shadow-lg shadow-primary-container/20"
+              >
+                {isSubmittingAttempt ? '...' : 'Submit'}
+              </button>
             </div>
           )}
         </div>
@@ -496,7 +488,11 @@ const TopicQuiz = () => {
                   <h3 className={`text-xl sm:text-2xl font-bold ${quizResults.score >= 50 ? 'text-emerald-700' : 'text-error'}`}>
                     {quizResults.score >= 50 ? 'Assessment Passed!' : 'Retry Required'}
                   </h3>
-                  <p className="text-sm sm:text-base text-on-surface-variant font-medium">{quizResults.message}</p>
+                  <p className="text-sm sm:text-base text-on-surface-variant font-medium">
+                    {quizResults.message || (quizResults.score >= 50
+                      ? 'You have already completed this assessment. Review your answers below.'
+                      : 'You have already submitted this attempt. Review your answers below, or retry for a new attempt.')}
+                  </p>
                 </div>
                 {quizResults.score < 50 && (
                   <button 
@@ -660,7 +656,8 @@ const TopicQuiz = () => {
              {activeQuiz.problems?.length > 0 ? (
                <div className="space-y-4">
                  {activeQuiz.problems.map((prob, idx) => {
-                  const feedback = quizFeedback[prob._id];
+                  const pid = String(prob._id);
+                  const feedback = quizFeedback[pid];
                   const hasFeedback = Boolean(feedback);
                   return (
                     <div key={prob._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 shadow-sm group">
@@ -695,17 +692,17 @@ const TopicQuiz = () => {
                            <button
                              key={c.value}
                              type="button"
-                             disabled={!isStudent || !attemptStarted || hasFeedback}
-                             onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [prob._id]: c.value }))}
+                             disabled={!isStudent || !attemptStarted || hasFeedback || quizResults}
+                             onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [pid]: c.value }))}
                              className={`px-3 py-2 rounded-lg border text-[11px] sm:text-xs font-bold text-left transition-all break-words ${
                                isStudent
                                  ? hasFeedback
                                    ? c.value === feedback.correctAnswer
                                      ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700'
-                                     : selectedQuizAnswers[prob._id] === c.value
+                                     : selectedQuizAnswers[pid] === c.value
                                        ? 'bg-error/5 border-error/20 text-error'
                                        : 'bg-surface/50 border-outline/5 text-outline'
-                                   : selectedQuizAnswers[prob._id] === c.value
+                                   : selectedQuizAnswers[pid] === c.value
                                      ? 'bg-primary-container/5 border-primary-container/20 text-primary-container'
                                      : 'bg-surface/50 border-outline/5 text-outline hover:border-primary-container/20'
                                  : c.value === prob.correctAnswer
