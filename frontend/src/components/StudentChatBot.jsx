@@ -153,34 +153,34 @@ const StudentChatBot = () => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[90] rounded-full bg-error text-white shadow-xl shadow-error/30 flex items-center justify-center gap-2 px-4 py-3 hover:brightness-110 active:scale-95 transition-all"
+        className="fixed z-[90] rounded-full bg-error text-white shadow-xl shadow-error/30 flex items-center justify-center gap-1.5 sm:gap-2 pl-3 pr-3 sm:pl-4 sm:pr-4 py-3 min-h-11 min-w-11 sm:min-w-0 bottom-[max(1rem,env(safe-area-inset-bottom,0px)+0.5rem)] right-[max(1rem,env(safe-area-inset-right,0px))] sm:bottom-6 sm:right-6 hover:brightness-110 active:scale-95 transition-all"
         title="Ask AI tutor"
       >
-        <Bot size={26} />
-        <span className="text-sm font-black">AI Tutor</span>
+        <Bot size={24} className="sm:w-[26px] sm:h-[26px] shrink-0" />
+        <span className="text-xs sm:text-sm font-black whitespace-nowrap">AI Tutor</span>
       </button>
 
       {isOpen && (
         <div
-          className={`fixed z-[100] bg-white border border-outline/10 shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
+          className={`fixed z-[100] bg-white border border-outline/10 shadow-2xl overflow-hidden flex flex-col min-w-0 max-w-[100vw] transition-all duration-200 ${
             isExpanded
-              ? 'inset-4 rounded-2xl'
-              : 'inset-x-4 top-4 bottom-20 sm:inset-auto sm:right-6 sm:top-auto sm:bottom-24 sm:w-[380px] sm:h-[620px] max-h-[calc(100vh-6rem)] rounded-2xl'
+              ? 'inset-3 sm:inset-4 rounded-2xl pb-[env(safe-area-inset-bottom,0px)]'
+              : 'inset-x-3 top-3 bottom-[max(5rem,calc(env(safe-area-inset-bottom,0px)+5rem))] sm:inset-auto sm:right-6 sm:top-auto sm:bottom-24 sm:w-[min(380px,calc(100vw-3rem))] sm:h-[min(620px,85vh)] max-h-[calc(100vh-5.5rem)] sm:max-h-[calc(100vh-6rem)] rounded-2xl pb-[env(safe-area-inset-bottom,0px)]'
           }`}
         >
-          <div className="p-4 bg-error text-white flex items-center justify-between shrink-0 relative z-10">
-            <div className="flex items-center gap-2">
-              <Bot size={20} />
-              <div>
-                <p className="font-bold text-sm">AI Tutor</p>
-                <p className="text-[11px] opacity-80">{routeContext.topicId ? 'Topic-aware chat' : 'General study chat'}</p>
+          <div className="p-3 sm:p-4 bg-error text-white flex items-center justify-between gap-2 shrink-0 relative z-10 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Bot size={20} className="shrink-0" />
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">AI Tutor</p>
+                <p className="text-[10px] sm:text-[11px] opacity-80 truncate">{routeContext.topicId ? 'Topic-aware chat' : 'General study chat'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsExpanded((value) => !value)}
-                className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-lg shrink-0"
+                className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-white/10 rounded-lg shrink-0 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
                 aria-label={isExpanded ? 'Minimize AI tutor' : 'Expand AI tutor'}
                 title={isExpanded ? 'Minimize' : 'Full screen'}
               >
@@ -192,7 +192,7 @@ const StudentChatBot = () => {
                   setIsOpen(false);
                   setIsExpanded(false);
                 }}
-                className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-lg shrink-0"
+                className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-white/10 rounded-lg shrink-0 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
                 aria-label="Close AI tutor"
                 title="Close"
               >
@@ -201,16 +201,16 @@ const StudentChatBot = () => {
             </div>
           </div>
 
-          <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-3 bg-surface/40 ${isExpanded ? 'sm:px-8' : ''}`}>
+          <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden p-3 sm:p-4 space-y-3 bg-surface/40 ${isExpanded ? 'sm:px-8' : ''}`}>
             {messages.map((item, idx) => (
               <div
                 key={`${item.role}-${idx}`}
-                className={`p-3 rounded-xl text-sm leading-relaxed ${isExpanded ? 'max-w-3xl' : ''} ${
+                className={`p-3 rounded-xl text-sm leading-relaxed min-w-0 break-words ${
                   item.role === 'user'
-                    ? 'bg-error text-white ml-auto'
+                    ? `bg-error text-white ml-auto max-w-[min(100%,85%)] ${isExpanded ? 'sm:max-w-2xl' : ''}`
                     : item.isError
-                      ? 'bg-error/10 text-error border border-error/20 mr-auto'
-                      : 'bg-white border border-outline/10 text-on-surface mr-auto'
+                      ? `bg-error/10 text-error border border-error/20 mr-auto ${isExpanded ? 'max-w-3xl' : 'max-w-full'}`
+                      : `bg-white border border-outline/10 text-on-surface mr-auto ${isExpanded ? 'max-w-3xl' : 'max-w-full'}`
                 }`}
               >
                 {renderMessageText(item.text, item.role === 'user')}
@@ -223,17 +223,18 @@ const StudentChatBot = () => {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 border-t border-outline/10 flex gap-2 bg-white shrink-0">
+          <form onSubmit={handleSubmit} className="p-3 border-t border-outline/10 flex gap-2 bg-white shrink-0 min-w-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask a study question..."
-              className="flex-1 border border-outline/20 rounded-xl px-3 py-2 text-sm outline-none focus:border-error"
+              className="min-w-0 flex-1 border border-outline/20 rounded-xl px-3 py-2.5 min-h-11 text-sm outline-none focus:border-error"
             />
             <button
               type="submit"
               disabled={isLoading || !message.trim()}
-              className="bg-error text-white rounded-xl px-4 py-2 disabled:opacity-50 hover:brightness-110 transition-all"
+              className="bg-error text-white rounded-xl px-4 min-h-11 min-w-11 shrink-0 flex items-center justify-center disabled:opacity-50 hover:brightness-110 transition-all"
+              aria-label="Send message"
             >
               <Send size={18} />
             </button>

@@ -42,16 +42,16 @@ const CreateSubjectForm = ({ onCreate }) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto py-2">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 w-full max-w-2xl min-w-0 mx-auto py-2 px-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 min-w-0">
+        <div className="space-y-5 sm:space-y-6 min-w-0">
           <div>
             <label className="block text-sm font-medium text-on-surface mb-2">Academic Grade</label>
             <div className="relative">
               <select
                 value={grade}
                 onChange={e => setGrade(e.target.value)}
-                className="w-full bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all appearance-none cursor-pointer"
+                className="w-full min-h-11 bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all appearance-none cursor-pointer"
               >
                 <option value="">Select Grade Level</option>
                 {gradeLevels.map(g => (
@@ -68,7 +68,7 @@ const CreateSubjectForm = ({ onCreate }) => {
               <select
                 value={stream}
                 onChange={e => setStream(e.target.value)}
-                className="w-full bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all appearance-none cursor-pointer"
+                className="w-full min-h-11 bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all appearance-none cursor-pointer"
               >
                 <option value="">General</option>
                 <option value="Natural">Natural</option>
@@ -79,7 +79,7 @@ const CreateSubjectForm = ({ onCreate }) => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6 min-w-0">
           <div>
             <label className="block text-sm font-medium text-on-surface mb-2">Subject Name</label>
             <div className="relative">
@@ -87,18 +87,18 @@ const CreateSubjectForm = ({ onCreate }) => {
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all"
+                className="w-full min-h-11 bg-white border border-outline/20 rounded-lg px-4 py-3 pl-11 text-sm font-medium outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all"
                 placeholder="e.g. Advanced Mathematics"
               />
               <Plus size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
             </div>
           </div>
           
-          <div className="pt-7">
+          <div className="pt-2 sm:pt-7">
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary-container text-on-primary py-3 rounded-lg font-bold text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary-container/20"
+              className="w-full min-h-11 bg-primary-container text-on-primary py-3 rounded-lg font-bold text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary-container/20"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-on-primary/20 border-t-on-primary rounded-full animate-spin"></div>
@@ -114,9 +114,9 @@ const CreateSubjectForm = ({ onCreate }) => {
       </div>
 
       {error && (
-        <div className="mt-6 p-4 rounded-lg bg-error-container text-on-error-container text-sm flex items-center gap-3 animate-in shake-1">
-          <Plus size={20} className="rotate-45" />
-          <p>{error}</p>
+        <div className="mt-4 sm:mt-6 p-4 rounded-lg bg-error-container text-on-error-container text-sm flex items-start gap-3 animate-in shake-1 min-w-0">
+          <Plus size={20} className="rotate-45 shrink-0 mt-0.5" />
+          <p className="break-words min-w-0">{error}</p>
         </div>
       )}
     </form>

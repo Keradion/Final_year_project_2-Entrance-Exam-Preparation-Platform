@@ -173,14 +173,14 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="h-screen bg-background text-on-surface font-sans flex overflow-hidden">
+    <div className="h-screen bg-background text-on-surface font-sans flex overflow-hidden min-w-0 max-w-[100vw]">
       {/* Sidebar (Desktop) */}
-      <aside className="w-[280px] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shadow-[4px_0_12px_rgba(0,0,0,0.02)] shrink-0 h-full sticky top-0">
-        <div className="p-gutter h-20 flex items-center gap-3 border-b border-outline/5 px-8">
-          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
+      <aside className="w-[280px] max-w-[85vw] bg-white border-r border-outline/10 hidden lg:flex flex-col z-50 shadow-[4px_0_12px_rgba(0,0,0,0.02)] shrink-0 h-full sticky top-0 min-w-0">
+        <div className="p-4 sm:p-gutter h-[4.5rem] sm:h-20 flex items-center gap-3 border-b border-outline/5 px-4 sm:px-8 min-w-0">
+          <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center shrink-0">
             <GraduationCap className="text-on-primary" size={20} />
           </div>
-          <h2 className="text-xl font-semibold tracking-tight">Entrance Exam Prep</h2>
+          <h2 className="text-base sm:text-xl font-semibold tracking-tight truncate min-w-0">Entrance Exam Prep</h2>
         </div>
 
         <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
@@ -213,15 +213,15 @@ const StudentDashboard = () => {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100] lg:hidden">
           <div className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
-            <div className="p-gutter h-20 flex items-center justify-between border-b border-outline/5 px-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center">
+          <div className="absolute left-0 top-0 bottom-0 w-[min(280px,calc(100vw-48px))] max-w-[min(280px,92vw)] bg-white shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col min-w-0">
+            <div className="p-4 sm:p-gutter h-[4.5rem] sm:h-20 flex items-center justify-between gap-2 border-b border-outline/5 px-4 sm:px-8 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-8 h-8 bg-primary-container rounded-lg flex items-center justify-center shrink-0">
                   <GraduationCap className="text-on-primary" size={20} />
                 </div>
-                <span className="text-xl font-semibold tracking-tight">Entrance Exam Prep</span>
+                <span className="text-base sm:text-xl font-semibold tracking-tight truncate min-w-0">Entrance Exam Prep</span>
               </div>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="text-on-surface-variant p-2">
+              <button type="button" onClick={() => setIsMobileMenuOpen(false)} className="text-on-surface-variant p-2 shrink-0 min-h-11 min-w-11 flex items-center justify-center rounded-lg" aria-label="Close menu">
                 <X size={24} />
               </button>
             </div>
@@ -257,18 +257,18 @@ const StudentDashboard = () => {
 
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
-        <header className="h-20 bg-white border-b border-outline/5 px-4 lg:px-gutter flex items-center justify-between sticky top-0 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2"><Menu size={24} /></button>
-            <h2 className="text-xl font-semibold text-on-surface">Dashboard</h2>
+        <header className="min-h-[4rem] sm:h-20 bg-white border-b border-outline/5 px-3 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2 shrink-0 rounded-lg hover:bg-surface min-h-11 min-w-11 flex items-center justify-center" aria-label="Open menu"><Menu size={24} /></button>
+            <h2 className="text-base sm:text-xl font-semibold text-on-surface truncate min-w-0">Dashboard</h2>
           </div>
 
-          <div className="flex items-center gap-4">
-             <div className="hidden md:block text-right">
-               <p className="text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
-               <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">Grade {user?.gradeLevel} • {user?.stream || 'General'}</p>
+          <div className="flex items-center justify-end gap-2 sm:gap-4 shrink-0 flex-nowrap min-w-0 [&>*]:shrink-0">
+             <div className="hidden md:block text-right max-w-[140px] lg:max-w-none min-w-0">
+               <p className="text-sm font-semibold truncate">{user?.firstName} {user?.lastName}</p>
+               <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest truncate">Grade {user?.gradeLevel} • {user?.stream || 'General'}</p>
              </div>
-             <Link to="/profile" className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity">
+             <Link to="/profile" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0">
                {user?.profileImage ? (
                  <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" />
                ) : (
@@ -279,32 +279,33 @@ const StudentDashboard = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-grow p-gutter overflow-y-auto bg-white">
-          <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold">My Subjects</h3>
-                <div className="px-4 py-1 bg-primary-container/10 text-primary-container rounded-full text-xs font-bold">
+        <main className="flex-grow px-3 py-4 sm:p-gutter overflow-y-auto overflow-x-hidden bg-white min-w-0">
+          <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-0">
+            <div className="space-y-5 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
+                <h3 className="text-xl sm:text-2xl font-bold break-words">My Subjects</h3>
+                <div className="px-4 py-1.5 bg-primary-container/10 text-primary-container rounded-full text-xs font-bold w-fit shrink-0">
                   {subjects.length} Subjects Assigned
                 </div>
               </div>
 
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {[1,2,3].map(i => <div key={i} className="h-48 bg-surface-variant/20 rounded-2xl animate-pulse"></div>)}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {subjects.map(subject => (
-                    <div key={subject._id} className="bg-white rounded-2xl border border-outline/10 p-6 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
-                      <div className="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-4">
+                    <div key={subject._id} className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all group flex flex-col h-full min-w-0">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary-container mb-3 sm:mb-4 shrink-0">
                         <BookOpen size={24} />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">{subject.subjectName}</h3>
-                      <p className="text-outline text-sm mb-6 flex-grow">Access chapters, topics, and exercises for {subject.subjectName}.</p>
+                      <h3 className="text-lg sm:text-xl font-bold mb-2 break-words">{subject.subjectName}</h3>
+                      <p className="text-outline text-sm mb-4 sm:mb-6 flex-grow break-words">Access chapters, topics, and exercises for {subject.subjectName}.</p>
                       <button 
+                        type="button"
                         onClick={() => handleSelectSubject(subject._id)} 
-                        className="w-full bg-primary-container text-white py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                        className="w-full bg-primary-container text-white py-2.5 sm:py-3 rounded-lg font-semibold text-sm transition-all hover:opacity-90 flex items-center justify-center gap-2 min-h-11"
                       >
                         Start Learning
                         <ChevronRight size={16} />
@@ -326,8 +327,8 @@ const StudentDashboard = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4">
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 pt-3 sm:pt-4">
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-2 mb-4">
                     <Bell size={18} className="text-primary-container" />
                     <h4 className="font-bold">Unread Notifications</h4>
@@ -349,9 +350,9 @@ const StudentDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Bookmark size={18} className="text-primary-container" />
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-4 min-w-0">
+                    <Bookmark size={18} className="text-primary-container shrink-0" />
                     <h4 className="font-bold">My Bookmarks</h4>
                   </div>
                   <div className="space-y-2 max-h-72 overflow-auto pr-1">
@@ -372,17 +373,17 @@ const StudentDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Search size={18} className="text-primary-container" />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-4 min-w-0">
+                    <Search size={18} className="text-primary-container shrink-0" />
                     <h4 className="font-bold">Search Topics (FR-12)</h4>
                   </div>
                   <input
                     value={topicSearch}
                     onChange={(e) => setTopicSearch(e.target.value)}
                     placeholder="Search by topic title..."
-                    className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-container/20"
+                    className="w-full min-h-11 border border-outline/20 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-container/20"
                   />
                   <div className="mt-3 space-y-2 max-h-56 overflow-auto pr-1">
                     {topicResults.map((t) => (
@@ -395,9 +396,9 @@ const StudentDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TriangleAlert size={18} className="text-primary-container" />
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-4 min-w-0">
+                    <TriangleAlert size={18} className="text-primary-container shrink-0" />
                     <h4 className="font-bold">Report Issue (FR-14)</h4>
                   </div>
                   <form onSubmit={handleIssueSubmit} className="space-y-3">
@@ -405,35 +406,35 @@ const StudentDashboard = () => {
                       value={issueForm.title}
                       onChange={(e) => setIssueForm((p) => ({ ...p, title: e.target.value }))}
                       placeholder="Issue title"
-                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm"
+                      className="w-full min-h-11 border border-outline/20 rounded-xl px-4 py-2 text-sm"
                     />
                     <textarea
                       value={issueForm.issueDescription}
                       onChange={(e) => setIssueForm((p) => ({ ...p, issueDescription: e.target.value }))}
                       placeholder="Describe wrong answer / missing material / bug..."
-                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm min-h-[90px]"
+                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm min-h-[90px] resize-y"
                     />
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                       <select
                         value={issueForm.issueType}
                         onChange={(e) => setIssueForm((p) => ({ ...p, issueType: e.target.value }))}
-                        className="border border-outline/20 rounded-xl px-3 py-2 text-sm"
+                        className="border border-outline/20 rounded-xl px-3 py-2.5 text-sm min-h-11 w-full sm:w-auto sm:min-w-[140px]"
                       >
                         <option value="bug">bug</option>
                         <option value="error">error</option>
                         <option value="feature-request">feature-request</option>
                         <option value="other">other</option>
                       </select>
-                      <button className="bg-primary-container text-white px-4 py-2 rounded-xl text-sm font-semibold">Submit</button>
+                      <button type="submit" className="bg-primary-container text-white px-4 py-2.5 rounded-xl text-sm font-semibold min-h-11 w-full sm:w-auto">Submit</button>
                     </div>
                   </form>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <MessageSquarePlus size={18} className="text-primary-container" />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 mb-4 min-w-0">
+                    <MessageSquarePlus size={18} className="text-primary-container shrink-0" />
                     <h4 className="font-bold">Ask Topic Question (FR-16)</h4>
                   </div>
                   <form onSubmit={handleAskQuestion} className="space-y-3">
@@ -441,22 +442,22 @@ const StudentDashboard = () => {
                       value={questionForm.topicId}
                       onChange={(e) => setQuestionForm((p) => ({ ...p, topicId: e.target.value }))}
                       placeholder="Topic ID"
-                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm"
+                      className="w-full min-h-11 border border-outline/20 rounded-xl px-4 py-2 font-mono text-xs sm:text-sm"
                     />
                     <textarea
                       value={questionForm.questionText}
                       onChange={(e) => setQuestionForm((p) => ({ ...p, questionText: e.target.value }))}
                       placeholder="Ask your question..."
-                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm min-h-[90px]"
+                      className="w-full border border-outline/20 rounded-xl px-4 py-2 text-sm min-h-[90px] resize-y"
                     />
-                    <button className="bg-primary-container text-white px-4 py-2 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+                    <button type="submit" className="w-full sm:w-auto bg-primary-container text-white px-4 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2 min-h-11">
                       <Send size={14} /> Send
                     </button>
                   </form>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-outline/10 p-6">
-                  <h4 className="font-bold mb-4">My Recent Issues</h4>
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
+                  <h4 className="font-bold mb-4 break-words">My Recent Issues</h4>
                   <div className="space-y-2 max-h-60 overflow-auto pr-1">
                     {myIssues.slice(0, 6).map((i) => (
                       <div key={i._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
