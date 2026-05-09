@@ -1,5 +1,4 @@
 const { User, Topic, Chapter, Subject, Concept, Video, Exercise, Quiz, QuizProblem, ExamQuestion } = require('../models');
-const authService = require('../services/authService');
 const geminiService = require('../services/geminiService');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
@@ -53,6 +52,11 @@ const summarizeTopicResources = async (topicId, page) => {
   return sections.join('\n\n');
 };
 
+const getServerGeminiApiKey = () => {
+  const key = String(process.env.GEMINI_API_KEY || '').trim();
+  return key || null;
+};
+
 exports.chat = asyncHandler(async (req, res, next) => {
   const { message, topicId, page } = req.body || {};
   const text = typeof message === 'string' ? message.trim() : '';
@@ -61,12 +65,14 @@ exports.chat = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('message is required', 400));
   }
 
-  const student = await User.findById(req.user.id).select('+geminiApiKeyEncrypted firstName role');
+  const apiKey = getServerGeminiApiKey();
+  if (!apiKey) {
+    return next(new ErrorResponse('AI tutor is not configured on the server.', 503));
+  }
+
+  const student = await User.findById(req.user.id).select('firstName role');
   if (!student || student.role !== 'student') {
     return next(new ErrorResponse('AI chat is only available for students', 403));
-  }
-  if (!student.geminiApiKeyEncrypted) {
-    return next(new ErrorResponse('Please add your Gemini API key in your profile before using the AI tutor.', 400));
   }
 
   let topicContext = 'No specific topic is open. Answer as a general study tutor.';
@@ -87,7 +93,6 @@ exports.chat = asyncHandler(async (req, res, next) => {
     }
   }
 
-  const apiKey = authService.decryptGeminiApiKey(student.geminiApiKeyEncrypted);
   const prompt = `
 You are a helpful AI tutor for an entrance exam preparation platform.
 Answer the student clearly and step by step.

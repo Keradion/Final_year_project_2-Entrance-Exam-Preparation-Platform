@@ -36,16 +36,6 @@ export const getAiSettings = async () => {
   return response.data;
 };
 
-export const saveGeminiApiKey = async (apiKey) => {
-  const response = await api.put('/auth/gemini-key', { apiKey });
-  return response.data;
-};
-
-export const removeGeminiApiKey = async () => {
-  const response = await api.delete('/auth/gemini-key');
-  return response.data;
-};
-
 export const requestPasswordReset = async (payload) => {
   const response = await api.post('/auth/request-password-reset', payload);
   return response.data;

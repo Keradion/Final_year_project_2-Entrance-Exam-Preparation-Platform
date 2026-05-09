@@ -167,8 +167,6 @@ router.get('/profile', authenticate, authController.getProfile);
 router.put('/profile', authenticate, profileImageUpload.single('profileImageFile'), updateProfileValidation, authController.updateProfile);
 
 router.get('/ai-settings', authenticate, authController.getAiSettings);
-router.put('/gemini-key', authenticate, authController.updateGeminiApiKey);
-router.delete('/gemini-key', authenticate, authController.removeGeminiApiKey);
 
 /**
  * POST /api/auth/change-password

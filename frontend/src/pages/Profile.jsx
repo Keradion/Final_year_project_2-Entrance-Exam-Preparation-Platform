@@ -4,15 +4,13 @@ import { Link } from 'react-router-dom';
 import { 
   Save, User, ArrowLeft, Eye, EyeOff, FlaskConical, Globe, ShieldCheck, Mail, Phone, 
   Calendar, Activity, BadgeCheck, Edit2, Layout, LogOut, BookOpen, CircleUserRound, ArrowRight, Lock,
-  RefreshCw, KeyRound
+  RefreshCw, Bot
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import {
   updateProfile as updateProfileRequest,
   changePassword as changePasswordRequest,
   getAiSettings,
-  saveGeminiApiKey,
-  removeGeminiApiKey,
 } from '../services/auth';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -25,11 +23,7 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [aiSettings, setAiSettings] = useState(null);
-  const [aiMessage, setAiMessage] = useState('');
-  const [aiError, setAiError] = useState('');
-  const [isSavingAiKey, setIsSavingAiKey] = useState(false);
 
   const {
     register,
@@ -125,39 +119,6 @@ const Profile = () => {
     } catch (error) {
       const validationError = error.response?.data?.errors?.[0]?.msg;
       setPasswordError(validationError || error.response?.data?.message || 'Failed to change password.');
-    }
-  };
-
-  const handleSaveGeminiKey = async (e) => {
-    e.preventDefault();
-    try {
-      setAiError('');
-      setAiMessage('');
-      setIsSavingAiKey(true);
-      const response = await saveGeminiApiKey(geminiApiKey);
-      setAiSettings(response?.data || null);
-      setGeminiApiKey('');
-      setAiMessage('Gemini API key saved.');
-    } catch (error) {
-      setAiError(error.response?.data?.message || 'Failed to save Gemini API key.');
-    } finally {
-      setIsSavingAiKey(false);
-    }
-  };
-
-  const handleRemoveGeminiKey = async () => {
-    try {
-      setAiError('');
-      setAiMessage('');
-      setIsSavingAiKey(true);
-      const response = await removeGeminiApiKey();
-      setAiSettings(response?.data || null);
-      setGeminiApiKey('');
-      setAiMessage('Gemini API key removed.');
-    } catch (error) {
-      setAiError(error.response?.data?.message || 'Failed to remove Gemini API key.');
-    } finally {
-      setIsSavingAiKey(false);
     }
   };
 
@@ -371,84 +332,34 @@ const Profile = () => {
             </form>
           </div>
 
-          {/* AI Tutor Settings (Students Only) */}
+          {/* AI Tutor (Students) — server-managed Gemini key */}
           {user?.role === 'student' && (
             <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
               <div className="mb-stack-lg flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-semibold text-on-surface mb-2">AI Tutor Settings</h3>
+                  <h3 className="text-2xl font-semibold text-on-surface mb-2">AI Tutor</h3>
                   <p className="text-body-md text-on-surface-variant">
-                    Save your Gemini API key so the topic chatbot can answer your questions.
+                    The AI tutor uses a shared Google Gemini connection managed by the platform. You do not need to add or store your own API key.
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
-                  <KeyRound size={24} />
+                  <Bot size={24} />
                 </div>
               </div>
 
-              {aiMessage && (
-                <div className="mb-4 p-4 bg-primary-container/10 text-primary-container rounded-lg text-sm flex items-center gap-3">
-                  <BadgeCheck size={20} />
-                  {aiMessage}
-                </div>
-              )}
-              {aiError && (
-                <div className="mb-4 p-4 bg-error-container text-on-error-container rounded-lg text-sm flex items-center gap-3">
-                  <ShieldCheck size={20} />
-                  {aiError}
-                </div>
-              )}
-
-              <div className="mb-5 p-4 bg-surface rounded-xl border border-outline/10">
+              <div className="p-4 bg-surface rounded-xl border border-outline/10">
                 <p className="text-sm font-semibold text-on-surface">
                   Status:{' '}
-                  {aiSettings?.hasGeminiApiKey ? (
-                    <span className="text-primary-container">Connected (ends in {aiSettings.geminiApiKeyLast4})</span>
+                  {aiSettings?.aiTutorEnabled ? (
+                    <span className="text-primary-container">Available (platform Gemini)</span>
                   ) : (
-                    <span className="text-on-surface-variant">No Gemini key saved</span>
+                    <span className="text-on-surface-variant">Unavailable — server API key not configured</span>
                   )}
                 </p>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  Your key is encrypted on the server and is never shown again after saving.
+                <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                  If AI responses fail, ask your administrator to set <code className="font-mono text-[11px] bg-white px-1 rounded">GEMINI_API_KEY</code> on the backend.
                 </p>
               </div>
-
-              <form onSubmit={handleSaveGeminiKey} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-on-surface mb-2">Gemini API Key</label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      value={geminiApiKey}
-                      onChange={(e) => setGeminiApiKey(e.target.value)}
-                      placeholder="Paste your Gemini API key"
-                      autoComplete="off"
-                      className="w-full px-4 py-3 pl-11 rounded-lg border border-outline/20 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all"
-                    />
-                    <KeyRound size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="submit"
-                    disabled={isSavingAiKey || !geminiApiKey.trim()}
-                    className="px-8 bg-primary-container text-on-primary py-3 rounded-lg font-semibold text-md hover:brightness-110 active:opacity-80 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isSavingAiKey ? 'Saving...' : 'Save Gemini Key'}
-                    <Save size={18} />
-                  </button>
-                  {aiSettings?.hasGeminiApiKey && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveGeminiKey}
-                      disabled={isSavingAiKey}
-                      className="px-8 bg-card border border-outline/20 text-error py-3 rounded-lg font-semibold text-md hover:bg-error/5 transition-all disabled:opacity-50"
-                    >
-                      Remove Key
-                    </button>
-                  )}
-                </div>
-              </form>
             </div>
           )}
 

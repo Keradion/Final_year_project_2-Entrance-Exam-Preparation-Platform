@@ -24,7 +24,7 @@ const buildGeminiError = (status, message, attemptedModels) => {
 
   if (isQuotaError) {
     const error = new Error(
-      'Your Gemini API key has no free quota available for the AI tutor right now. Please wait for quota reset, try another Gemini key, or enable billing in Google AI Studio.'
+      'The AI tutor has no quota available right now (rate limit or billing). Please try again later or contact support.'
     );
     error.status = 429;
     error.details = { attemptedModels };
@@ -33,7 +33,7 @@ const buildGeminiError = (status, message, attemptedModels) => {
 
   if (isMissingModel) {
     const error = new Error(
-      'The configured Gemini model is not available for your API key. Please try a different Gemini key or set GEMINI_MODEL to a model your key can access.'
+      'The configured Gemini model is not available. Ask an administrator to set GEMINI_MODEL / GEMINI_FALLBACK_MODELS to a model enabled for this project.'
     );
     error.status = 400;
     error.details = { attemptedModels };

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Bot, Maximize2, Minimize2, Send, X } from 'lucide-react';
 import { askAiTutor } from '../services/ai';
 
@@ -214,13 +214,6 @@ const StudentChatBot = () => {
                 }`}
               >
                 {renderMessageText(item.text, item.role === 'user')}
-                {item.isError && item.text.includes('Gemini API key') && (
-                  <div className="mt-2">
-                    <Link to="/profile" className="text-xs font-bold underline">
-                      Add key in Profile
-                    </Link>
-                  </div>
-                )}
               </div>
             ))}
             {isLoading && (
@@ -234,7 +227,7 @@ const StudentChatBot = () => {
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ask Gemini..."
+              placeholder="Ask a study question..."
               className="flex-1 border border-outline/20 rounded-xl px-3 py-2 text-sm outline-none focus:border-error"
             />
             <button

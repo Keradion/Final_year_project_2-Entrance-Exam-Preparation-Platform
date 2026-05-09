@@ -68,7 +68,7 @@ function getOpenApiSpec() {
     servers: [{ url: serverUrl, description: 'API server' }],
     tags: [
       { name: 'Health', description: 'Service status' },
-      { name: 'Auth', description: 'Registration, login, profile, passwords, Gemini key' },
+      { name: 'Auth', description: 'Registration, login, profile, passwords, AI availability' },
       { name: 'Admin', description: 'Admin user management' },
       { name: 'Subjects', description: 'Subjects and teacher assignment' },
       { name: 'Content', description: 'Chapters, topics, concepts, videos' },
@@ -81,7 +81,7 @@ function getOpenApiSpec() {
       { name: 'Questions', description: 'Topic Q&A between students and teachers' },
       { name: 'Progress', description: 'Student progress (student role)' },
       { name: 'Notifications', description: 'User notifications' },
-      { name: 'AI', description: 'AI tutor (student + Gemini key)' },
+      { name: 'AI', description: 'AI tutor (server-configured Gemini)' },
     ],
     components: {
       securitySchemes: {
@@ -145,9 +145,9 @@ function getOpenApiSpec() {
         },
         GeminiKeyRequest: {
           type: 'object',
-          required: ['apiKey'],
+          deprecated: true,
+          description: 'Deprecated — Gemini is configured server-side via GEMINI_API_KEY',
           properties: { apiKey: { type: 'string' } },
-          example: { apiKey: 'your_gemini_api_key' },
         },
         SubjectCreate: {
           type: 'object',
@@ -592,27 +592,9 @@ function getOpenApiSpec() {
       '/api/auth/ai-settings': {
         get: {
           tags: ['Auth'],
-          summary: 'AI settings (Gemini key metadata)',
+          summary: 'AI tutor availability (student)',
           security: [{ bearerAuth: [] }],
-          responses: { '200': { description: 'hasGeminiApiKey, last4, etc.' } },
-        },
-      },
-      '/api/auth/gemini-key': {
-        put: {
-          tags: ['Auth'],
-          summary: 'Save Gemini API key (students)',
-          security: [{ bearerAuth: [] }],
-          requestBody: {
-            required: true,
-            content: { 'application/json': { schema: { $ref: '#/components/schemas/GeminiKeyRequest' } } },
-          },
-          responses: { '200': { description: 'Saved' }, '403': { description: 'Not a student' } },
-        },
-        delete: {
-          tags: ['Auth'],
-          summary: 'Remove Gemini API key',
-          security: [{ bearerAuth: [] }],
-          responses: { '200': { description: 'Removed' } },
+          responses: { '200': { description: 'aiTutorEnabled: whether GEMINI_API_KEY is set on the server' } },
         },
       },
       '/api/auth/change-password': {
@@ -1624,7 +1606,7 @@ function getOpenApiSpec() {
           tags: ['AI'],
           summary: 'AI tutor chat',
           security: [{ bearerAuth: [] }],
-          description: 'Student must store Gemini API key via `/api/auth/gemini-key` first.',
+          description: 'Requires student role. Uses GEMINI_API_KEY configured on the server.',
           requestBody: {
             content: { 'application/json': { schema: { $ref: '#/components/schemas/AiChatRequest' } } },
           },

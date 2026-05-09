@@ -279,34 +279,6 @@ class AuthController {
     }
   }
 
-  async updateGeminiApiKey(req, res, next) {
-    try {
-      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
-      const settings = await authService.updateGeminiApiKey(userId, req.body?.apiKey);
-      res.status(200).json({
-        success: true,
-        message: 'Gemini API key saved',
-        data: settings,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async removeGeminiApiKey(req, res, next) {
-    try {
-      const userId = req.user?.id || req.user?._id?.toString() || req.user?._id;
-      const settings = await authService.removeGeminiApiKey(userId);
-      res.status(200).json({
-        success: true,
-        message: 'Gemini API key removed',
-        data: settings,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   /**
    * POST /api/auth/logout
    * Logout user and blacklist token
