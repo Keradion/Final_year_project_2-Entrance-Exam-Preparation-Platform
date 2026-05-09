@@ -333,14 +333,15 @@ const StudentDashboard = () => {
                     <Bell size={18} className="text-primary-container" />
                     <h4 className="font-bold">Unread Notifications</h4>
                   </div>
-                  <div className="space-y-3 max-h-72 overflow-auto pr-1">
+                  <div className="space-y-3 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1">
                     {notifications.map((n) => (
-                      <div key={n._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
-                        <p className="font-semibold text-sm">{n.title}</p>
-                        <p className="text-xs text-on-surface-variant mt-1">{n.message}</p>
+                      <div key={n._id} className="p-3 rounded-xl border border-outline/10 bg-surface min-w-0">
+                        <p className="font-semibold text-sm break-words">{n.title}</p>
+                        <p className="text-xs text-on-surface-variant mt-1 break-words">{n.message}</p>
                         <button
+                          type="button"
                           onClick={() => handleMarkRead(n._id)}
-                          className="mt-2 text-xs font-semibold text-primary-container hover:underline"
+                          className="mt-2 text-xs font-semibold text-primary-container hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-container/40 rounded"
                         >
                           Mark as read
                         </button>
@@ -355,16 +356,23 @@ const StudentDashboard = () => {
                     <Bookmark size={18} className="text-primary-container shrink-0" />
                     <h4 className="font-bold">My Bookmarks</h4>
                   </div>
-                  <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                  <div className="space-y-2 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1">
                     {bookmarks.map((b) => (
-                      <div key={b._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
-                        <button type="button" onClick={() => handleOpenBookmark(b)} className="w-full text-left" disabled={!b.targetPath}>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">{b.resourceType.replace('-', ' ')}</p>
-                          <p className="text-sm font-semibold text-on-surface mt-1 line-clamp-2">{b.title || b.resourceId}</p>
-                          {b.note && <p className="text-[11px] text-on-surface-variant mt-2 line-clamp-2">Note: {b.note}</p>}
+                      <div key={b._id} className="p-3 rounded-xl border border-outline/10 bg-surface min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBookmark(b)}
+                          className="w-full min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-container/40 rounded-lg"
+                          disabled={!b.targetPath}
+                        >
+                          <p className="text-[10px] font-black uppercase tracking-widest text-primary-container break-words">{b.resourceType.replace('-', ' ')}</p>
+                          <p className="text-sm font-semibold text-on-surface mt-1 line-clamp-2 break-words">{b.title || b.resourceId}</p>
+                          {b.note && <p className="text-[11px] text-on-surface-variant mt-2 line-clamp-2 break-words">Note: {b.note}</p>}
                         </button>
                         <div className="flex justify-end mt-2">
-                          <button onClick={() => handleRemoveBookmark(b._id)} className="text-xs text-error font-semibold">Remove</button>
+                          <button type="button" onClick={() => handleRemoveBookmark(b._id)} className="text-xs text-error font-semibold">
+                            Remove
+                          </button>
                         </div>
                       </div>
                     ))}

@@ -900,7 +900,10 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
              <div className="relative">
                <button
                  type="button"
-                 onClick={() => setShowNotifications((v) => !v)}
+                 onClick={() => {
+                   setShowBookmarks(false);
+                   setShowNotifications((v) => !v);
+                 }}
                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
                  title="Notifications"
                >
@@ -912,35 +915,47 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  )}
                </button>
                {showNotifications && (
-                 <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
-                   <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
-                     <p className="text-sm font-semibold">Notifications</p>
-                     <span className="text-xs text-on-surface-variant">{notifications.length} unread</span>
+                 <>
+                   <button
+                     type="button"
+                     className="fixed inset-0 z-[55] bg-on-surface/20 sm:hidden"
+                     aria-label="Close notifications"
+                     onClick={() => setShowNotifications(false)}
+                   />
+                   <div className="min-w-0 max-w-full max-h-[min(22.5rem,70vh)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-xl z-[60] max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[4.75rem] sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-[min(20rem,calc(100vw-1.5rem))]">
+                     <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between gap-2 min-w-0">
+                       <p className="text-sm font-semibold truncate">Notifications</p>
+                       <span className="text-xs text-on-surface-variant shrink-0">{notifications.length} unread</span>
+                     </div>
+                     <div className="p-2 space-y-2 min-w-0">
+                       {notifications.map((n) => (
+                         <div key={n._id} className="p-3 rounded-lg border border-outline/10 bg-surface min-w-0">
+                           <p className="text-sm font-semibold break-words">{n.title}</p>
+                           <p className="text-xs text-on-surface-variant mt-1 break-words">{n.message}</p>
+                           <button
+                             type="button"
+                             onClick={() => handleMarkReadFromNav(n._id)}
+                             className="text-xs text-primary-container font-semibold mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-container/40 rounded"
+                           >
+                             Mark as read
+                           </button>
+                         </div>
+                       ))}
+                       {notifications.length === 0 && (
+                         <p className="text-sm text-on-surface-variant p-3">No unread notifications.</p>
+                       )}
+                     </div>
                    </div>
-                   <div className="p-2 space-y-2">
-                     {notifications.map((n) => (
-                       <div key={n._id} className="p-3 rounded-lg border border-outline/10 bg-surface">
-                         <p className="text-sm font-semibold">{n.title}</p>
-                         <p className="text-xs text-on-surface-variant mt-1">{n.message}</p>
-                         <button
-                           onClick={() => handleMarkReadFromNav(n._id)}
-                           className="text-xs text-primary-container font-semibold mt-2"
-                         >
-                           Mark as read
-                         </button>
-                       </div>
-                     ))}
-                     {notifications.length === 0 && (
-                       <p className="text-sm text-on-surface-variant p-3">No unread notifications.</p>
-                     )}
-                   </div>
-                 </div>
+                 </>
                )}
              </div>
              <div className="relative">
                <button
                  type="button"
-                 onClick={() => setShowBookmarks((v) => !v)}
+                 onClick={() => {
+                   setShowNotifications(false);
+                   setShowBookmarks((v) => !v);
+                 }}
                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 relative"
                  title={userRole === 'student' ? 'My bookmarks' : 'Bookmarks'}
                >
@@ -952,50 +967,59 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  )}
                </button>
                {showBookmarks && (
-                 <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
-                   <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
-                     <p className="text-sm font-semibold">My Bookmarks</p>
-                     <span className="text-xs text-on-surface-variant">{bookmarks.length} saved</span>
+                 <>
+                   <button
+                     type="button"
+                     className="fixed inset-0 z-[55] bg-on-surface/20 sm:hidden"
+                     aria-label="Close bookmarks"
+                     onClick={() => setShowBookmarks(false)}
+                   />
+                   <div className="min-w-0 max-w-full max-h-[min(22.5rem,70vh)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-xl z-[60] max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[4.75rem] sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-[min(20rem,calc(100vw-1.5rem))]">
+                     <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between gap-2 min-w-0">
+                       <p className="text-sm font-semibold truncate">My Bookmarks</p>
+                       <span className="text-xs text-on-surface-variant shrink-0">{bookmarks.length} saved</span>
+                     </div>
+                     <div className="p-2 space-y-2 min-w-0">
+                       {userRole !== 'student' && (
+                         <p className="text-sm text-on-surface-variant p-3">Bookmarks are available for student accounts.</p>
+                       )}
+                       {userRole === 'student' && bookmarks.map((bookmark) => (
+                         <div key={bookmark._id} className="p-3 rounded-lg border border-outline/10 bg-surface min-w-0">
+                           <button
+                             type="button"
+                             onClick={() => handleOpenBookmark(bookmark)}
+                             disabled={!bookmark.targetPath}
+                             className="w-full min-w-0 text-left disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-container/40 rounded-lg"
+                           >
+                             <p className="text-[10px] font-black uppercase tracking-widest text-primary-container break-words">
+                               {String(bookmark.resourceType ?? 'resource').replaceAll('-', ' ')}
+                             </p>
+                             <p className="text-sm font-semibold text-on-surface line-clamp-2 mt-1 break-words">
+                               {bookmark.title || bookmark.resourceId}
+                             </p>
+                             {bookmark.note && (
+                               <p className="text-[11px] text-on-surface-variant mt-2 line-clamp-2 break-words">
+                                 Note: {bookmark.note}
+                               </p>
+                             )}
+                           </button>
+                           <div className="flex justify-end mt-2">
+                             <button
+                               type="button"
+                               onClick={() => handleRemoveBookmarkFromNav(bookmark._id)}
+                               className="text-xs text-error font-semibold shrink-0"
+                             >
+                               Remove
+                             </button>
+                           </div>
+                         </div>
+                       ))}
+                       {userRole === 'student' && bookmarks.length === 0 && (
+                         <p className="text-sm text-on-surface-variant p-3">No bookmarks yet.</p>
+                       )}
+                     </div>
                    </div>
-                   <div className="p-2 space-y-2">
-                    {userRole !== 'student' && (
-                      <p className="text-sm text-on-surface-variant p-3">Bookmarks are available for student accounts.</p>
-                    )}
-                    {userRole === 'student' && bookmarks.map((bookmark) => (
-                      <div key={bookmark._id} className="p-3 rounded-lg border border-outline/10 bg-surface">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenBookmark(bookmark)}
-                          disabled={!bookmark.targetPath}
-                          className="w-full text-left disabled:cursor-not-allowed"
-                        >
-                          <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">
-                            {String(bookmark.resourceType ?? 'resource').replaceAll('-', ' ')}
-                          </p>
-                          <p className="text-sm font-semibold text-on-surface line-clamp-2 mt-1">
-                            {bookmark.title || bookmark.resourceId}
-                          </p>
-                          {bookmark.note && (
-                            <p className="text-[11px] text-on-surface-variant mt-2 line-clamp-2">
-                              Note: {bookmark.note}
-                            </p>
-                          )}
-                        </button>
-                        <div className="flex justify-end mt-2">
-                          <button
-                            onClick={() => handleRemoveBookmarkFromNav(bookmark._id)}
-                            className="text-xs text-error font-semibold shrink-0"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                     {userRole === 'student' && bookmarks.length === 0 && (
-                       <p className="text-sm text-on-surface-variant p-3">No bookmarks yet.</p>
-                     )}
-                   </div>
-                 </div>
+                 </>
                )}
              </div>
              <ThemeToggle />

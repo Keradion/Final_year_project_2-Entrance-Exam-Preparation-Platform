@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom';
 import { 
   Save, User, ArrowLeft, Eye, EyeOff, FlaskConical, Globe, ShieldCheck, Mail, Phone, 
   Calendar, Activity, BadgeCheck, Edit2, Layout, LogOut, BookOpen, CircleUserRound, ArrowRight, Lock,
-  RefreshCw, Bot
+  RefreshCw
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import {
   updateProfile as updateProfileRequest,
   changePassword as changePasswordRequest,
-  getAiSettings,
 } from '../services/auth';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -23,7 +22,6 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [aiSettings, setAiSettings] = useState(null);
 
   const {
     register,
@@ -63,19 +61,6 @@ const Profile = () => {
       profileImageFile: undefined,
     });
   }, [user, reset]);
-
-  useEffect(() => {
-    const fetchAiSettings = async () => {
-      if (user?.role !== 'student') return;
-      try {
-        const response = await getAiSettings();
-        setAiSettings(response?.data || null);
-      } catch (_err) {
-        setAiSettings(null);
-      }
-    };
-    fetchAiSettings();
-  }, [user]);
 
   const onSubmit = async (formValues) => {
     try {
@@ -331,37 +316,6 @@ const Profile = () => {
               </div>
             </form>
           </div>
-
-          {/* AI Tutor (Students) — server-managed Gemini key */}
-          {user?.role === 'student' && (
-            <div className="bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
-              <div className="mb-stack-lg flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl font-semibold text-on-surface mb-2">AI Tutor</h3>
-                  <p className="text-body-md text-on-surface-variant">
-                    The AI tutor uses a shared Google Gemini connection managed by the platform. You do not need to add or store your own API key.
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
-                  <Bot size={24} />
-                </div>
-              </div>
-
-              <div className="p-4 bg-surface rounded-xl border border-outline/10">
-                <p className="text-sm font-semibold text-on-surface">
-                  Status:{' '}
-                  {aiSettings?.aiTutorEnabled ? (
-                    <span className="text-primary-container">Available (platform Gemini)</span>
-                  ) : (
-                    <span className="text-on-surface-variant">Unavailable — server API key not configured</span>
-                  )}
-                </p>
-                <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
-                  If AI responses fail, ask your administrator to set <code className="font-mono text-[11px] bg-white px-1 rounded">GEMINI_API_KEY</code> on the backend.
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Academic Stream (Students Only) */}
           {user?.role === 'student' && (
