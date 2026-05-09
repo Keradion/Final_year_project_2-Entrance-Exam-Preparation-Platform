@@ -25,19 +25,19 @@ const ConceptBody = ({ content, isStudent }) => {
   }
 
   return (
-    <div className="mt-6 max-w-[65ch] border-l-[3px] border-primary-container/25 pl-5 sm:pl-7 ml-0.5">
-      <div className="space-y-5">
+    <div className="mt-4 sm:mt-6 w-full min-w-0 max-w-[min(65ch,100%)] border-l-[3px] border-primary-container/25 pl-3 sm:pl-7 ml-0">
+      <div className="space-y-4 sm:space-y-5">
         {blocks.map((block, idx) => (
           <p
             key={idx}
-            className="text-[1.05rem] sm:text-[1.0625rem] leading-[1.75] text-on-surface font-normal tracking-normal whitespace-pre-line"
+            className="text-base sm:text-[1.0625rem] leading-relaxed sm:leading-[1.75] text-on-surface font-normal tracking-normal whitespace-pre-line break-words"
           >
             {block}
           </p>
         ))}
       </div>
       {blocks.length === 0 && content && (
-        <p className="text-[1.05rem] leading-[1.75] text-on-surface whitespace-pre-line">{content}</p>
+        <p className="text-base leading-relaxed text-on-surface whitespace-pre-line break-words">{content}</p>
       )}
     </div>
   );
@@ -170,7 +170,7 @@ const TopicConcept = () => {
   };
 
   return (
-    <div className="py-6 space-y-10 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="py-4 sm:py-6 space-y-6 sm:space-y-10 animate-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-x-hidden">
       {toast.show && (
         <div
           className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${
@@ -183,9 +183,9 @@ const TopicConcept = () => {
         </div>
       )}
 
-      <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-10`}>
+      <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-6 sm:gap-10 min-w-0`}>
         {!isStudent && (
-          <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-8 h-fit">
+          <div className="bg-white p-4 sm:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-8 h-fit">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-on-surface">{editingId ? 'Edit Concept' : 'Concept Builder'}</h3>
@@ -329,9 +329,9 @@ const TopicConcept = () => {
               {concepts.map((c) => (
                 <article
                   key={c._id}
-                  className={`flex flex-col gap-6 group transition-all duration-300 ${
+                  className={`flex flex-col gap-6 group transition-all duration-300 min-w-0 ${
                     isStudent
-                      ? 'rounded-xl border border-outline/10 bg-card px-6 py-8 sm:px-8 sm:py-10 shadow-sm'
+                      ? 'rounded-xl border border-outline/10 bg-card px-4 py-6 sm:px-8 sm:py-10 shadow-sm'
                       : 'p-6 rounded-xl border border-outline-variant bg-white hover:border-primary-container hover:shadow-[0px_12px_32px_rgba(0,0,0,0.07)]'
                   }`}
                 >
@@ -387,7 +387,7 @@ const TopicConcept = () => {
 
                   {c.contentImageUrl && (
                     <div
-                      className={`rounded-xl overflow-hidden border border-outline/10 bg-surface/50 ${isStudent ? '' : 'ml-[72px]'}`}
+                      className={`rounded-xl overflow-hidden border border-outline/10 bg-surface/50 max-w-full ${isStudent ? '' : 'sm:ml-[72px]'}`}
                     >
                       {c.contentImageUrl.toLowerCase().endsWith('.pdf') ? (
                         <div className="flex items-center gap-3 p-5">
@@ -410,7 +410,7 @@ const TopicConcept = () => {
                         <img
                           src={`${resolvePublicApiOrigin()}${c.contentImageUrl}`}
                           alt=""
-                          className="max-h-[320px] w-full object-cover"
+                          className="max-h-[min(50vh,28rem)] w-full max-w-full mx-auto object-contain bg-surface/30"
                         />
                       )}
                     </div>

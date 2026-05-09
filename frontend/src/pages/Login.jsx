@@ -40,14 +40,14 @@ const Login = () => {
   };
 
   return (
-    <div className="relative bg-background text-on-surface min-h-screen flex flex-col font-sans">
-      <div className="fixed top-4 right-4 z-50">
+    <div className="relative bg-background text-on-surface min-h-screen flex flex-col font-sans overflow-x-hidden">
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <ThemeToggle />
       </div>
-      <main className="flex-grow flex items-center justify-center py-12 px-6">
-        <div className="w-full max-w-[450px] bg-card rounded-xl border border-outline-variant p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+      <main className="flex-grow flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 w-full min-w-0">
+        <div className="w-full max-w-[450px] min-w-0 bg-card rounded-xl border border-outline-variant p-5 sm:p-stack-lg shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
           <div className="mb-stack-lg">
-            <h3 className="text-2xl font-semibold text-on-surface mb-2">Sign In</h3>
+            <h3 className="text-xl sm:text-2xl font-semibold text-on-surface mb-2">Sign In</h3>
             <p className="text-body-md text-on-surface-variant">Access your dashboard.</p>
           </div>
 

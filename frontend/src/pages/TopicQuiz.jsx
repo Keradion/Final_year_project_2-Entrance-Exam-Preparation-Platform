@@ -372,13 +372,13 @@ const TopicQuiz = () => {
   if (activeQuiz) {
     if (isStudent && !attemptStarted && !quizResults) {
       return (
-        <div className="py-20 flex flex-col items-center justify-center space-y-8 animate-in zoom-in-95 duration-500">
-           <div className="w-24 h-24 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container border border-primary-container/20">
-             <BrainCircuit size={48} />
+        <div className="w-full min-w-0 px-4 py-12 sm:py-20 flex flex-col items-center justify-center space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-500">
+           <div className="w-20 h-20 sm:w-24 sm:h-24 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container border border-primary-container/20 shrink-0">
+             <BrainCircuit className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" aria-hidden />
            </div>
-           <div className="text-center space-y-4 max-w-md">
-             <h2 className="text-3xl font-bold text-on-surface">{activeQuiz.title}</h2>
-             <p className="text-on-surface-variant font-medium">{activeQuiz.description || 'No instructions provided.'}</p>
+           <div className="text-center space-y-4 max-w-md w-full min-w-0">
+             <h2 className="text-2xl sm:text-3xl font-bold text-on-surface break-words px-1">{activeQuiz.title}</h2>
+             <p className="text-on-surface-variant font-medium text-sm sm:text-base break-words px-1">{activeQuiz.description || 'No instructions provided.'}</p>
              <div className="flex items-center justify-center gap-6 mt-6">
                 <div className="text-center">
                   <p className="text-[10px] font-black uppercase tracking-widest text-outline">Duration</p>
@@ -450,15 +450,15 @@ const TopicQuiz = () => {
     }
 
     return (
-      <div className="py-6 space-y-8 animate-in fade-in duration-500 relative">
-        <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-md py-4 -mx-4 px-4 border-b border-outline/5 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
+      <div className="py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in fade-in duration-500 relative w-full min-w-0 overflow-x-hidden">
+        <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-md py-3 sm:py-4 -mx-3 px-3 sm:-mx-4 sm:px-4 border-b border-outline/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 transition-all min-w-0">
           <button 
             onClick={() => { setActiveQuiz(null); fetchQuizzes(); }}
             disabled={attemptStarted}
-            className={`flex items-center gap-2 text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors ${attemptStarted ? 'opacity-20 pointer-events-none' : ''}`}
+            className={`flex items-center gap-2 text-outline hover:text-on-surface font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-colors shrink-0 min-h-11 ${attemptStarted ? 'opacity-20 pointer-events-none' : ''}`}
           >
-            <ChevronLeft size={16} /> <span className="hidden xs:inline">Back to {isStudent ? 'Assessments' : 'Quizzes'}</span>
-            <span className="xs:hidden">Back</span>
+            <ChevronLeft size={16} /> <span className="hidden sm:inline">Back to {isStudent ? 'Assessments' : 'Quizzes'}</span>
+            <span className="sm:hidden">Back</span>
           </button>
           {isStudent && attemptStarted && (
             <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
@@ -515,10 +515,10 @@ const TopicQuiz = () => {
           </div>
         )}
 
-        <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-10`}>
+        <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-6 sm:gap-10 min-w-0 w-full`}>
           {/* Problem Creator or Meta Editor */}
           {!isStudent && (
-            <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-8 h-fit">
+            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-6 sm:space-y-8 h-fit min-w-0">
             {editingId === activeQuiz._id ? (
                <div className="space-y-6 animate-in slide-in-from-top-2">
                  <h3 className="text-2xl font-bold text-on-surface mb-6">Edit Quiz Details</h3>
@@ -591,8 +591,8 @@ const TopicQuiz = () => {
                    <label className="text-xs font-black uppercase tracking-widest text-outline ml-1">Choices & Correct Answer</label>
                    <div className="grid grid-cols-1 gap-3">
                      {newProblem.choices.map((choice, i) => (
-                       <div key={choice.value} className="flex items-center gap-4">
-                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border transition-all ${newProblem.correctAnswer === choice.value ? 'bg-primary-container text-white border-primary-container' : 'bg-surface text-outline border-outline/10'}`}>
+                       <div key={choice.value} className="flex items-center gap-2 sm:gap-4 min-w-0">
+                         <div className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-lg flex items-center justify-center font-black text-xs border transition-all ${newProblem.correctAnswer === choice.value ? 'bg-primary-container text-white border-primary-container' : 'bg-surface text-outline border-outline/10'}`}>
                            {choice.value}
                          </div>
                          <input 
@@ -603,14 +603,14 @@ const TopicQuiz = () => {
                              setNewProblem({...newProblem, choices: newChoices});
                            }} 
                            placeholder={`Option ${choice.value}`} 
-                           className={`flex-grow bg-white border px-5 py-3 rounded-xl font-semibold text-sm outline-none transition-all shadow-sm ${newProblem.correctAnswer === choice.value ? 'border-primary-container ring-1 ring-primary-container/20' : 'border-outline/20 focus:border-primary-container/40'}`} 
+                           className={`min-w-0 flex-1 bg-white border px-3 sm:px-5 py-3 rounded-xl font-semibold text-sm outline-none transition-all shadow-sm ${newProblem.correctAnswer === choice.value ? 'border-primary-container ring-1 ring-primary-container/20' : 'border-outline/20 focus:border-primary-container/40'}`} 
                          />
                          <input 
                            type="radio" 
                            name="correctAnswer" 
                            checked={newProblem.correctAnswer === choice.value} 
                            onChange={() => setNewProblem({...newProblem, correctAnswer: choice.value})} 
-                           className="w-5 h-5 accent-primary-container cursor-pointer"
+                           className="w-5 h-5 shrink-0 accent-primary-container cursor-pointer"
                          />
                        </div>
                      ))}
@@ -669,7 +669,7 @@ const TopicQuiz = () => {
                             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-surface rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black text-outline border border-outline/5 shrink-0">
                               {idx + 1}
                             </div>
-                            <p className="font-bold text-sm sm:text-base text-on-surface leading-tight">{prob.questionText}</p>
+                            <p className="font-bold text-sm sm:text-base text-on-surface leading-tight break-words min-w-0">{prob.questionText}</p>
                          </div>
                          {!isStudent && (
                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
@@ -697,7 +697,7 @@ const TopicQuiz = () => {
                              type="button"
                              disabled={!isStudent || !attemptStarted || hasFeedback}
                              onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [prob._id]: c.value }))}
-                             className={`px-3 py-2 rounded-lg border text-[11px] sm:text-xs font-bold text-left transition-all ${
+                             className={`px-3 py-2 rounded-lg border text-[11px] sm:text-xs font-bold text-left transition-all break-words ${
                                isStudent
                                  ? hasFeedback
                                    ? c.value === feedback.correctAnswer
@@ -760,23 +760,23 @@ const TopicQuiz = () => {
   }
 
   return (
-    <div className="py-6 space-y-10 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="py-4 sm:py-6 space-y-6 sm:space-y-10 animate-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-x-hidden">
       {toast.show && (
-        <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
-          <p className="font-bold">{toast.message}</p>
+        <div className={`fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-auto sm:right-4 z-[100] max-w-[min(100%,calc(100vw-2rem))] sm:max-w-sm px-4 py-3 rounded-xl shadow-lg border mb-[env(safe-area-inset-bottom,0)] ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
+          <p className="font-bold text-sm break-words">{toast.message}</p>
         </div>
       )}
 
-      <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-10`}>
+      <div className={`grid grid-cols-1 ${isStudent ? '' : 'lg:grid-cols-2'} gap-6 sm:gap-10 min-w-0`}>
         {/* Creator Panel */}
         {!isStudent && (
-          <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-8 h-fit">
-          <div className="flex items-center justify-between">
-             <div>
-               <h3 className="text-2xl font-bold text-on-surface">New Quiz</h3>
+          <div className="bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] space-y-6 sm:space-y-8 h-fit min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+             <div className="min-w-0">
+               <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">New Quiz</h3>
                <p className="text-on-surface-variant/60 text-sm font-medium mt-1">Define a new assessment container.</p>
              </div>
-             <div className="w-14 h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
+             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
                <BrainCircuit size={28} />
              </div>
           </div>

@@ -212,27 +212,27 @@ const TopicExercise = () => {
   };
 
   return (
-    <div className="py-6 space-y-10 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="py-4 sm:py-6 space-y-6 sm:space-y-10 animate-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-x-hidden">
       {toast.show && (
-        <div className={`fixed bottom-4 right-4 z-[100] px-6 py-3 rounded-xl shadow-lg border ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
-          <p className="font-bold">{toast.message}</p>
+        <div className={`fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-auto sm:right-4 z-[100] max-w-[min(100%,calc(100vw-2rem))] sm:max-w-sm px-4 py-3 rounded-xl shadow-lg border mb-[env(safe-area-inset-bottom,0)] ${toast.type === 'error' ? 'bg-error/10 border-error/20 text-error' : 'bg-primary-container/10 border-primary-container/20 text-primary-container'}`}>
+          <p className="font-bold text-sm sm:text-base break-words">{toast.message}</p>
         </div>
       )}
 
       {/* Exercise Builder Card */}
       {!isStudent && (
-        <div className="bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h3 className="text-2xl font-bold text-on-surface">{editingId ? 'Edit Exercise' : 'Exercise Builder'}</h3>
+        <div className="bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-10">
+          <div className="min-w-0">
+            <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">{editingId ? 'Edit Exercise' : 'Exercise Builder'}</h3>
             <p className="text-on-surface-variant/60 text-sm font-medium mt-1">{editingId ? 'Modify existing MCQ exercise.' : 'Design challenging MCQs for your students.'}</p>
           </div>
-          <div className="w-14 h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
             <ClipboardList size={28} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Exercise Title</label>
@@ -255,7 +255,7 @@ const TopicExercise = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Difficulty</label>
                   <select 
@@ -284,8 +284,8 @@ const TopicExercise = () => {
             <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Options & Correct Answer</label>
             <div className="grid grid-cols-1 gap-3">
               {['A', 'B', 'C', 'D'].map((opt, i) => (
-                <div key={opt} className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border transition-all ${newExercise.correctAnswer === i ? 'bg-primary-container text-white border-primary-container shadow-md' : 'bg-surface text-outline border-outline/10'}`}>
+                <div key={opt} className="flex items-center gap-2 sm:gap-4 min-w-0">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-lg flex items-center justify-center font-black text-xs border transition-all ${newExercise.correctAnswer === i ? 'bg-primary-container text-white border-primary-container shadow-md' : 'bg-surface text-outline border-outline/10'}`}>
                     {opt}
                   </div>
                   <input 
@@ -296,14 +296,14 @@ const TopicExercise = () => {
                       setNewExercise({...newExercise, options: opts});
                     }} 
                     placeholder={`Option ${opt}`} 
-                    className={`flex-grow bg-white border px-5 py-3 rounded-xl font-semibold text-sm outline-none transition-all shadow-sm ${newExercise.correctAnswer === i ? 'border-primary-container ring-1 ring-primary-container/20' : 'border-outline/20 focus:border-primary-container/40'}`} 
+                    className={`min-w-0 flex-1 bg-white border px-3 sm:px-5 py-3 rounded-xl font-semibold text-sm outline-none transition-all shadow-sm ${newExercise.correctAnswer === i ? 'border-primary-container ring-1 ring-primary-container/20' : 'border-outline/20 focus:border-primary-container/40'}`} 
                   />
                   <input 
                     type="radio" 
                     name="correctAnswer" 
                     checked={newExercise.correctAnswer === i} 
                     onChange={() => setNewExercise({...newExercise, correctAnswer: i})} 
-                    className="w-5 h-5 accent-primary-container cursor-pointer"
+                    className="w-5 h-5 shrink-0 accent-primary-container cursor-pointer"
                   />
                 </div>
               ))}
@@ -311,11 +311,11 @@ const TopicExercise = () => {
           </div>
         </div>
 
-        <div className="mt-12 flex justify-end border-t border-outline/5 pt-8 gap-4">
+        <div className="mt-8 sm:mt-12 flex flex-col-reverse sm:flex-row sm:justify-end border-t border-outline/5 pt-6 sm:pt-8 gap-3 sm:gap-4">
            {editingId && (
              <button 
                onClick={handleCancelEdit} 
-               className="bg-white border border-outline/20 text-on-surface px-10 py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-surface transition-all shadow-sm"
+               className="w-full sm:w-auto bg-white border border-outline/20 text-on-surface px-6 sm:px-10 py-3.5 sm:py-5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-surface transition-all shadow-sm min-h-11"
              >
                Cancel
              </button>
@@ -323,7 +323,7 @@ const TopicExercise = () => {
            <button 
              onClick={handleAddExercise} 
              disabled={isSaving || !newExercise.question || !newExercise.title} 
-             className={`${editingId ? 'bg-primary-container' : 'bg-on-surface'} text-white px-12 py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:brightness-110 active:opacity-80 transition-all shadow-xl shadow-on-surface/10 disabled:opacity-50 flex items-center gap-3`}
+             className={`w-full sm:w-auto ${editingId ? 'bg-primary-container' : 'bg-on-surface'} text-white px-8 sm:px-12 py-3.5 sm:py-5 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:brightness-110 active:opacity-80 transition-all shadow-xl shadow-on-surface/10 disabled:opacity-50 flex items-center justify-center gap-3 min-h-11`}
            >
              <Save size={20} /> {isSaving ? 'Processing...' : (editingId ? 'Update Exercise' : 'Publish Exercise')}
            </button>
@@ -347,20 +347,20 @@ const TopicExercise = () => {
         ) : exercises.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             {exercises.map((ex, i) => (
-              <div key={ex._id} className="bg-white rounded-xl border border-outline-variant p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all group">
+              <div key={ex._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all group min-w-0">
                 {(() => {
                   const feedback = exerciseFeedback[ex._id];
                   const hasFeedback = Boolean(feedback);
                   return (
                     <>
-                <div className="flex items-start justify-between gap-6 mb-6">
-                  <div className="flex gap-4 items-start">
-                    <div className="w-10 h-10 bg-primary-container/5 rounded-lg flex items-center justify-center text-primary-container font-black text-xs border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all">
+                <div className="flex items-start justify-between gap-3 sm:gap-6 mb-6 min-w-0">
+                  <div className="flex gap-3 sm:gap-4 items-start min-w-0 flex-1">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary-container/5 rounded-lg flex items-center justify-center text-primary-container font-black text-xs border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all">
                       {i + 1}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                         <h4 className="font-bold text-on-surface text-lg leading-tight">{ex.title}</h4>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                         <h4 className="font-bold text-on-surface text-base sm:text-lg leading-tight break-words">{ex.title}</h4>
                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
                            ex.difficulty === 'Hard' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
                            ex.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
@@ -369,7 +369,7 @@ const TopicExercise = () => {
                            {ex.difficulty}
                          </span>
                       </div>
-                      <p className="text-on-surface-variant/70 text-sm font-medium leading-relaxed mb-4">{ex.question}</p>
+                      <p className="text-on-surface-variant/70 text-sm font-medium leading-relaxed mb-4 break-words">{ex.question}</p>
                       {ex.tag && (
                         <span className="px-2 py-0.5 rounded-lg bg-surface text-[9px] font-black uppercase tracking-widest border border-outline/10 text-on-surface-variant/60">
                            {ex.tag}
@@ -407,7 +407,7 @@ const TopicExercise = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-14">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 sm:pl-12 md:pl-14">
                   {ex.options.map((opt, idx) => (
                     <button
                       key={idx}

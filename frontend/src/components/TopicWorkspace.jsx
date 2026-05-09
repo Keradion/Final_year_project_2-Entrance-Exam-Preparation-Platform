@@ -19,39 +19,41 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-3xl border border-outline/10 overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-500">
+    <div className="flex flex-col h-full min-w-0 bg-white rounded-2xl sm:rounded-3xl border border-outline/10 overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-500">
       {/* Workspace Header */}
-      <div className="bg-primary-container text-on-primary p-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="bg-primary-container text-on-primary p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-w-0">
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
           <button 
+            type="button"
             onClick={onBack}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            className="p-2 shrink-0 min-h-11 min-w-11 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+            aria-label="Back"
           >
             <ChevronLeft size={24} />
           </button>
-          <div>
-            <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest mb-1">
-              <span>{subject.subjectName}</span>
-              <span>/</span>
-              <span>{chapter.chapterName || chapter.title}</span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-white/60 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">
+              <span className="truncate max-w-[100%]">{subject.subjectName}</span>
+              <span className="shrink-0" aria-hidden>/</span>
+              <span className="truncate max-w-[100%]">{chapter.chapterName || chapter.title}</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight">{topic.topicName}</h1>
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight break-words">{topic.topicName}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-white/10 rounded-xl border border-white/10">
-            <span className="text-xs font-black uppercase tracking-widest text-white/80">Editing Mode</span>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="px-3 py-2 sm:px-4 bg-white/10 rounded-xl border border-white/10 w-full sm:w-auto text-center">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white/80">Editing Mode</span>
           </div>
         </div>
       </div>
 
       {/* Premium Tab Bar */}
-      <div className="bg-white border-b border-outline/10 px-8 flex items-center gap-8 overflow-x-auto no-scrollbar">
+      <div className="bg-white border-b border-outline/10 px-3 sm:px-8 flex items-center gap-3 sm:gap-6 md:gap-8 overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] no-scrollbar snap-x snap-mandatory">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 py-6 border-b-2 transition-all relative font-bold text-sm ${
+            className={`flex items-center gap-2 py-4 sm:py-6 shrink-0 snap-start whitespace-nowrap border-b-2 transition-all relative text-xs sm:text-sm font-bold ${
               activeTab === tab.id 
               ? 'border-primary-container text-primary-container' 
               : 'border-transparent text-outline hover:text-on-surface'
@@ -67,28 +69,29 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
       </div>
 
       {/* Workspace Content */}
-      <div className="flex-grow overflow-y-auto p-10 bg-[#fafbfc]">
+      <div className="flex-grow overflow-y-auto overflow-x-hidden p-4 sm:p-8 md:p-10 bg-[#fafbfc] min-w-0">
         <div className="max-w-4xl mx-auto">
           {/* Objectives Tab */}
           {activeTab === 'objectives' && (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-8 rounded-3xl border border-outline/5 shadow-sm">
+              <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-outline/5 shadow-sm min-w-0">
                 <h3 className="text-xl font-black mb-2">Topic Objectives</h3>
                 <p className="text-outline text-sm mb-8">Define what students should achieve after completing this topic.</p>
                 
-                <div className="flex gap-4 mb-8">
-                  <div className="relative flex-grow">
-                    <Target className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 min-w-0">
+                  <div className="relative flex-1 min-w-0">
+                    <Target className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={20} />
                     <input 
                       value={newObjective} 
                       onChange={e => setNewObjective(e.target.value)} 
                       placeholder="e.g. Understand the fundamental principles of..." 
-                      className="w-full bg-surface border border-outline/10 pl-14 pr-6 py-4 rounded-2xl font-semibold focus:border-primary-container focus:ring-0 transition-all outline-none" 
+                      className="w-full bg-surface border border-outline/10 pl-12 sm:pl-14 pr-4 sm:pr-6 py-3.5 sm:py-4 rounded-2xl font-semibold focus:border-primary-container focus:ring-0 transition-all outline-none min-h-11 text-sm sm:text-base" 
                     />
                   </div>
                   <button 
+                    type="button"
                     onClick={handleAddObjective}
-                    className="bg-primary-container text-white px-8 rounded-2xl font-bold text-sm uppercase hover:shadow-lg hover:shadow-primary-container/20 transition-all"
+                    className="bg-primary-container text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-sm uppercase hover:shadow-lg hover:shadow-primary-container/20 transition-all whitespace-nowrap shrink-0 min-h-11 w-full sm:w-auto"
                   >
                     Add Goal
                   </button>
@@ -97,16 +100,17 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
                 <div className="space-y-4">
                   {topicObjectives.length > 0 ? (
                     topicObjectives.map((obj, i) => (
-                      <div key={i} className="flex items-center justify-between p-5 bg-surface rounded-2xl border border-outline/5 group hover:border-primary-container/30 transition-all">
-                        <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container font-black text-xs">
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between p-4 sm:p-5 bg-surface rounded-2xl border border-outline/5 group hover:border-primary-container/30 transition-all min-w-0">
+                        <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-8 h-8 shrink-0 rounded-full bg-primary-container/10 flex items-center justify-center text-primary-container font-black text-xs">
                             {i + 1}
                           </div>
-                          <span className="font-bold text-on-surface">{obj}</span>
+                          <span className="font-bold text-on-surface break-words min-w-0">{obj}</span>
                         </div>
                         <button 
+                          type="button"
                           onClick={() => setTopicObjectives(topicObjectives.filter((_, idx) => idx !== i))}
-                          className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-all p-2 hover:bg-error/5 rounded-lg"
+                          className="text-outline hover:text-error sm:opacity-0 sm:group-hover:opacity-100 transition-all p-2 hover:bg-error/5 rounded-lg self-end sm:self-auto shrink-0"
                         >
                           <Trash2 size={18}/>
                         </button>
@@ -135,7 +139,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
           {/* Concept Page Tab */}
           {activeTab === 'concept' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-8 rounded-3xl border border-outline/5 shadow-sm space-y-6">
+              <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-outline/5 shadow-sm min-w-0 space-y-6">
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-xl font-black">Add New Concept</h3>
                    <div className="p-2 bg-primary-container/10 rounded-lg text-primary-container">
@@ -207,7 +211,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
           {/* Video Lessons Tab */}
           {activeTab === 'video' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-8 rounded-3xl border border-outline/5 shadow-sm space-y-6">
+              <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-outline/5 shadow-sm min-w-0 space-y-6">
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-xl font-black">Add Video Lesson</h3>
                    <div className="p-2 bg-primary-container/10 rounded-lg text-primary-container">
@@ -278,7 +282,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
           {/* Exercise Tab */}
           {activeTab === 'exercise' && (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-8 rounded-3xl border border-outline/5 shadow-sm space-y-8">
+              <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-outline/5 shadow-sm min-w-0 space-y-8">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-black">Create Practice Exercise</h3>
@@ -425,7 +429,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
           {/* Exam Tab */}
           {activeTab === 'exam' && (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white p-8 rounded-3xl border border-outline/5 shadow-sm">
+              <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-outline/5 shadow-sm min-w-0">
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h3 className="text-xl font-black">Previous Exam Linkage</h3>

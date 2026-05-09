@@ -809,13 +809,13 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
       )}
 
       <div className="flex-grow flex flex-col min-h-0 min-w-0">
-        <header className="min-h-[3.5rem] sm:min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2 sm:px-4 lg:px-gutter flex items-center justify-between gap-1.5 sm:gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-1.5 sm:py-0 overflow-x-hidden">
-           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 overflow-hidden">
-             <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2 shrink-0 rounded-lg hover:bg-surface -ml-1" aria-label="Open menu">
-               <Menu size={24} />
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2.5 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
+             <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-1.5 shrink-0 rounded-lg hover:bg-surface" aria-label="Open menu">
+               <Menu size={22} />
              </button>
              {userRole === 'student' && (
-               <div className="relative min-w-0 flex-1 sm:flex-initial max-w-[min(10rem,calc(100vw-13rem))] sm:max-w-[14rem]">
+               <div className="relative min-w-0 max-w-full sm:max-w-[11rem] md:max-w-none">
                  <button
                    type="button"
                    onClick={() => setShowGradeMenu((value) => !value)}
@@ -869,7 +869,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                </div>
              )}
            </div>
-          <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-3 shrink-0">
+          <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0 flex-nowrap min-w-0 [&>*]:shrink-0">
              <div className="relative">
                <button
                  type="button"
@@ -910,7 +910,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  </div>
                )}
              </div>
-             <div className="relative hidden sm:block">
+             <div className="relative">
                <button
                  type="button"
                  onClick={() => setShowBookmarks((v) => !v)}
@@ -976,12 +976,12 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                <p className="text-sm font-semibold">{user?.firstName} {user?.lastName}</p>
                <p className="text-[10px] text-primary-container uppercase font-bold tracking-widest">{user?.stream || 'Student'}</p>
              </div>
-             <Link to="/profile" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0" aria-label="Profile">
-               {user?.profileImage ? <img src={user.profileImage} alt="Profile" className="w-full h-full object-cover" /> : <CircleUserRound size={24} />}
+             <Link to="/profile" className="relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 overflow-hidden hover:opacity-80 transition-opacity shrink-0" title="Profile">
+               {user?.profileImage ? <img src={user.profileImage} alt="" className="w-full h-full object-cover" /> : <CircleUserRound size={20} />}
              </Link>
            </div>
         </header>
-        <main className="flex-grow min-h-0 p-gutter overflow-y-auto bg-background">
+        <main className="flex-grow min-h-0 px-3 py-4 sm:p-gutter overflow-x-hidden overflow-y-auto bg-background">
           <div className="max-w-[1440px] mx-auto">
             {children}
           </div>

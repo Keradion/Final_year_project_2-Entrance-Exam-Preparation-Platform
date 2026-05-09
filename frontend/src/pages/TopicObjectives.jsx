@@ -69,14 +69,14 @@ const TopicObjectives = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 py-6 max-w-4xl mx-auto w-full">
+    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500 py-4 sm:py-6 max-w-4xl mx-auto w-full min-w-0 px-0 overflow-x-hidden">
       <div
-        className={`${isStudent ? 'bg-card rounded-xl border border-outline/10 shadow-sm px-6 py-8 sm:px-10 sm:py-10' : 'bg-white p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)]'}`}
+        className={`${isStudent ? 'bg-card rounded-xl border border-outline/10 shadow-sm px-4 py-6 sm:px-10 sm:py-10' : 'bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0'}`}
       >
         {!isStudent && (
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-2xl font-bold text-on-surface">Topic Objectives</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+            <div className="min-w-0">
+              <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">Topic Objectives</h3>
               <p className="text-on-surface-variant/60 text-sm font-medium mt-1">
                 Define what students should achieve after completing this topic.
               </p>

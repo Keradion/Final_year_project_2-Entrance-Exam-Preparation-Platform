@@ -174,8 +174,8 @@ const TeacherLayout = () => {
       )}
 
       <div className="flex-grow flex flex-col min-w-0 min-h-0">
-        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-3 sm:px-4 lg:px-gutter flex items-center justify-between gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2.5 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
@@ -189,7 +189,7 @@ const TeacherLayout = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+          <div className="flex items-center justify-end gap-1 sm:gap-4 shrink-0 flex-nowrap min-w-0 [&>*]:shrink-0">
             <ThemeToggle />
             <div className="relative">
               <button
@@ -260,7 +260,7 @@ const TeacherLayout = () => {
         </header>
 
         {/* Same shell as StudentLayout main column */}
-        <main className="flex-grow p-gutter overflow-y-auto bg-background">
+        <main className="flex-grow px-3 py-4 sm:p-gutter overflow-x-hidden overflow-y-auto bg-background">
           <div className="max-w-[1440px] mx-auto">
             <Outlet context={{ teacherShell: true }} />
           </div>

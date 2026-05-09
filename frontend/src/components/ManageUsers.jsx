@@ -49,15 +49,15 @@ const ManageUsers = ({
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700 relative h-full flex flex-col">
+    <div className="max-w-[1440px] mx-auto px-3 py-6 sm:px-6 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-700 relative h-full flex flex-col min-w-0 w-full">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-on-surface mb-2">Users</h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-6 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface mb-2 break-words">Users</h1>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="bg-white px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 min-w-0">
+          <div className="bg-white px-4 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center min-w-0 shrink-0">
             <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Users</span>
             <p className="text-2xl font-bold text-primary-container leading-none">{total}</p>
           </div>
@@ -80,15 +80,15 @@ const ManageUsers = ({
             value={query}
             onChange={(e) => { setQuery(e.target.value); setPage(1); }}
             placeholder="Search users..."
-            className="w-full bg-white border border-outline/20 rounded-lg pl-12 pr-4 py-4 text-sm font-semibold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm"
+            className="w-full bg-white border border-outline/20 rounded-lg pl-11 pr-4 py-3 sm:py-4 text-sm font-semibold text-on-surface focus:border-primary-container outline-none transition-all shadow-sm min-h-11"
           />
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto min-w-0">
           <select
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-            className="bg-white border border-outline/20 rounded-lg px-6 py-4 text-xs font-bold uppercase tracking-widest text-on-surface-variant focus:border-primary-container outline-none shadow-sm cursor-pointer appearance-none min-w-[160px]"
+            className="w-full sm:min-w-[160px] bg-white border border-outline/20 rounded-lg px-4 sm:px-6 py-3 sm:py-4 text-xs font-bold uppercase tracking-widest text-on-surface-variant focus:border-primary-container outline-none shadow-sm cursor-pointer appearance-none min-h-11"
           >
             <option value="">All Roles</option>
             <option value="student">Students</option>
@@ -99,7 +99,7 @@ const ManageUsers = ({
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="bg-white border border-outline/20 rounded-lg px-6 py-4 text-xs font-bold uppercase tracking-widest text-on-surface-variant focus:border-primary-container outline-none shadow-sm cursor-pointer appearance-none min-w-[160px]"
+            className="w-full sm:min-w-[160px] bg-white border border-outline/20 rounded-lg px-4 sm:px-6 py-3 sm:py-4 text-xs font-bold uppercase tracking-widest text-on-surface-variant focus:border-primary-container outline-none shadow-sm cursor-pointer appearance-none min-h-11"
           >
             <option value="">All Statuses</option>
             <option value="active">Active Only</option>

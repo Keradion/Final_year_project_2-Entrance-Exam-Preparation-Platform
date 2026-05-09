@@ -106,7 +106,7 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
 
   return (
     <div
-      className={`flex flex-col flex-1 min-h-0 min-w-0 animate-in fade-in duration-500 ${
+      className={`flex flex-col flex-1 min-h-0 min-w-0 overflow-x-hidden animate-in fade-in duration-500 ${
         !isStudent ? 'w-full max-w-[min(100%,1180px)] mx-auto' : ''
       }`}
     >
@@ -118,13 +118,13 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
           <ChevronLeft size={14}/> Back to Topics
         </button>
 
-        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide mb-5">
+        <div className="flex overflow-x-auto gap-1.5 sm:gap-2 pb-2 -mx-1 px-1 scrollbar-hide snap-x snap-mandatory mb-4 sm:mb-5">
           {tabs.map((tab, index) => (
             <NavLink
               key={tab.path}
               to={`${basePath}/${tab.path}`}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                `flex shrink-0 snap-start items-center gap-1.5 sm:gap-2 px-3 py-2.5 sm:px-5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap [&_svg]:size-4 sm:[&_svg]:size-[18px] ${
                   isActive 
                     ? 'bg-primary-container text-on-primary shadow-md shadow-primary-container/20' 
                     : isLearningTab && index < currentIndex
@@ -133,22 +133,22 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
                 }`
               }
             >
-              <span className="w-5 h-5 rounded-full bg-white/20 border border-current/10 flex items-center justify-center text-[10px]">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/20 border border-current/10 flex items-center justify-center text-[9px] sm:text-[10px] shrink-0 tabular-nums">
                 {index + 1}
               </span>
               {tab.icon}
-              {tab.name}
+              <span>{tab.name}</span>
             </NavLink>
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-outline-variant p-6 shadow-[0px_8px_24px_rgba(0,0,0,0.08)] mb-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">
+        <div className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 shadow-[0px_8px_24px_rgba(0,0,0,0.08)] mb-4 sm:mb-6 min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-outline break-words">
             {subject?.subjectName || 'Subject'} {chapter?.chapterName ? `• ${chapter.chapterName}` : ''}
           </p>
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-2">
-            <div>
-              <h1 className="text-3xl font-bold text-on-surface">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-2 min-w-0">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-on-surface break-words">
                 {topic?.topicName || 'Loading...'}
               </h1>
             </div>
@@ -196,18 +196,18 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
           )}
         </div>
 
-        <div className="mt-4 rounded-xl border border-outline/10 bg-white p-4 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div className="mt-3 rounded-xl border border-outline/10 bg-white p-3 sm:p-4 shadow-sm min-w-0">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 min-w-0">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">Support</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 min-w-0">
               {supportTabs.map((tab) => (
                 <NavLink
                   key={tab.path}
                   to={`${basePath}/${tab.path}`}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-bold transition-all ${
+                    `flex shrink-0 items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg border text-xs sm:text-sm font-bold transition-all [&_svg]:size-4 sm:[&_svg]:size-[18px] ${
                       isActive
                         ? 'bg-primary-container text-on-primary border-primary-container'
                         : 'bg-surface text-on-surface-variant border-outline/10 hover:bg-primary-container/5'
@@ -224,10 +224,10 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
         </div>
       </div>
 
-      <div className={`flex-grow min-h-[500px] w-full ${isStudent ? 'px-4 sm:px-6 md:px-8 pb-4' : 'px-2 sm:px-4 pb-4'}`}>
+      <div className={`flex-grow min-h-[280px] sm:min-h-[500px] w-full min-w-0 ${isStudent ? 'px-0 sm:px-4 md:px-6 pb-4' : 'px-2 sm:px-4 pb-4'}`}>
         <Outlet context={{ topic, chapter, subject, isStudent, fetchData: fetchTopic }} />
       </div>
-      <div className="mt-5 bg-white rounded-xl border border-outline-variant p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="mt-4 sm:mt-5 bg-white rounded-xl border border-outline-variant p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 min-w-0">
         <button
           type="button"
           onClick={() => previousTab && navigate(`${basePath}/${previousTab.path}`)}

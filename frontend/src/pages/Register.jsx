@@ -323,8 +323,8 @@ const Register = () => {
           </div>
         ) : (
           /* Step 3: Verification */
-          <div className="w-full min-w-0 max-w-[min(32rem,calc(100vw-2rem))] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-card rounded-2xl border border-outline-variant p-4 sm:p-stack-lg shadow-xl text-center min-w-0">
+          <div className="w-full min-w-0 mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 px-1 max-w-md">
+            <div className="bg-card rounded-2xl border border-outline-variant p-3 sm:p-stack-lg shadow-xl text-center min-w-0 overflow-hidden">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary-container/10 rounded-full flex items-center justify-center text-primary-container mx-auto mb-6 sm:mb-8">
                 <ShieldCheck className="w-9 h-9 sm:w-10 sm:h-10" />
               </div>
@@ -341,7 +341,7 @@ const Register = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full max-w-xs sm:max-w-sm mx-auto mb-6 sm:mb-8 px-1">
+              <div className="grid grid-cols-6 gap-1 sm:gap-2 w-full max-w-[16.5rem] sm:max-w-xs mx-auto mb-6 sm:mb-8 px-0.5">
                 {verificationCode.map((digit, index) => (
                   <input
                     key={index}
@@ -367,7 +367,7 @@ const Register = () => {
                         document.getElementById(`code-${index - 1}`)?.focus();
                       }
                     }}
-                    className="min-w-0 w-full aspect-[4/5] max-h-14 sm:max-h-16 text-center text-lg sm:text-2xl font-bold border-2 border-outline-variant rounded-lg focus:border-primary-container outline-none transition-all"
+                    className="min-w-0 w-full h-10 sm:h-14 text-center text-base sm:text-2xl font-bold border-2 border-outline-variant rounded-md sm:rounded-lg focus:border-primary-container outline-none transition-all tabular-nums"
                   />
                 ))}
               </div>

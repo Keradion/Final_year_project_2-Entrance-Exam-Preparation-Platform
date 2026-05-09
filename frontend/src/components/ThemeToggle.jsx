@@ -33,7 +33,7 @@ export default function ThemeToggle({ className = '' }) {
         aria-label={`Theme: ${LABELS[preference]}. Open choices.`}
         title={`Theme: ${LABELS[preference]} — click for options`}
         onClick={() => setOpen((v) => !v)}
-        className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20"
+        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary-container border border-primary-container/20 shrink-0"
       >
         <Icon size={18} aria-hidden />
       </button>

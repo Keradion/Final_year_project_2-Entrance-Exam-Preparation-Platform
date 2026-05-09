@@ -163,27 +163,27 @@ const TopicQA = () => {
   };
 
   return (
-    <div className="py-6 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-2xl border border-outline-variant p-6 md:p-8 shadow-sm">
+    <div className="py-4 sm:py-6 space-y-6 animate-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-x-hidden">
+      <div className="bg-white rounded-2xl border border-outline-variant p-4 sm:p-6 md:p-8 shadow-sm min-w-0">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-2xl bg-primary-container/10 text-primary-container flex items-center justify-center shrink-0">
               <HelpCircle size={24} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Topic Q&A</p>
-              <h3 className="text-2xl font-black text-on-surface mt-1">Questions and Teacher Answers</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-on-surface mt-1 break-words">Questions and Teacher Answers</h3>
               <p className="text-sm text-on-surface-variant mt-2">
                 Students ask topic questions here. Teachers provide answers and replies under each question.
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-center">
-            <div className="rounded-xl bg-surface border border-outline/10 px-5 py-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center shrink-0 w-full sm:w-auto min-w-0">
+            <div className="rounded-xl bg-surface border border-outline/10 px-3 sm:px-5 py-3 min-w-0">
               <p className="text-xl font-black text-on-surface">{questions.length}</p>
               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Questions</p>
             </div>
-            <div className="rounded-xl bg-primary-container/10 border border-primary-container/10 px-5 py-3">
+            <div className="rounded-xl bg-primary-container/10 border border-primary-container/10 px-3 sm:px-5 py-3 min-w-0">
               <p className="text-xl font-black text-primary-container">{answeredCount}</p>
               <p className="text-[10px] font-bold uppercase tracking-widest text-primary-container">Answered</p>
             </div>
@@ -228,7 +228,7 @@ const TopicQA = () => {
             const canManageQuestion = isStudent && question.studentId?._id === currentUserId;
             const isAnswered = question.status === 'answered' || answers.length > 0;
             return (
-              <div key={question._id} className="bg-white rounded-2xl border border-outline-variant p-6 shadow-sm">
+              <div key={question._id} className="bg-white rounded-2xl border border-outline-variant p-4 sm:p-6 shadow-sm min-w-0">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-surface border border-outline/10 flex items-center justify-center text-primary-container shrink-0">
                     <UserRound size={20} />
@@ -260,7 +260,7 @@ const TopicQA = () => {
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-3 text-base leading-8 font-semibold text-on-surface">{question.questionText}</p>
+                      <p className="mt-3 text-base leading-8 font-semibold text-on-surface break-words">{question.questionText}</p>
                     )}
                     {canManageQuestion && editingQuestionId !== question._id && (
                       <div className="mt-3 flex items-center gap-3">

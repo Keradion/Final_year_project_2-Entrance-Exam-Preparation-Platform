@@ -129,8 +129,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans">
-      <header className="py-6 px-8 max-w-[1000px] mx-auto w-full flex justify-between items-center gap-4 flex-wrap">
+    <div className="bg-background text-on-surface min-h-screen flex flex-col font-sans overflow-x-hidden">
+      <header className="py-4 sm:py-6 px-4 sm:px-8 max-w-[1000px] mx-auto w-full flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 min-w-0">
         <Link to={getDashboardLink()} className="text-on-surface-variant hover:text-primary-container flex items-center gap-2 font-semibold transition-colors">
           <ArrowLeft size={20} /> Back to Dashboard
         </Link>
@@ -142,7 +142,7 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex items-center justify-center py-6 px-6">
+      <main className="flex-grow flex items-center justify-center py-6 px-4 sm:px-6 w-full min-w-0">
         <div className="w-full max-w-[800px] space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Identity Configuration */}

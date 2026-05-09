@@ -113,21 +113,21 @@ const ManageSubjects = () => {
   });
 
   return (
-    <div className="max-w-[1440px] mx-auto px-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-[1440px] mx-auto px-3 py-6 sm:px-6 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-700 min-w-0 w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-on-surface mb-2">Subject Management</h1>
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-6 min-w-0">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface mb-2 break-words">Subject Management</h1>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="bg-white px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full md:w-auto min-w-0">
+          <div className="bg-white px-4 sm:px-8 py-4 rounded-xl border border-outline/10 shadow-[0px_4px_12px_rgba(0,0,0,0.04)] flex flex-col items-center shrink-0">
             <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Total Subjects</span>
             <p className="text-2xl font-bold text-primary-container leading-none">{subjects.length}</p>
           </div>
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-primary-container text-on-primary px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-3 shadow-lg shadow-primary-container/20"
+            className="w-full sm:w-auto bg-primary-container text-on-primary px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary-container/20 min-h-11 shrink-0"
           >
             <Plus size={20} />
             Create Subject
@@ -136,7 +136,7 @@ const ManageSubjects = () => {
       </div>
       
       {showAddForm && (
-        <div className="bg-white rounded-2xl border border-outline/10 p-8 mb-8 animate-in slide-in-from-top-4 duration-500 shadow-sm">
+        <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-8 mb-8 animate-in slide-in-from-top-4 duration-500 shadow-sm min-w-0">
           <CreateSubjectForm onCreate={() => { setShowAddForm(false); fetchSubjects(); }} />
         </div>
       )}

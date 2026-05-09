@@ -113,11 +113,11 @@ const TeacherDashboardHome = () => {
   };
 
   return (
-    <div className="w-full animate-in fade-in duration-500">
+    <div className="w-full min-w-0 overflow-x-hidden animate-in fade-in duration-500">
         {activeSection === 'courses' && (
           <>
-            <div className="mb-10">
-              <h3 className="text-2xl font-bold mb-2">Assigned Courses</h3>
+            <div className="mb-6 sm:mb-10">
+              <h3 className="text-xl sm:text-2xl font-bold mb-2 break-words">Assigned Courses</h3>
               <p className="text-on-surface-variant">
                 Select a course to manage its chapters, topics, and learning materials.
               </p>
@@ -125,30 +125,30 @@ const TeacherDashboardHome = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-64 bg-surface-variant/20 rounded-2xl animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
                 {subjects.map((subject) => (
                   <div
                     key={subject._id}
-                    className="bg-white rounded-2xl border border-outline/10 p-8 shadow-sm hover:shadow-md transition-all group flex flex-col"
+                    className="bg-white rounded-2xl border border-outline/10 p-5 sm:p-8 shadow-sm hover:shadow-md transition-all group flex flex-col min-w-0"
                   >
                     <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container mb-6 border border-primary-container/10 group-hover:bg-primary-container group-hover:text-white transition-all">
                       <BookOpen size={24} />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2">{subject.subjectName}</h3>
-                    <p className="text-on-surface-variant text-sm mb-8 flex-grow">
+                    <h3 className="text-lg sm:text-2xl font-bold mb-2 break-words">{subject.subjectName}</h3>
+                    <p className="text-on-surface-variant text-sm mb-6 sm:mb-8 flex-grow break-words">
                       Manage the curriculum for Grade {subject.gradeLevel}{' '}
                       {subject.stream ? `${subject.stream} Stream` : ''}.
                     </p>
                     <button
                       type="button"
                       onClick={() => navigate(`/teacher/subject/${subject._id}/chapters`)}
-                      className="w-full bg-primary-container text-on-primary py-4 rounded-lg font-semibold text-xs uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-primary-container text-on-primary py-3.5 sm:py-4 rounded-lg font-semibold text-xs uppercase tracking-widest hover:brightness-110 transition-all flex items-center justify-center gap-2 min-h-11"
                     >
                       Manage Curriculum
                       <ArrowRight size={18} />

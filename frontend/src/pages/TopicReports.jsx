@@ -51,15 +51,15 @@ const TopicReports = () => {
   };
 
   return (
-    <div className="py-6 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white p-8 rounded-xl border border-outline-variant shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10">
+    <div className="py-4 sm:py-6 space-y-6 sm:space-y-8 animate-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-x-hidden">
+      <div className="bg-white p-4 sm:p-8 rounded-xl border border-outline-variant shadow-sm min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4 min-w-0">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
             <TriangleAlert size={24} />
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-on-surface">Report Topic Issue</h3>
-            <p className="text-sm text-on-surface-variant">Report wrong answers, missing content, or confusing material for {topic?.topicName || 'this topic'}.</p>
+          <div className="min-w-0">
+            <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">Report Topic Issue</h3>
+            <p className="text-sm text-on-surface-variant mt-1 break-words">Report wrong answers, missing content, or confusing material for {topic?.topicName || 'this topic'}.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -70,7 +70,7 @@ const TopicReports = () => {
             rows={4}
             className="w-full border border-outline/20 rounded-xl px-4 py-3 text-sm"
           />
-          <button disabled={isSubmitting} className="bg-primary-container text-white px-5 py-3 rounded-xl font-semibold text-sm disabled:opacity-50">
+          <button disabled={isSubmitting} className="w-full sm:w-auto bg-primary-container text-white px-5 py-3 rounded-xl font-semibold text-sm disabled:opacity-50 min-h-11">
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </button>
           {feedback && <p className="text-xs font-semibold text-primary-container">{feedback}</p>}

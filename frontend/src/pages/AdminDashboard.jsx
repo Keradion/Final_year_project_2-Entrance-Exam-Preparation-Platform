@@ -254,15 +254,15 @@ const AdminDashboard = () => {
 
       <div className="flex-grow flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-3 sm:px-4 lg:px-gutter flex items-center justify-between gap-2 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
-           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+        <header className="min-h-[4rem] sm:h-20 bg-header-surface/95 backdrop-blur border-b border-outline/10 px-2.5 sm:px-4 lg:px-gutter grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 sticky top-0 z-40 shrink-0 min-w-0 py-2 sm:py-0">
+           <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
              <button type="button" onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-on-surface-variant p-2 shrink-0 rounded-lg hover:bg-surface" aria-label="Open menu">
                <Menu size={24} />
              </button>
             <h2 className="text-base sm:text-xl font-semibold text-on-surface truncate min-w-0">{activeSectionLabel}</h2>
            </div>
            
-           <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+           <div className="flex items-center justify-end gap-1 sm:gap-4 shrink-0 flex-nowrap min-w-0 [&>*]:shrink-0">
              <ThemeToggle />
              <div className="text-right hidden sm:block">
                <p className="text-sm font-semibold">{user?.firstName || 'Admin'}</p>
@@ -279,15 +279,15 @@ const AdminDashboard = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-grow p-gutter overflow-y-auto bg-background">
+        <main className="flex-grow px-3 py-4 sm:p-gutter overflow-x-hidden overflow-y-auto bg-background">
           <div className="max-w-[1440px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             {activeSection === 'dashboard' && (
               <div className="space-y-6">
-                <section className="bg-white rounded-xl border border-outline-variant p-8 shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+                <section className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 md:p-8 shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0">
                   <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-container">Dashboard</p>
-                      <h2 className="text-3xl font-bold text-on-surface mt-2">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 break-words">
                         Welcome back, {user?.firstName || 'Admin'}
                       </h2>
                       <p className="text-sm text-on-surface-variant mt-3 max-w-2xl">
@@ -350,11 +350,11 @@ const AdminDashboard = () => {
             {activeSection === 'subjects' && <ManageSubjects />}
             {activeSection === 'issues' && (
               <div className="space-y-6">
-                <section className="bg-white rounded-xl border border-outline-variant p-8 shadow-[0px_8px_24px_rgba(0,0,0,0.08)]">
+                <section className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 md:p-8 shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0">
                   <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-container">Issue Review Center</p>
-                      <h3 className="text-3xl font-bold text-on-surface mt-2">Reported Issues</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-on-surface mt-2 break-words">Reported Issues</h3>
                       <p className="text-sm text-on-surface-variant mt-3 max-w-2xl">
                         Track student reports, move each case through review, and keep learners informed when a topic issue is resolved.
                       </p>
