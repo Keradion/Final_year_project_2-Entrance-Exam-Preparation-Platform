@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node scripts/scripts/seed.js",
+    "seed:populate": "node scripts/scripts/seed-new.js",
     "test:redis": "node scripts/testRedis.js",
     "test": "cross-env NODE_ENV=test REDIS_ENABLED=false mocha --require @babel/register test/**/*.js --exit"
   },
