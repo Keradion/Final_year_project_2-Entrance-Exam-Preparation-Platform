@@ -11,6 +11,23 @@ const summarizeText = (value, fallback) => {
   return value.length > 90 ? `${value.slice(0, 87)}...` : value;
 };
 
+/** Match TopicExam.jsx — keep bookmark titles clean of duplicated E.C. prefixes */
+const stripExamStemPrefix = (text) => {
+  let s = String(text ?? '').trim();
+  for (let k = 0; k < 8; k += 1) {
+    const next = s
+      .replace(/^\[E\.C\.\s*\d{4}\]\s*/i, '')
+      .replace(/^\[E\.C\.\d{4}\]\s*/i, '')
+      .replace(/^\(E\.C\.\s*\d{4}\)\s*/i, '')
+      .replace(/^E\.C\.\s*\d{4}\s*[.:—–-]\s*/i, '')
+      .replace(/^E\.C\.\s*\d{4}\s+/i, '')
+      .trim();
+    if (next === s) break;
+    s = next;
+  }
+  return s;
+};
+
 const buildBookmarkTarget = async (bookmark) => {
   const base = bookmark.toObject ? bookmark.toObject() : bookmark;
   const id = base.resourceId;
@@ -50,10 +67,12 @@ const buildBookmarkTarget = async (bookmark) => {
 
   if (base.resourceType === 'exam-question') {
     const question = await ExamQuestion.findById(id).select('questionText topic examPaper').populate('examPaper', 'year title').lean();
-    const year = question?.examPaper?.year ? ` (${question.examPaper.year})` : '';
+    const year = question?.examPaper?.year;
+    const stem = stripExamStemPrefix(question?.questionText);
+    const yearPart = year != null ? ` · ${year} E.C.` : '';
     return {
       ...base,
-      title: `${summarizeText(question?.questionText, 'Previous year question')}${year}`,
+      title: `${summarizeText(stem, 'University entrance exam question')}${yearPart}`,
       targetPath: question?.topic ? `/curriculum/topic/${question.topic}/exam` : '',
     };
   }

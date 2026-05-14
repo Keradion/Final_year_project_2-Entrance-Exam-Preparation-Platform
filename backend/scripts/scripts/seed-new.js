@@ -9,7 +9,7 @@
  * Topic videos: one curated YouTube URL per topic (`TOPIC_YOUTUBE_VIDEO_IDS` in grade9SeedContent.js; no API).
  *
  * Topics are stored with MoE-style labels: chapter 1 → 1.1, 1.2, …; chapter 2 → 2.1, 2.2, …
- * Each topic gets study notes (Concept), **seven** MCQ exercises, and **five** national-exit-style exam MCQs (E.C. 2014–2018).
+ * Each topic gets study notes (Concept), **seven** MCQ exercises, and **five** university-entrance-style exam MCQs (linked to papers by year for metadata only).
  */
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
@@ -143,7 +143,7 @@ async function main() {
       subject: subject._id,
       createdBy,
       year,
-      title: `Ethiopia National Exit Examination — Mathematics (Grade 9, Natural) — E.C. ${year}`,
+      title: 'University Entrance Exam',
     });
     examPaperByYear[year] = paper._id;
   }
@@ -270,7 +270,7 @@ async function main() {
   console.log(`   Exercises (MCQ, 7 per topic): ${exerciseCount}`);
   console.log(`   Quizzes: ${quizCount}`);
   console.log(`   Quiz problems: ${quizProblemCount}`);
-  console.log(`   Exam questions (5 per topic, E.C. 2014–2018): ${examQuestionCount}`);
+  console.log(`   Exam questions (5 per topic, university entrance style): ${examQuestionCount}`);
 }
 
 main()

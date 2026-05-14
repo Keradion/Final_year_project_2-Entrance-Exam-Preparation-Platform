@@ -4,8 +4,6 @@
  * Notes are plain text for TopicConcept.jsx (no markdown **).
  */
 
-const { stripEmbeddedHexIdLinesMultiline } = require('../../../src/utils/topicTextSanitize');
-
 const CHAPTER_TAGS = ['sets', 'numbers', 'exponents', 'polynomials', 'linear', 'coordinate', 'geometry'];
 
 function hashPair(a, b) {
@@ -17,12 +15,10 @@ function hashPair(a, b) {
 
 /** Strip accidental markdown / decorative asterisks so the topic UI stays plain text */
 function sanitizePlain(s) {
-  return stripEmbeddedHexIdLinesMultiline(
-    String(s || '')
-      .replace(/\*{1,2}/g, '')
-      .replace(/[ \t]+$/gm, '')
-      .trim()
-  );
+  return String(s || '')
+    .replace(/\*{1,2}/g, '')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
 }
 
 /** One concrete example per (chapter, topic) — stays on the mathematics of that lesson only */

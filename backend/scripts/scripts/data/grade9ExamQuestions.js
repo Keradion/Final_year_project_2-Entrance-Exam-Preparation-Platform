@@ -1,6 +1,6 @@
 /**
- * Five national-exit-style MCQs per Grade 9 Mathematics topic (Ethiopian calendar years on each stem).
- * Years 2014–2018 E.C. are applied when seeding (one year per question in order).
+ * Five university-entrance-style MCQs per Grade 9 Mathematics topic.
+ * When seeding, questions are attached to year-tagged exam papers (2014–2018 E.C.) for sorting only — stems have no year prefix.
  */
 
 const EC_YEARS = [2014, 2015, 2016, 2017, 2018];
@@ -311,13 +311,15 @@ function pack(c, t) {
 
 function buildExamQuestionsForTopic({ chapterIndex, topicIndex, topicName }) {
   const raw = pack(chapterIndex, topicIndex);
-  return EC_YEARS.map((year, i) => {
+  return EC_YEARS.map((_, i) => {
     const q = raw[i];
     return {
-      questionText: `[E.C. ${year}] ${q.questionText}`,
+      questionText: q.questionText,
       choices: q.choices,
       correctAnswer: q.correctAnswer,
-      answerExplanation: q.answerExplanation || `Ethiopian national exit examination style item (Mathematics, Natural stream), aligned to “${topicName}”.`,
+      answerExplanation:
+        q.answerExplanation ||
+        `University entrance exam style item (Mathematics, Natural stream), aligned to “${topicName}”.`,
     };
   });
 }
