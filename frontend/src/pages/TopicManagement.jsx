@@ -4,6 +4,7 @@ import { Compass, Plus, Trash2, Edit2, ChevronLeft, Save, X } from 'lucide-react
 import api from '../services/api';
 import { getTopicsByChapter, createTopic, updateTopic, deleteTopic } from '../services/chapter';
 import { useAuth } from '../context/AuthContext';
+import { formatTopicTitleDisplay, formatTopicBodyText } from '../utils/formatTopicDisplayText';
 
 const TopicManagement = ({ isStudent = false }) => {
   const { chapterId } = useParams();
@@ -218,13 +219,10 @@ const TopicManagement = ({ isStudent = false }) => {
                         </div>
                         <div className="space-y-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                            <h3 className="text-xl sm:text-2xl font-bold text-on-surface leading-tight tracking-tight group-hover:text-primary-container transition-colors break-words">{topic.topicName}</h3>
-                            <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-black uppercase tracking-widest border border-outline/5 text-on-surface-variant/40">
-                              {topic._id.slice(-6)}
-                            </span>
+                            <h3 className="text-xl sm:text-2xl font-bold text-on-surface leading-tight tracking-tight group-hover:text-primary-container transition-colors break-words">{formatTopicTitleDisplay(topic.topicName)}</h3>
                           </div>
                           {topic.topicDescription ? (
-                            <p className="text-on-surface-variant/70 font-medium text-sm max-w-xl leading-relaxed">{topic.topicDescription}</p>
+                            <p className="text-on-surface-variant/70 font-medium text-sm max-w-xl leading-relaxed">{formatTopicBodyText(topic.topicDescription || '')}</p>
                           ) : (
                             <p className="text-on-surface-variant/30 italic text-sm font-medium">No description provided for this topic.</p>
                           )}

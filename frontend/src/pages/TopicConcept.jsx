@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { BookOpen, Trash2, CheckCircle2, FileText, X, Paperclip, UploadCloud, Edit2 } from 'lucide-react';
 import api, { resolvePublicApiOrigin } from '../services/api';
+import { formatTopicTitleDisplay, formatTopicBodyText } from '../utils/formatTopicDisplayText';
 
 /** Split on blank lines so long pasted text reads as formal paragraphs */
 const toParagraphBlocks = (text) => {
-  const raw = String(text || '').replace(/\r\n/g, '\n').trim();
+  const raw = formatTopicBodyText(String(text || '')).replace(/\r\n/g, '\n');
   if (!raw) return [];
   return raw
     .split(/\n\s*\n/)
@@ -13,31 +14,52 @@ const toParagraphBlocks = (text) => {
     .filter(Boolean);
 };
 
+/** First line is a titled block when it looks like a topic label or seeded section header */
+const TITLE_FIRST_LINE =
+  /^(\d+\.\d+\.\s+[^\n]+|Key rules and formulas[^\n]*|Worked example[^\n]*|Syllabus statements[^\n]*|Unit:\s+[^\n]+)/i;
+
 const ConceptBody = ({ content, isStudent }) => {
   const blocks = toParagraphBlocks(content);
 
   if (!isStudent) {
     return (
       <p className="text-sm text-on-surface-variant mt-3 leading-7 whitespace-pre-line line-clamp-3">
-        {content}
+        {formatTopicBodyText(String(content || ''))}
       </p>
     );
   }
 
+  const bodyClass =
+    'text-base sm:text-[1.0625rem] leading-relaxed sm:leading-[1.75] text-on-surface font-normal tracking-normal whitespace-pre-line break-words';
+
   return (
     <div className="mt-4 sm:mt-6 w-full min-w-0 max-w-[min(65ch,100%)] border-l-[3px] border-primary-container/25 pl-3 sm:pl-7 ml-0">
       <div className="space-y-4 sm:space-y-5">
-        {blocks.map((block, idx) => (
-          <p
-            key={idx}
-            className="text-base sm:text-[1.0625rem] leading-relaxed sm:leading-[1.75] text-on-surface font-normal tracking-normal whitespace-pre-line break-words"
-          >
-            {block}
-          </p>
-        ))}
+        {blocks.map((block, idx) => {
+          const lines = block.split('\n');
+          const firstLine = lines[0]?.trim() ?? '';
+          const rest = lines.slice(1).join('\n').trim();
+          if (TITLE_FIRST_LINE.test(firstLine)) {
+            return (
+              <div key={idx} className="space-y-2 sm:space-y-3">
+                <p className="text-base sm:text-lg font-bold text-on-surface underline decoration-2 underline-offset-[3px] decoration-primary-container/40 tracking-tight">
+                  {firstLine}
+                </p>
+                {rest ? <p className={bodyClass}>{rest}</p> : null}
+              </div>
+            );
+          }
+          return (
+            <p key={idx} className={bodyClass}>
+              {block}
+            </p>
+          );
+        })}
       </div>
       {blocks.length === 0 && content && (
-        <p className="text-base leading-relaxed text-on-surface whitespace-pre-line break-words">{content}</p>
+        <p className="text-base leading-relaxed text-on-surface whitespace-pre-line break-words">
+          {formatTopicBodyText(String(content || ''))}
+        </p>
       )}
     </div>
   );
@@ -354,11 +376,11 @@ const TopicConcept = () => {
                           </p>
                         )}
                         <h4
-                          className={`font-semibold text-on-surface tracking-tight ${
+                          className={`font-bold text-on-surface tracking-tight underline decoration-2 underline-offset-4 decoration-primary-container/35 ${
                             isStudent ? 'text-xl sm:text-2xl leading-snug' : 'text-lg leading-tight'
                           }`}
                         >
-                          {c.title}
+                          {formatTopicTitleDisplay(c.title || '')}
                         </h4>
                         <ConceptBody content={c.content} isStudent={isStudent} />
                       </div>

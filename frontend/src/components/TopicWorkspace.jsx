@@ -5,6 +5,8 @@ import {
   CheckCircle2, PlayCircle, ClipboardList, BookCheck, FileQuestion
 } from 'lucide-react';
 import api from '../services/api';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
+import { normalizeExamQuestionStem } from '../utils/examQuestionDisplay';
 
 const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, topicContent, topicObjectives, setTopicObjectives, handleUpdateObjectives, handleAddObjective, newObjective, setNewObjective, handleAddContent, isSavingContent, newContent, setNewContent, handleDeleteContent, examPapers }) => {
   const [activeTab, setActiveTab] = useState('objectives');
@@ -37,7 +39,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
               <span className="shrink-0" aria-hidden>/</span>
               <span className="truncate max-w-[100%]">{chapter.chapterName || chapter.title}</span>
             </div>
-            <h1 className="text-lg sm:text-2xl font-black tracking-tight break-words">{topic.topicName}</h1>
+            <h1 className="text-lg sm:text-2xl font-black tracking-tight break-words">{formatTopicTitleDisplay(topic.topicName)}</h1>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -450,7 +452,7 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
                     >
                       <option value="">Choose an exam paper...</option>
                       {examPapers.map(paper => (
-                        <option key={paper._id} value={paper._id}>{paper.title} ({paper.year})</option>
+                        <option key={paper._id} value={paper._id}>{paper.title} · {paper.year} E.C.</option>
                       ))}
                     </select>
                   </div>
@@ -486,8 +488,8 @@ const TopicWorkspace = ({ topic, chapter, subject, onBack, fetchTopicContent, to
                             <FileQuestion size={20} />
                           </div>
                           <div>
-                            <h4 className="font-bold text-on-surface">{q.questionText}</h4>
-                            <p className="text-[10px] text-primary-container font-black uppercase tracking-wider">{q.paperTitle || 'External Paper'}</p>
+                            <h4 className="font-bold text-on-surface text-base sm:text-lg leading-snug">{normalizeExamQuestionStem(q.questionText)}</h4>
+                            <p className="text-[11px] text-on-surface-variant font-semibold mt-1 tabular-nums">{q.paperYear != null ? `${q.paperYear} E.C.` : 'Reference paper'}</p>
                           </div>
                         </div>
                         <button 

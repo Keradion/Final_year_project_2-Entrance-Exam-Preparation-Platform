@@ -30,6 +30,7 @@ import {
   removeBookmark,
   askQuestion
 } from '../services/engagement';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const gradeMatchesFilter = (subjectGrade, selectedGrade) => {
   const g = String(subjectGrade ?? '').replace(/\D/g, '');
@@ -328,12 +329,12 @@ const StudentDashboard = () => {
               )}
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 pt-3 sm:pt-4">
-                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Bell size={18} className="text-primary-container" />
-                    <h4 className="font-bold">Unread Notifications</h4>
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-4 min-w-0">
+                    <Bell size={18} className="text-primary-container shrink-0" />
+                    <h4 className="font-bold text-base sm:text-lg min-w-0 break-words pr-1">Unread Notifications</h4>
                   </div>
-                  <div className="space-y-3 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1">
+                  <div className="space-y-3 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1 -mr-1">
                     {notifications.map((n) => (
                       <div key={n._id} className="p-3 rounded-xl border border-outline/10 bg-surface min-w-0">
                         <p className="font-semibold text-sm break-words">{n.title}</p>
@@ -351,12 +352,12 @@ const StudentDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0 overflow-hidden">
-                  <div className="flex items-center gap-2 mb-4 min-w-0">
+                <div className="bg-white rounded-2xl border border-outline/10 p-4 sm:p-6 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-4 min-w-0">
                     <Bookmark size={18} className="text-primary-container shrink-0" />
-                    <h4 className="font-bold">My Bookmarks</h4>
+                    <h4 className="font-bold text-base sm:text-lg min-w-0 break-words pr-1">My Bookmarks</h4>
                   </div>
-                  <div className="space-y-2 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1">
+                  <div className="space-y-2 max-h-72 min-w-0 overflow-y-auto overflow-x-hidden overscroll-x-contain pr-1 -mr-1">
                     {bookmarks.map((b) => (
                       <div key={b._id} className="p-3 rounded-xl border border-outline/10 bg-surface min-w-0">
                         <button
@@ -396,7 +397,7 @@ const StudentDashboard = () => {
                   <div className="mt-3 space-y-2 max-h-56 overflow-auto pr-1">
                     {topicResults.map((t) => (
                       <div key={t._id} className="p-3 rounded-xl border border-outline/10 bg-surface">
-                        <p className="text-sm font-semibold">{t.topicName}</p>
+                        <p className="text-sm font-semibold">{formatTopicTitleDisplay(t.topicName)}</p>
                         <button onClick={() => navigate(`/curriculum/topic/${t._id}`)} className="text-xs text-primary-container font-semibold mt-1">Open topic</button>
                       </div>
                     ))}

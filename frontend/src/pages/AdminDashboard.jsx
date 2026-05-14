@@ -8,6 +8,7 @@ import ManageDiscussionChannels from '../components/ManageDiscussionChannels';
 import { getIssuesForReview, updateIssueStatus } from '../services/engagement';
 import ThemeToggle from '../components/ThemeToggle';
 import { Link, useNavigate } from 'react-router-dom';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const SIDEBAR_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -424,7 +425,7 @@ const AdminDashboard = () => {
                                 </span>
                               </div>
                               <p className="text-[11px] text-on-surface-variant mt-2 font-semibold">
-                                {issue.topicId?.chapter?.subject?.subjectName || 'Subject'} / {issue.topicId?.chapter?.chapterName || 'Chapter'} / {issue.topicId?.topicName || 'Topic'}
+                                {issue.topicId?.chapter?.subject?.subjectName || 'Subject'} / {issue.topicId?.chapter?.chapterName || 'Chapter'} / {formatTopicTitleDisplay(issue.topicId?.topicName || '') || 'Topic'}
                               </p>
                             </div>
                             <div className="rounded-lg bg-white border border-outline/10 px-4 py-3 text-xs text-on-surface-variant lg:min-w-[260px]">

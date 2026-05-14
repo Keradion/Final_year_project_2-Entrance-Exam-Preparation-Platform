@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Award, Trash2, CheckCircle2, Save, Edit2, Link, BookOpen, Calendar, Bookmark } from 'lucide-react';
+import { Award, Trash2, CheckCircle2, Save, Edit2, Link, Bookmark } from 'lucide-react';
 import api from '../services/api';
 import { addBookmark, getBookmarks, removeBookmark } from '../services/engagement';
+import { normalizeExamQuestionStem } from '../utils/examQuestionDisplay';
 
 const TopicExam = () => {
   const { topic, subject, isStudent } = useOutletContext();
@@ -66,12 +67,12 @@ const TopicExam = () => {
       if (existing) {
         await removeBookmark(existing._id);
         setBookmarks((prev) => prev.filter((bookmark) => bookmark._id !== existing._id));
-        showToast('Previous year question removed from bookmarks.');
+        showToast('University entrance exam question removed from bookmarks.');
       } else {
         const note = window.prompt('Add a note for this bookmark (optional):', '') || '';
         const response = await addBookmark({ resourceType: 'exam-question', resourceId: questionId, note });
         setBookmarks((prev) => [response.data, ...prev]);
-        showToast('Previous year question bookmarked.');
+        showToast('Entrance exam question bookmarked.');
       }
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update bookmark.', 'error');
@@ -83,7 +84,7 @@ const TopicExam = () => {
     setNewQuestion({
       year: q.examPaperDoc?.year?.toString() || '2017',
       tag: q.tag || '',
-      questionText: q.questionText,
+      questionText: normalizeExamQuestionStem(q.questionText),
       choices: q.choices || ['', '', '', ''],
       correctAnswer: q.correctAnswer || 'A',
       answerExplanation: q.answerExplanation || ''
@@ -126,7 +127,7 @@ const TopicExam = () => {
         const newPaperRes = await api.post('/exams/papers', {
           subject: subject._id,
           year: parseInt(newQuestion.year),
-          title: `National Exam ${newQuestion.year}`
+          title: 'University Entrance Exam',
         });
         paperId = newPaperRes.data.data._id;
       }
@@ -141,7 +142,7 @@ const TopicExam = () => {
           choices: newQuestion.choices.map(c => c.trim()),
           tag: newQuestion.tag.trim()
         });
-        showToast('Exam reference updated successfully!');
+        showToast('University entrance exam question updated.');
       } else {
         await api.post(`/exams/papers/${paperId}/questions`, {
           ...newQuestion,
@@ -150,7 +151,7 @@ const TopicExam = () => {
           choices: newQuestion.choices.map(c => c.trim()),
           tag: newQuestion.tag.trim()
         });
-        showToast('National Exam reference linked successfully!');
+        showToast('University entrance exam question added.');
       }
 
       handleCancelEdit();
@@ -167,7 +168,7 @@ const TopicExam = () => {
     if (!window.confirm('Remove this national exam reference? This will affect student revision history.')) return;
     try {
       await api.delete(`/exams/questions/${id}`);
-      showToast('Exam reference successfully unlinked.');
+      showToast('University entrance exam question removed.');
       if (editingId === id) handleCancelEdit();
       fetchExamQuestions();
     } catch (err) {
@@ -189,8 +190,8 @@ const TopicExam = () => {
         <div className="bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-outline-variant shadow-[0px_8px_24px_rgba(0,0,0,0.08)] min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-10">
           <div className="min-w-0">
-            <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">{editingId ? 'Edit Exam Linkage' : 'National Exam Linkage'}</h3>
-            <p className="text-on-surface-variant/60 text-sm font-medium mt-1">Design and associate previous exam questions with this topic.</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">{editingId ? 'Edit question' : 'University entrance exam questions'}</h3>
+            <p className="text-on-surface-variant/60 text-sm font-medium mt-1">Link multiple-choice items to this topic and a paper year for records.</p>
           </div>
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0">
             <Award size={28} />
@@ -211,6 +212,7 @@ const TopicExam = () => {
                     <option value="2015">2015</option>
                     <option value="2016">2016</option>
                     <option value="2017">2017</option>
+                    <option value="2018">2018</option>
                   </select>
                </div>
                <div className="space-y-2">
@@ -225,12 +227,13 @@ const TopicExam = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Question Statement</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Question stem</label>
+              <p className="text-xs text-on-surface-variant/80 ml-1">Write the full multiple-choice prompt only. Do not repeat the calendar year here — it is set by <strong className="text-on-surface">Exam year</strong> above.</p>
               <textarea 
                 value={newQuestion.questionText} 
                 onChange={e => setNewQuestion({...newQuestion, questionText: e.target.value})} 
-                placeholder="Type the exam question here..." 
-                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-bold text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm" 
+                placeholder="Example: What is the value of 2⁻¹ + 4⁻¹ ?"
+                className="w-full bg-white border border-outline/20 px-6 py-4 rounded-xl font-semibold text-base text-on-surface resize-none focus:border-primary-container outline-none transition-all shadow-sm" 
                 rows="4"
               />
             </div>
@@ -289,7 +292,10 @@ const TopicExam = () => {
 
       {/* Associated Exam Questions */}
       <div className="space-y-6">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline px-2">{isStudent ? 'Revision Archives' : 'National Exam References'} ({examQuestions.length})</h4>
+        <h4 className="text-sm sm:text-base font-semibold text-on-surface tracking-tight px-2">
+          University entrance examination — multiple choice ({examQuestions.length}{' '}
+          {examQuestions.length === 1 ? 'item' : 'items'})
+        </h4>
         {loading ? (
           <div className="flex justify-center py-20 bg-white rounded-xl border border-outline/5"><div className="w-10 h-10 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></div></div>
         ) : examQuestions.length > 0 ? (
@@ -298,24 +304,27 @@ const TopicExam = () => {
               <div key={q._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0px_8px_24px_rgba(0,0,0,0.08)] transition-all group min-w-0">
                 <div className="flex items-start justify-between gap-3 sm:gap-6 mb-6 min-w-0">
                   <div className="flex gap-3 sm:gap-4 items-start min-w-0 flex-1">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all">
-                      <BookOpen size={24} />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all text-sm sm:text-base font-bold tabular-nums">
+                      {i + 1}
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                         <h4 className="font-bold text-on-surface text-base sm:text-lg leading-tight break-words">
-                           {q.examPaperDoc?.title || `National Exam ${q.examPaperDoc?.year || 'Unknown'}`}
-                         </h4>
-                         <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest">
-                           <Calendar size={10} /> {q.examPaperDoc?.year || 'Unknown'}
-                         </span>
-                         {q.tag && (
-                           <span className="px-2 py-0.5 rounded-lg bg-surface text-[9px] font-black uppercase tracking-widest border border-outline/10 text-on-surface-variant/60">
-                             {q.tag}
-                           </span>
-                         )}
-                      </div>
-                      <p className="text-on-surface-variant/70 text-sm font-medium leading-relaxed mb-4 break-words">{q.questionText}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] text-on-surface-variant break-words pr-8">
+                        University entrance examination
+                      </p>
+                      <h3 className="font-semibold text-on-surface text-sm sm:text-base leading-snug break-words pr-8 mt-1.5">
+                        Multiple-choice question {i + 1} of {examQuestions.length}
+                      </h3>
+                      {q.tag ? (
+                        <p className="text-xs sm:text-sm text-on-surface-variant mt-2 font-medium">{q.tag}</p>
+                      ) : null}
+                      <p className="text-on-surface text-xl sm:text-2xl md:text-[1.7rem] font-normal leading-relaxed break-words mt-4 sm:mt-5">
+                        {normalizeExamQuestionStem(q.questionText)}
+                      </p>
+                      {q.examPaperDoc?.year != null ? (
+                        <p className="mt-4 text-[11px] sm:text-xs text-on-surface-variant font-medium tabular-nums">
+                          Reference paper year (Ethiopian calendar): <span className="text-on-surface/75">{q.examPaperDoc.year} E.C.</span>
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   {!isStudent && (
@@ -339,7 +348,7 @@ const TopicExam = () => {
                       type="button"
                       onClick={() => handleToggleExamBookmark(q._id)}
                       className={`p-3 rounded-xl border shrink-0 transition-all ${getExamQuestionBookmark(q._id) ? 'bg-primary-container text-white border-primary-container' : 'text-primary-container border-primary-container/20 hover:bg-primary-container/5'}`}
-                      title={getExamQuestionBookmark(q._id) ? 'Remove bookmark' : 'Bookmark previous year question'}
+                      title={getExamQuestionBookmark(q._id) ? 'Remove bookmark' : 'Bookmark this question'}
                     >
                       <Bookmark size={18} fill={getExamQuestionBookmark(q._id) ? 'currentColor' : 'none'} />
                     </button>
@@ -347,13 +356,23 @@ const TopicExam = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 sm:pl-12 md:pl-16">
-                  {(q.choices || []).map((opt, idx) => (
-                    <div key={idx} className={`p-3 sm:p-4 rounded-xl border flex items-center gap-2 sm:gap-4 min-w-0 transition-all ${(!isStudent || String.fromCharCode(65 + idx) === q.correctAnswer) ? (String.fromCharCode(65 + idx) === q.correctAnswer ? 'bg-emerald-500/5 border-emerald-500/20 ring-1 ring-emerald-500/10' : 'bg-surface/50 border-outline/5 opacity-60') : 'bg-surface/50 border-outline/5'}`}>
-                      <span className="text-[10px] font-black uppercase text-outline w-4 shrink-0">{String.fromCharCode(65 + idx)}</span>
-                      <span className={`text-sm font-bold min-w-0 break-words ${(!isStudent && String.fromCharCode(65 + idx) === q.correctAnswer) ? 'text-emerald-700' : 'text-on-surface'}`}>{opt}</span>
-                      {(!isStudent && String.fromCharCode(65 + idx) === q.correctAnswer) && <CheckCircle2 size={16} className="ml-auto text-emerald-600" />}
+                  {(q.choices || []).map((opt, idx) => {
+                    const letter = String.fromCharCode(65 + idx);
+                    const correctLetter = String(q.correctAnswer ?? 'A').trim().toUpperCase().slice(0, 1);
+                    const isCorrect = letter === correctLetter;
+                    const showAnswerKey = !isStudent;
+                    const cardClass = showAnswerKey
+                      ? isCorrect
+                        ? 'bg-emerald-500/5 border-emerald-500/20 ring-1 ring-emerald-500/10'
+                        : 'bg-surface/50 border-outline/5 opacity-60'
+                      : 'bg-surface/50 border-outline/10';
+                    return (
+                    <div key={idx} className={`p-4 sm:p-5 rounded-xl border flex items-center gap-3 sm:gap-4 min-w-0 transition-all ${cardClass}`}>
+                      <span className="text-xs sm:text-sm font-black uppercase text-outline w-7 sm:w-8 shrink-0 tabular-nums">{letter}</span>
+                      <span className={`text-base sm:text-lg font-semibold min-w-0 break-words leading-snug ${showAnswerKey && isCorrect ? 'text-emerald-700' : 'text-on-surface'}`}>{opt}</span>
+                      {showAnswerKey && isCorrect && <CheckCircle2 size={16} className="ml-auto text-emerald-600 shrink-0" />}
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             ))}
@@ -361,7 +380,7 @@ const TopicExam = () => {
         ) : (
           <div className="bg-surface/50 border border-dashed border-outline/20 rounded-xl py-32 text-center opacity-40">
             <Award size={64} className="mx-auto mb-4 text-outline" />
-            <p className="text-lg font-bold uppercase tracking-widest text-on-surface-variant">No exam references linked.</p>
+            <p className="text-lg font-bold uppercase tracking-widest text-on-surface-variant">No university entrance exam questions linked yet.</p>
           </div>
         )}
       </div>

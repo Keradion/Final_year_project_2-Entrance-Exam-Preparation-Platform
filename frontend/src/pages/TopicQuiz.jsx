@@ -329,12 +329,18 @@ const TopicQuiz = () => {
   };
 
   const handleSubmitQuizAttempt = async (isAutoSubmit = false) => {
-    // Check if all questions are answered
-    const unansweredCount = activeQuiz.problems.filter(p => !selectedQuizAnswers[p._id]).length;
-    
-    // Only block if it's a manual submit and there are unanswered questions
+    // Require every question answered unless timer auto-submit (forceSubmit)
+    const unansweredCount = activeQuiz.problems.filter((p) => {
+      const pid = String(p._id);
+      const a = selectedQuizAnswers[pid];
+      return a === undefined || a === null || String(a).trim() === '';
+    }).length;
+
     if (!isAutoSubmit && unansweredCount > 0) {
-      showToast(`Please answer all questions before submitting. (${unansweredCount} remaining)`, 'error');
+      showToast(
+        `Please answer all questions before submitting. ${unansweredCount} question(s) remaining.`,
+        'error'
+      );
       return;
     }
 
@@ -346,7 +352,8 @@ const TopicQuiz = () => {
       }));
 
       const res = await api.post(`/quizzes/${activeQuiz._id}/submit`, {
-        answers: formattedAnswers
+        answers: formattedAnswers,
+        forceSubmit: Boolean(isAutoSubmit)
       });
 
       const { score, detailedResults, message } = res.data.data;
@@ -410,7 +417,7 @@ const TopicQuiz = () => {
            </div>
            <div className="text-center space-y-4 max-w-md w-full min-w-0">
              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface break-words px-1">{activeQuiz.title}</h2>
-             <p className="text-on-surface-variant font-medium text-sm sm:text-base break-words px-1">{activeQuiz.description || 'No instructions provided.'}</p>
+             <p className="text-on-surface-variant font-medium text-base sm:text-lg break-words px-1 leading-relaxed">{activeQuiz.description || 'No instructions provided.'}</p>
              <div className="flex items-center justify-center gap-6 mt-6">
                 <div className="text-center">
                   <p className="text-[10px] font-black uppercase tracking-widest text-outline">Duration</p>
@@ -650,7 +657,7 @@ const TopicQuiz = () => {
           {/* Current Problems List */}
           <div className="space-y-6">
              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-2">
-                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Assessment Problems' : 'Quiz Questions'} ({activeQuiz.problems?.length || 0})</h4>
+                <h4 className="text-sm font-bold tracking-tight text-on-surface-variant">{isStudent ? 'Assessment questions' : 'Quiz questions'} · {activeQuiz.problems?.length || 0} items</h4>
              </div>
              
              {activeQuiz.problems?.length > 0 ? (
@@ -660,13 +667,13 @@ const TopicQuiz = () => {
                   const feedback = quizFeedback[pid];
                   const hasFeedback = Boolean(feedback);
                   return (
-                    <div key={prob._id} className="bg-white rounded-xl border border-outline-variant p-4 sm:p-6 shadow-sm group">
-                      <div className="flex justify-between items-start gap-4 mb-4">
-                         <div className="flex gap-3 sm:gap-4">
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-surface rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-black text-outline border border-outline/5 shrink-0">
+                    <div key={prob._id} className="bg-white rounded-xl border border-outline-variant p-5 sm:p-7 shadow-sm group">
+                      <div className="flex justify-between items-start gap-4 mb-5">
+                         <div className="flex gap-3 sm:gap-4 min-w-0">
+                            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-surface rounded-xl flex items-center justify-center text-sm sm:text-base font-bold text-outline border border-outline/10 shrink-0 tabular-nums">
                               {idx + 1}
                             </div>
-                            <p className="font-bold text-sm sm:text-base text-on-surface leading-tight break-words min-w-0">{prob.questionText}</p>
+                            <p className="font-semibold text-base sm:text-lg md:text-xl text-on-surface leading-snug break-words min-w-0">{prob.questionText}</p>
                          </div>
                          {!isStudent && (
                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
@@ -687,14 +694,14 @@ const TopicQuiz = () => {
                            </div>
                          )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:pl-12">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:pl-12">
                          {prob.choices.map(c => (
                            <button
                              key={c.value}
                              type="button"
                              disabled={!isStudent || !attemptStarted || hasFeedback || quizResults}
                              onClick={() => setSelectedQuizAnswers((prev) => ({ ...prev, [pid]: c.value }))}
-                             className={`px-3 py-2 rounded-lg border text-[11px] sm:text-xs font-bold text-left transition-all break-words ${
+                             className={`px-4 py-3.5 sm:px-5 sm:py-4 rounded-xl border text-sm sm:text-base font-semibold text-left transition-all break-words min-h-[3.25rem] leading-snug ${
                                isStudent
                                  ? hasFeedback
                                    ? c.value === feedback.correctAnswer
@@ -716,11 +723,11 @@ const TopicQuiz = () => {
                       </div>
                       {isStudent && hasFeedback && (
                        <div className={`sm:ml-12 mt-4 rounded-xl border px-4 py-3 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
-                         <p className="text-xs sm:text-sm font-bold">
+                         <p className="text-sm sm:text-base font-bold">
                            {feedback.isCorrect ? 'Correct answer.' : `Incorrect. Correct answer: ${feedback.correctAnswer}`}
                          </p>
                          {!feedback.isCorrect && feedback.answerExplanation && (
-                           <p className="text-[10px] sm:text-xs mt-1 opacity-80">{feedback.answerExplanation}</p>
+                           <p className="text-xs sm:text-sm mt-1.5 opacity-90 leading-relaxed">{feedback.answerExplanation}</p>
                          )}
                        </div>
                       )}

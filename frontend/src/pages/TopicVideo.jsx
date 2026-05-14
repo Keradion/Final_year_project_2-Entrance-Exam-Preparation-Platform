@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Bot, PlayCircle, Trash2, Save, Video, VideoOff, Edit2 } from 'lucide-react';
 import api from '../services/api';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const TopicVideo = () => {
   const { topic, isStudent } = useOutletContext();
@@ -93,16 +94,22 @@ const TopicVideo = () => {
   };
 
   const getEmbeddableUrl = (url) => {
-    if (!url) return '';
-    if (url.includes('youtube.com/watch?v=')) return url.replace('watch?v=', 'embed/');
-    if (url.includes('youtu.be/')) return url.replace('youtu.be/', 'www.youtube.com/embed/');
-    if (url.includes('vimeo.com/')) return url.replace('vimeo.com/', 'player.vimeo.com/video/');
-    if (url.includes('/embed/')) return url;
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    if (trimmed.includes('vimeo.com/')) {
+      return trimmed.replace(/^http:/, 'https:').replace('vimeo.com/', 'player.vimeo.com/video/');
+    }
+    const fromPath = trimmed.match(/(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    const fromShort = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    const fromWatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    const id = (fromPath && fromPath[1]) || (fromShort && fromShort[1]) || (fromWatch && fromWatch[1]);
+    if (id) return `https://www.youtube.com/embed/${id}?rel=0`;
     return '';
   };
 
   const getVideoSummary = (video) => {
-    const topicName = topic?.topicName || 'this topic';
+    const topicName = formatTopicTitleDisplay(topic?.topicName || '') || 'this topic';
     const title = video?.title || 'This video lesson';
     return `${title} supports your study of ${topicName}. Focus on the main definitions, worked examples, and any problem-solving steps shown in the lesson. After watching, try to explain the key idea in your own words and connect it to the topic exercises or quiz questions.`;
   };
@@ -215,14 +222,18 @@ const TopicVideo = () => {
                               allowFullScreen
                             />
                           </div>
-                          <div className="max-w-full mx-auto rounded-xl border border-primary-container/15 bg-primary-container/5 p-4 sm:p-5 min-w-0">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-primary-container/10 text-primary-container flex items-center justify-center shrink-0">
+                          <div className="max-w-full mx-auto rounded-xl border border-primary-container/20 bg-surface/80 dark:bg-card/80 p-5 sm:p-6 min-w-0 shadow-sm">
+                            <div className="flex items-start gap-3 sm:gap-4">
+                              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary-container/12 text-primary-container flex items-center justify-center shrink-0">
                                 <Bot size={20} />
                               </div>
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-primary-container">AI Summary</p>
-                                <p className="text-sm text-on-surface-variant leading-6 mt-2">{getVideoSummary(v)}</p>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-primary-container mb-1">
+                                  AI Summary
+                                </p>
+                                <p className="text-base sm:text-[1.0625rem] text-on-surface leading-relaxed sm:leading-[1.7] font-medium">
+                                  {getVideoSummary(v)}
+                                </p>
                               </div>
                             </div>
                           </div>

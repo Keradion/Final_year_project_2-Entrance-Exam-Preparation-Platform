@@ -16,6 +16,7 @@ import {
   listQuestions,
   answerQuestion,
 } from '../services/engagement';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const TeacherDashboardHome = () => {
   const { user } = useContext(AuthContext);
@@ -78,7 +79,7 @@ const TeacherDashboardHome = () => {
       question.questionText?.toLowerCase().includes(query) ||
       question.studentId?.firstName?.toLowerCase().includes(query) ||
       question.studentId?.lastName?.toLowerCase().includes(query) ||
-      question.topicId?.topicName?.toLowerCase().includes(query);
+      formatTopicTitleDisplay(question.topicId?.topicName || '').toLowerCase().includes(query);
     return matchesStatus && matchesSearch;
   });
 
@@ -193,7 +194,7 @@ const TeacherDashboardHome = () => {
                     <p className="text-[11px] text-on-surface-variant mt-1">
                       {issue.studentId?.firstName || 'Student'} {issue.studentId?.lastName || ''} •{' '}
                       {issue.topicId?.chapter?.subject?.subjectName || 'Subject'} •{' '}
-                      {issue.topicId?.topicName || 'Topic'}
+                      {formatTopicTitleDisplay(issue.topicId?.topicName || '') || 'Topic'}
                     </p>
                     <p className="text-xs text-on-surface-variant mt-1">{issue.issueDescription}</p>
                     {issue.response && (
@@ -234,7 +235,7 @@ const TeacherDashboardHome = () => {
                     <p className="font-semibold text-sm">{q.questionText}</p>
                     <p className="text-xs text-on-surface-variant mt-1">
                       {q.studentId?.firstName} {q.studentId?.lastName} •{' '}
-                      {q.topicId?.topicName || 'Topic'}
+                      {formatTopicTitleDisplay(q.topicId?.topicName || '') || 'Topic'}
                     </p>
                     <div className="mt-2 flex gap-2">
                       <input
@@ -340,7 +341,7 @@ const TeacherDashboardHome = () => {
                       </div>
                       <p className="text-xs text-on-surface-variant mt-2">
                         {q.studentId?.firstName} {q.studentId?.lastName} •{' '}
-                        {q.topicId?.topicName || 'Topic'}
+                        {formatTopicTitleDisplay(q.topicId?.topicName || '') || 'Topic'}
                       </p>
                     </div>
                     <button

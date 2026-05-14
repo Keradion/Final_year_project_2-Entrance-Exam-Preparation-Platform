@@ -39,6 +39,7 @@ import {
   getSubjectChapterProgress,
   getSubjectProgress
 } from './services/engagement';
+import { formatTopicTitleDisplay } from './utils/formatTopicDisplayText';
 
 /** Match seed/UI variants like "12" vs "Grade 12". */
 const gradeMatchesFilter = (subjectGrade, selectedGrade) => {
@@ -286,13 +287,19 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
         if (chapterProgress?.topics?.length) {
           setNavTopics(chapterProgress.topics.map((topic) => ({
             _id: topic.topicId,
-            topicName: topic.topicName,
+            topicName: formatTopicTitleDisplay(topic.topicName),
             completed: topic.completed,
           })));
           return;
         }
 
-        setNavTopics(await getTopicsByChapter(activeChapterId));
+        const fromApi = await getTopicsByChapter(activeChapterId);
+        setNavTopics(
+          fromApi.map((t) => ({
+            ...t,
+            topicName: formatTopicTitleDisplay(t.topicName),
+          }))
+        );
       } catch (_err) {
         setNavTopics([]);
       }
@@ -504,7 +511,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                     : 'bg-white text-on-surface hover:bg-primary-container/5'
                 }`}
               >
-                <span className="line-clamp-2">{topicItem.topicName}</span>
+                <span className="line-clamp-2">{formatTopicTitleDisplay(topicItem.topicName)}</span>
                 <ArrowRight size={12} className="shrink-0 text-outline" aria-hidden />
               </button>
             ))}
@@ -635,7 +642,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                     : 'bg-white text-on-surface hover:bg-primary-container/5'
                 }`}
               >
-                <span className="line-clamp-2">{topicItem.topicName}</span>
+                <span className="line-clamp-2">{formatTopicTitleDisplay(topicItem.topicName)}</span>
                 <ArrowRight size={13} className="shrink-0 text-outline" aria-hidden />
               </button>
             ))}
@@ -712,7 +719,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                   onClick={() => { navigate(`/curriculum/topic/${t._id}/objectives`); }}
                   className="w-full text-left px-3 py-2 rounded-lg bg-white hover:bg-primary-container/5 transition-colors flex items-start justify-between gap-2"
                 >
-                  <span className="text-sm font-semibold text-on-surface line-clamp-2">{t.topicName}</span>
+                  <span className="text-sm font-semibold text-on-surface line-clamp-2">{formatTopicTitleDisplay(t.topicName)}</span>
                   <ArrowRight size={14} className="shrink-0 text-primary-container mt-0.5" aria-hidden />
                 </button>
               ))}
@@ -755,7 +762,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                     onClick={() => issue.topicId?._id && navigate(`/curriculum/topic/${issue.topicId._id}/reports`)}
                     className="w-full text-left p-3 rounded-lg bg-white hover:bg-primary-container/5"
                   >
-                    <p className="text-sm font-semibold line-clamp-1">{issue.topicId?.topicName || issue.title}</p>
+                    <p className="text-sm font-semibold line-clamp-1">{formatTopicTitleDisplay(issue.topicId?.topicName || '') || issue.title}</p>
                     <p className="text-[11px] text-primary-container capitalize mt-1">{issue.issueStatus}</p>
                   </button>
                 ))}
@@ -810,7 +817,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                       }}
                       className="w-full text-left px-3 py-3 rounded-xl border border-outline/10 bg-white text-sm font-semibold"
                     >
-                      {t.topicName}
+                      {formatTopicTitleDisplay(t.topicName)}
                     </button>
                   ))}
                 </div>
@@ -834,7 +841,7 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                <Menu size={22} />
              </button>
              {userRole === 'student' && (
-               <div ref={gradeMenuRef} className="relative min-w-0 max-w-full sm:max-w-[11rem] md:max-w-none isolate z-[100]">
+               <div ref={gradeMenuRef} className="relative min-w-0 max-w-full sm:max-w-[11rem] md:max-w-[13rem] lg:max-w-[15rem] xl:max-w-[18rem] isolate z-[100]">
                  <button
                    type="button"
                    onClick={() => setShowGradeMenu((value) => !value)}
@@ -918,11 +925,11 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  <>
                    <button
                      type="button"
-                     className="fixed inset-0 z-[55] bg-on-surface/20 sm:hidden"
+                     className="fixed inset-0 z-[190] bg-on-surface/25 sm:bg-on-surface/10"
                      aria-label="Close notifications"
                      onClick={() => setShowNotifications(false)}
                    />
-                   <div className="min-w-0 max-w-full max-h-[min(22.5rem,70vh)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-xl z-[60] max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[4.75rem] sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-[min(20rem,calc(100vw-1.5rem))]">
+                   <div className="fixed left-3 right-3 top-[4.75rem] sm:top-20 sm:left-auto sm:right-4 sm:w-[min(22rem,calc(100vw-2rem))] min-w-0 max-h-[min(22.5rem,min(70vh,calc(100vh-6rem)))] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-2xl z-[200]">
                      <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between gap-2 min-w-0">
                        <p className="text-sm font-semibold truncate">Notifications</p>
                        <span className="text-xs text-on-surface-variant shrink-0">{notifications.length} unread</span>
@@ -970,11 +977,11 @@ const StudentLayout = ({ children, selectedGrade, setSelectedGrade }) => {
                  <>
                    <button
                      type="button"
-                     className="fixed inset-0 z-[55] bg-on-surface/20 sm:hidden"
+                     className="fixed inset-0 z-[190] bg-on-surface/25 sm:bg-on-surface/10"
                      aria-label="Close bookmarks"
                      onClick={() => setShowBookmarks(false)}
                    />
-                   <div className="min-w-0 max-w-full max-h-[min(22.5rem,70vh)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-xl z-[60] max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[4.75rem] sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-[min(20rem,calc(100vw-1.5rem))]">
+                   <div className="fixed left-3 right-3 top-[4.75rem] sm:top-20 sm:left-auto sm:right-4 sm:w-[min(22rem,calc(100vw-2rem))] min-w-0 max-h-[min(22.5rem,min(70vh,calc(100vh-6rem)))] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-2xl z-[200]">
                      <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between gap-2 min-w-0">
                        <p className="text-sm font-semibold truncate">My Bookmarks</p>
                        <span className="text-xs text-on-surface-variant shrink-0">{bookmarks.length} saved</span>

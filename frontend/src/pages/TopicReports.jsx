@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { TriangleAlert } from 'lucide-react';
 import { createIssue, getMyIssues } from '../services/engagement';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const TopicReports = () => {
   const { topicId } = useParams();
@@ -59,7 +60,7 @@ const TopicReports = () => {
           </div>
           <div className="min-w-0">
             <h3 className="text-xl sm:text-2xl font-bold text-on-surface break-words">Report Topic Issue</h3>
-            <p className="text-sm text-on-surface-variant mt-1 break-words">Report wrong answers, missing content, or confusing material for {topic?.topicName || 'this topic'}.</p>
+            <p className="text-sm text-on-surface-variant mt-1 break-words">Report wrong answers, missing content, or confusing material for {(topic?.topicName != null ? formatTopicTitleDisplay(topic.topicName) : null) || 'this topic'}.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">

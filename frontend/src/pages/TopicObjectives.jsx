@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { Target, Trash2, Save, Edit2, Check, X } from 'lucide-react';
 import api from '../services/api';
+import { formatTopicBodyText } from '../utils/formatTopicDisplayText';
 
 const TopicObjectives = () => {
   const { topic, fetchData, isStudent } = useOutletContext();
@@ -133,7 +134,7 @@ const TopicObjectives = () => {
                       {i + 1}
                     </span>
                     <p className="flex-1 min-w-0 text-[1.05rem] sm:text-[1.0625rem] leading-[1.75] text-on-surface font-normal tracking-normal pt-1.5">
-                      {obj}
+                      {formatTopicBodyText(obj)}
                     </p>
                   </li>
                 ))}
@@ -172,7 +173,7 @@ const TopicObjectives = () => {
                         </button>
                       </div>
                     ) : (
-                      <span className="font-semibold text-on-surface text-base sm:text-lg leading-relaxed">{obj}</span>
+                      <span className="font-semibold text-on-surface text-base sm:text-lg leading-relaxed">{formatTopicBodyText(obj)}</span>
                     )}
                   </div>
                   {!isStudent && editingIndex !== i && (

@@ -3,6 +3,7 @@ import { Outlet, NavLink, useParams, useNavigate, useLocation } from 'react-rout
 import { ChevronLeft, ChevronRight, Target, BookOpen, Video, PenTool, CheckSquare, Award, TriangleAlert, HelpCircle } from 'lucide-react';
 import api from '../services/api';
 import { getTopicCompletionEligibility, markTopicComplete } from '../services/engagement';
+import { formatTopicTitleDisplay } from '../utils/formatTopicDisplayText';
 
 const TopicDetailsLayout = ({ isStudent = false }) => {
   const { topicId } = useParams();
@@ -149,7 +150,7 @@ const TopicDetailsLayout = ({ isStudent = false }) => {
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mt-2 min-w-0">
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-on-surface break-words">
-                {topic?.topicName || 'Loading...'}
+                {topic?.topicName ? formatTopicTitleDisplay(topic.topicName) : 'Loading...'}
               </h1>
             </div>
             {isStudent && (

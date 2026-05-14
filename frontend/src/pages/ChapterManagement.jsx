@@ -245,9 +245,6 @@ const ChapterManagement = ({ isStudent = false }) => {
                         <div className="space-y-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                             <h3 className="text-xl sm:text-2xl font-bold text-on-surface leading-tight tracking-tight group-hover:text-primary-container transition-colors break-words">{chapter.chapterName}</h3>
-                            <span className="px-2.5 py-1 rounded-lg bg-surface text-[10px] font-black uppercase tracking-widest border border-outline/5 text-on-surface-variant/40">
-                              {chapter._id.slice(-6)}
-                            </span>
                           </div>
                           {chapter.chapterDescription ? (
                             <p className="text-on-surface-variant/70 font-medium text-sm max-w-xl leading-relaxed">{chapter.chapterDescription}</p>

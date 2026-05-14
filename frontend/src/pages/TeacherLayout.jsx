@@ -206,7 +206,14 @@ const TeacherLayout = () => {
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-h-[min(22.5rem,70vh)] overflow-auto rounded-xl border border-outline/10 bg-card shadow-xl z-[60]">
+                <>
+                  <button
+                    type="button"
+                    className="fixed inset-0 z-[190] bg-on-surface/25 sm:bg-on-surface/10"
+                    aria-label="Close notifications"
+                    onClick={() => setShowNotifications(false)}
+                  />
+                  <div className="fixed left-3 right-3 top-[4.75rem] sm:top-20 sm:left-auto sm:right-4 sm:w-[min(22rem,calc(100vw-2rem))] min-w-0 max-h-[min(22.5rem,min(70vh,calc(100vh-6rem)))] overflow-y-auto overflow-x-hidden rounded-xl border border-outline/10 bg-card shadow-2xl z-[200]">
                   <div className="px-4 py-3 border-b border-outline/10 flex items-center justify-between">
                     <p className="text-sm font-semibold">Notifications</p>
                     <span className="text-xs text-on-surface-variant">
@@ -235,6 +242,7 @@ const TeacherLayout = () => {
                     )}
                   </div>
                 </div>
+                </>
               )}
             </div>
             <div className="text-right hidden md:block">

@@ -334,7 +334,7 @@ const TopicExercise = () => {
       {/* Inventory Panel */}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-2">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">{isStudent ? 'Practice Lab' : 'Exercise Inventory'} ({exercises.length})</h4>
+          <h4 className="text-sm font-bold text-on-surface-variant tracking-tight">{isStudent ? 'Practice exercises' : 'Exercise inventory'} · {exercises.length} items</h4>
           {isStudent && exercises.length > 0 && (
             <p className="text-xs text-on-surface-variant font-semibold">
               Pick a choice, then press <span className="text-on-surface">Check answer</span> on the bottom-right of that question. Change your choice after a wrong attempt, then check again.
@@ -355,13 +355,13 @@ const TopicExercise = () => {
                     <>
                 <div className="flex items-start justify-between gap-3 sm:gap-6 mb-6 min-w-0">
                   <div className="flex gap-3 sm:gap-4 items-start min-w-0 flex-1">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary-container/5 rounded-lg flex items-center justify-center text-primary-container font-black text-xs border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-container/5 rounded-xl flex items-center justify-center text-primary-container font-bold text-sm sm:text-base border border-primary-container/10 shrink-0 group-hover:bg-primary-container group-hover:text-white transition-all tabular-nums">
                       {i + 1}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                         <h4 className="font-bold text-on-surface text-base sm:text-lg leading-tight break-words">{ex.title}</h4>
-                         <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
+                         <h4 className="font-semibold text-on-surface text-lg sm:text-xl leading-snug break-words">{ex.title}</h4>
+                         <span className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wide border ${
                            ex.difficulty === 'Hard' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 
                            ex.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 
                            'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
@@ -369,7 +369,7 @@ const TopicExercise = () => {
                            {ex.difficulty}
                          </span>
                       </div>
-                      <p className="text-on-surface-variant/70 text-sm font-medium leading-relaxed mb-4 break-words">{ex.question}</p>
+                      <p className="text-on-surface text-base sm:text-lg font-medium leading-relaxed mb-4 break-words">{ex.question}</p>
                       {ex.tag && (
                         <span className="px-2 py-0.5 rounded-lg bg-surface text-[9px] font-black uppercase tracking-widest border border-outline/10 text-on-surface-variant/60">
                            {ex.tag}
@@ -420,7 +420,7 @@ const TopicExercise = () => {
                       onClick={() =>
                         setSelectedAnswers((prev) => ({ ...prev, [ex._id]: idx }))
                       }
-                      className={`p-4 rounded-xl border flex items-center gap-4 transition-all text-left ${
+                      className={`p-4 sm:p-5 rounded-xl border flex items-center gap-4 transition-all text-left min-h-[3.5rem] ${
                         isStudent
                           ? hasFeedback
                             ? idx === feedback.correctAnswer
@@ -436,8 +436,8 @@ const TopicExercise = () => {
                             : 'bg-surface/50 border-outline/5 opacity-60'
                       }`}
                     >
-                      <span className="text-[10px] font-black uppercase text-outline w-4">{String.fromCharCode(65 + idx)}</span>
-                      <span className={`text-sm font-bold ${(!isStudent && idx === ex.correctAnswer) || (hasFeedback && idx === feedback.correctAnswer) ? 'text-emerald-700' : 'text-on-surface'}`}>{opt}</span>
+                      <span className="text-xs sm:text-sm font-bold uppercase text-outline w-8 shrink-0 tabular-nums">{String.fromCharCode(65 + idx)}</span>
+                      <span className={`text-base sm:text-lg font-semibold leading-snug ${(!isStudent && idx === ex.correctAnswer) || (hasFeedback && idx === feedback.correctAnswer) ? 'text-emerald-700' : 'text-on-surface'}`}>{opt}</span>
                       {((!isStudent && idx === ex.correctAnswer) || (hasFeedback && idx === feedback.correctAnswer)) && <CheckCircle2 size={16} className="ml-auto text-emerald-600" />}
                     </button>
                   ))}
@@ -470,11 +470,11 @@ const TopicExercise = () => {
                 {isStudent && hasFeedback && (
                   <div className="pl-14 mt-5">
                       <div className={`rounded-xl border px-5 py-4 ${feedback.isCorrect ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700' : 'bg-error/5 border-error/20 text-error'}`}>
-                        <p className="font-bold text-sm">
+                        <p className="font-bold text-sm sm:text-base">
                           {feedback.isCorrect ? 'Correct answer. Well done.' : `Incorrect. Correct answer: ${feedback.correctOption}`}
                         </p>
                         {!feedback.isCorrect && feedback.hint && (
-                          <p className="text-xs mt-1 opacity-80">Hint: {feedback.hint}</p>
+                          <p className="text-xs sm:text-sm mt-2 opacity-90 leading-relaxed">Hint: {feedback.hint}</p>
                         )}
                       </div>
                   </div>
