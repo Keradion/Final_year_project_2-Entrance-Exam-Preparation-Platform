@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
 const appCache = require('../services/appCache');
+const {
+  normalizeExamQuestionStem,
+  sanitizeExamPaperDoc,
+} = require('../utils/examQuestionStem');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),
@@ -60,18 +64,23 @@ exports.getExamQuestionsByPaper = asyncHandler(async (req, res, next) => {
 
     const filter = { examPaper: paperId };
     const [questions, total] = await Promise.all([
-      ExamQuestion.find(filter).sort({ createdAt: 1 }).skip(skip).limit(limit),
+      ExamQuestion.find(filter).sort({ createdAt: 1 }).skip(skip).limit(limit).lean(),
       ExamQuestion.countDocuments(filter),
     ]);
 
+    const data = questions.map((q) => ({
+      ...q,
+      questionText: normalizeExamQuestionStem(q.questionText),
+    }));
+
     res.status(200).json({
         success: true,
-        count: questions.length,
+        count: data.length,
         total,
         page,
         pages: Math.ceil(total / limit) || 1,
         limit,
-        data: questions
+        data,
     });
 });
 
@@ -152,8 +161,14 @@ exports.searchExamQuestions = asyncHandler(async (req, res, next) => {
     );
 
     const result = await ExamQuestion.aggregate(pipeline);
-    const data = result[0]?.data || [];
+    const rows = result[0]?.data || [];
     const total = result[0]?.meta?.[0]?.total || 0;
+
+    const data = rows.map((row) => ({
+      ...row,
+      questionText: normalizeExamQuestionStem(row.questionText),
+      examPaperDoc: sanitizeExamPaperDoc(row.examPaperDoc),
+    }));
 
     res.status(200).json({
         success: true,

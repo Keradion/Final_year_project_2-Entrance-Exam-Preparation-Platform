@@ -3,29 +3,13 @@ const Bookmark = require('../models/Bookmark');
 const { Topic, Concept, Video, Exercise, Quiz, ExamQuestion } = require('../models');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
+const { normalizeExamQuestionStem } = require('../utils/examQuestionStem');
 
 const allowedResourceTypes = new Set(['topic', 'video', 'concept', 'exercise', 'quiz', 'exercise-question', 'exam-question']);
 
 const summarizeText = (value, fallback) => {
   if (!value) return fallback;
   return value.length > 90 ? `${value.slice(0, 87)}...` : value;
-};
-
-/** Match TopicExam.jsx — keep bookmark titles clean of duplicated E.C. prefixes */
-const stripExamStemPrefix = (text) => {
-  let s = String(text ?? '').trim();
-  for (let k = 0; k < 8; k += 1) {
-    const next = s
-      .replace(/^\[E\.C\.\s*\d{4}\]\s*/i, '')
-      .replace(/^\[E\.C\.\d{4}\]\s*/i, '')
-      .replace(/^\(E\.C\.\s*\d{4}\)\s*/i, '')
-      .replace(/^E\.C\.\s*\d{4}\s*[.:—–-]\s*/i, '')
-      .replace(/^E\.C\.\s*\d{4}\s+/i, '')
-      .trim();
-    if (next === s) break;
-    s = next;
-  }
-  return s;
 };
 
 const buildBookmarkTarget = async (bookmark) => {
@@ -68,7 +52,7 @@ const buildBookmarkTarget = async (bookmark) => {
   if (base.resourceType === 'exam-question') {
     const question = await ExamQuestion.findById(id).select('questionText topic examPaper').populate('examPaper', 'year title').lean();
     const year = question?.examPaper?.year;
-    const stem = stripExamStemPrefix(question?.questionText);
+    const stem = normalizeExamQuestionStem(question?.questionText);
     const yearPart = year != null ? ` · ${year} E.C.` : '';
     return {
       ...base,

@@ -2,6 +2,7 @@ const ExamPaper = require('../models/ExamPaper');
 const Subject = require('../models/Subject');
 const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
+const { displayExamPaperTitle } = require('../utils/examQuestionStem');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),
@@ -53,14 +54,20 @@ exports.getExamPapersBySubject = asyncHandler(async (req, res, next) => {
       ExamPaper.countDocuments(filter),
     ]);
 
+    const data = examPapers.map((p) => {
+      const o = p.toObject ? p.toObject() : { ...p };
+      o.title = displayExamPaperTitle();
+      return o;
+    });
+
     res.status(200).json({
         success: true,
-        count: examPapers.length,
+        count: data.length,
         total,
         page,
         pages: Math.ceil(total / limit) || 1,
         limit,
-        data: examPapers
+        data,
     });
 });
 
@@ -91,14 +98,20 @@ exports.searchExamPapers = asyncHandler(async (req, res, next) => {
       ExamPaper.countDocuments(query),
     ]);
 
+    const data = examPapers.map((p) => {
+      const o = p.toObject ? p.toObject() : { ...p };
+      o.title = displayExamPaperTitle();
+      return o;
+    });
+
     res.status(200).json({
         success: true,
-        count: examPapers.length,
+        count: data.length,
         total,
         page,
         pages: Math.ceil(total / limit) || 1,
         limit,
-        data: examPapers
+        data,
     });
 });
 
