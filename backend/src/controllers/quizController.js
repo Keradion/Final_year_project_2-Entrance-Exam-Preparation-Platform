@@ -314,7 +314,7 @@ exports.startQuizAttempt = asyncHandler(async (req, res, next) => {
 // @access  Private (Student)
 exports.submitQuizAttempt = asyncHandler(async (req, res, next) => {
     const { quizId } = req.params;
-    const { answers } = req.body; // Array of { problemId, submittedAnswer }
+    const { answers, forceSubmit } = req.body;
     const studentId = req.user.id;
 
     const quiz = await Quiz.findById(quizId);
@@ -342,12 +342,37 @@ exports.submitQuizAttempt = asyncHandler(async (req, res, next) => {
     }
 
     const problems = await QuizProblem.find({ quizId });
+    if (!problems.length) {
+        return next(new ErrorResponse('This quiz has no questions yet.', 400));
+    }
+
+    const answerList = Array.isArray(answers) ? answers : [];
+    const allowIncomplete = forceSubmit === true;
+
+    if (!allowIncomplete) {
+        const unanswered = problems.filter((problem) => {
+            const submission = answerList.find(
+                (a) => String(a?.problemId) === problem._id.toString()
+            );
+            const val = submission?.submittedAnswer;
+            return val === undefined || val === null || String(val).trim() === '';
+        });
+        if (unanswered.length > 0) {
+            return next(
+                new ErrorResponse(
+                    `Submit blocked: answer all ${problems.length} questions first (${unanswered.length} still unanswered).`,
+                    400
+                )
+            );
+        }
+    }
+
     let correctCount = 0;
     const detailedResults = [];
     const answersToCreate = [];
 
     for (const problem of problems) {
-        const submission = answers.find(a => a.problemId === problem._id.toString());
+        const submission = answerList.find((a) => String(a?.problemId) === problem._id.toString());
         const submittedAnswer = submission ? submission.submittedAnswer : null;
         const isCorrect = submittedAnswer === problem.correctAnswer;
 
@@ -383,7 +408,10 @@ exports.submitQuizAttempt = asyncHandler(async (req, res, next) => {
     scoreEntry.endTime = now;
     
     // Save answers and a map of detailed results for later viewing
-    scoreEntry.answers = answers.map(a => ({ problemId: a.problemId, answer: a.submittedAnswer }));
+    scoreEntry.answers = answerList.map((a) => ({
+        problemId: a.problemId,
+        answer: a.submittedAnswer,
+    }));
     const resultsMap = {};
     detailedResults.forEach(r => {
         resultsMap[r.problemId.toString()] = r;
