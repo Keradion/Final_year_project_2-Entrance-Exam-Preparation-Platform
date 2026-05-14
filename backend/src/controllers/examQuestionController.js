@@ -260,13 +260,15 @@ exports.validateExamAnswer = asyncHandler(async (req, res, next) => {
             return next(new ErrorResponse(`Exam question not found with id of ${questionId}`, 404));
         }
 
-        const isCorrect = question.correctAnswer === submittedAnswer;
+        const letter = String(submittedAnswer ?? '').trim().toUpperCase().slice(0, 1);
+        const correctLetter = String(question.correctAnswer ?? '').trim().toUpperCase().slice(0, 1);
+        const isCorrect = Boolean(letter && correctLetter && letter === correctLetter);
 
         const answer = await Answer.create({
             student: studentId,
             question: questionId,
             questionModel: 'ExamQuestion',
-            submittedAnswer,
+            submittedAnswer: letter,
             isCorrect,
         });
 
