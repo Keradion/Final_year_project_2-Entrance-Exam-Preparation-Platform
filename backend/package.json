@@ -9,7 +9,9 @@
     "test:redis": "node scripts/testRedis.js",
     "test": "cross-env NODE_ENV=test REDIS_ENABLED=false mocha --require @babel/register test/**/*.js --exit",
     "seed:grade9math": "node scripts/scripts/seed-new.js",
-    "seed:grade9math:reset": "node scripts/scripts/seed-new.js --reset"
+    "seed:grade9math:reset": "node scripts/scripts/seed-new.js --reset",
+    "seed:grade10math": "node scripts/scripts/seed-grade10-math.js",
+    "seed:grade10math:reset": "node scripts/scripts/seed-grade10-math.js --reset"
   },
   "keywords": [
     "learning",
