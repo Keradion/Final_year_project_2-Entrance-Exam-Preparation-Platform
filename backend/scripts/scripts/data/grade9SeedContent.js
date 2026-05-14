@@ -1,9 +1,10 @@
 /**
- * Study notes (→ Concept) and extra MCQ templates to ensure 7 exercises per topic.
- * Curriculum chapters supply curated items via exercises[] with topicIndex; this module pads to 7.
- *
- * Notes are plain text (no markdown **): paragraphs separated by blank lines for TopicConcept.jsx.
+ * Study notes (→ Concept), per-topic YouTube URLs (`TOPIC_YOUTUBE_VIDEO_IDS`), and MCQ templates.
+ * Curriculum chapters supply curated exercises[] with topicIndex; this module pads to 7 per topic.
+ * Notes are plain text for TopicConcept.jsx (no markdown **).
  */
+
+const { stripEmbeddedHexIdLinesMultiline } = require('../../../src/utils/topicTextSanitize');
 
 const CHAPTER_TAGS = ['sets', 'numbers', 'exponents', 'polynomials', 'linear', 'coordinate', 'geometry'];
 
@@ -16,10 +17,12 @@ function hashPair(a, b) {
 
 /** Strip accidental markdown / decorative asterisks so the topic UI stays plain text */
 function sanitizePlain(s) {
-  return String(s || '')
-    .replace(/\*{1,2}/g, '')
-    .replace(/[ \t]+$/gm, '')
-    .trim();
+  return stripEmbeddedHexIdLinesMultiline(
+    String(s || '')
+      .replace(/\*{1,2}/g, '')
+      .replace(/[ \t]+$/gm, '')
+      .trim()
+  );
 }
 
 /** One concrete example per (chapter, topic) — stays on the mathematics of that lesson only */
@@ -219,8 +222,81 @@ function buildTopicStudyNotes({
   };
 }
 
+/**
+ * One `watch?v=` URL per curriculum topic (`chapterIndex` & `topicIndex` match seed order).
+ * IDs are hand-picked free lessons (mostly Khan Academy) verified via YouTube oEmbed — no Data API.
+ */
+const TOPIC_YOUTUBE_VIDEO_IDS = {
+  // Unit 1: Sets
+  '0-0': 'K_f3c6Q0AhQ',
+  '0-1': 'aKZTYRxQChE',
+  '0-2': 'En8fI2ixepo',
+  '0-3': 'QE2uR6Z-NcU',
+  '0-4': 'En8fI2ixepo',
+  // Unit 2: Real numbers
+  '1-0': '-QHff5pRdM8',
+  '1-1': '8XtgKmU4PWo',
+  '1-2': 'N4nrdf0yYfM',
+  '1-3': 'frBJEYvyd-8',
+  '1-4': 'eCJ76hz7jPM',
+  // Unit 3: Exponents & radicals
+  '2-0': 'CZ5ne_mX5_I',
+  '2-1': 'JnpqlXN9Whw',
+  '2-2': 'mbc3_e5lWw0',
+  '2-3': 'cw3mp8oNASk',
+  '2-4': 'trdbaV4TaAo',
+  // Unit 4: Polynomials
+  '3-0': 'vN0aL-_vIKM',
+  '3-1': 'ZGl2ExHwdak',
+  '3-2': 'Xy8NKUoyy98',
+  '3-3': 'bFtjG45-Udk',
+  '3-4': 'TuMV-Zb6A9s',
+  // Unit 5: Linear equations & inequalities
+  '4-0': '9Ek61w1LxSc',
+  '4-1': 'DqeMQHomwAU',
+  '4-2': 'fnuIT7EhAvs',
+  '4-3': 'FZ2APP6-grU',
+  '4-4': 'bAerID24QJ0',
+  // Unit 6: Coordinate geometry
+  '5-0': 's7NKLWXkEEE',
+  '5-1': 'nyZuite17Pc',
+  '5-2': 'pzDfd8NXRXk',
+  '5-3': 'R948Tsyq4vA',
+  '5-4': 'IL3UCuXrUzE',
+  // Unit 7: Plane geometry
+  '6-0': 'gRKZaojKeP0',
+  '6-1': 'hmj3_zbz2eg',
+  '6-2': 'CJrVOf_3dN0',
+  '6-3': 'dVFp9psjn8c',
+  '6-4': '7N5orPxUoGo',
+};
+
+const FALLBACK_MATH_VIDEO_IDS = [
+  'K_f3c6Q0AhQ',
+  'N4nrdf0yYfM',
+  '9Ek61w1LxSc',
+  'nyZuite17Pc',
+  'M7lc1UVf-VE',
+];
+
+/**
+ * Resolved watch URL for this topic row in the curriculum (stable; not random).
+ */
+function pickRandomTopicVideo({ chapterIndex, topicIndex, topicName, gradeLevel }) {
+  const key = `${chapterIndex}-${topicIndex}`;
+  let id = TOPIC_YOUTUBE_VIDEO_IDS[key];
+  if (!id) {
+    id = FALLBACK_MATH_VIDEO_IDS[Math.floor(Math.random() * FALLBACK_MATH_VIDEO_IDS.length)];
+  }
+  return {
+    videoUrl: `https://www.youtube.com/watch?v=${id}`,
+    title: `${topicName} (Grade ${gradeLevel})`,
+  };
+}
+
 module.exports = {
   CHAPTER_TAGS,
   exercisesForTopic,
   buildTopicStudyNotes,
+  pickRandomTopicVideo,
 };

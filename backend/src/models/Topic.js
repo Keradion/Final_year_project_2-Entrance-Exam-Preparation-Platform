@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const { stripEmbeddedHexIdLines, stripEmbeddedHexIdLinesMultiline } = require('../utils/topicTextSanitize');
 
 /**
  * ==================================================================================
@@ -67,6 +68,28 @@ const topicSchema = new Schema(
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   }
 );
+
+topicSchema.pre('save', function stripTopicText(next) {
+  if (this.topicName) this.topicName = stripEmbeddedHexIdLines(this.topicName);
+  if (this.topicDescription) this.topicDescription = stripEmbeddedHexIdLinesMultiline(this.topicDescription);
+  next();
+});
+
+topicSchema.pre('findOneAndUpdate', function stripTopicTextUpdate(next) {
+  const update = this.getUpdate();
+  if (!update) return next();
+  if (update.$set) {
+    if (update.$set.topicName != null)
+      update.$set.topicName = stripEmbeddedHexIdLines(String(update.$set.topicName));
+    if (update.$set.topicDescription != null)
+      update.$set.topicDescription = stripEmbeddedHexIdLinesMultiline(String(update.$set.topicDescription));
+  } else {
+    if (update.topicName != null) update.topicName = stripEmbeddedHexIdLines(String(update.topicName));
+    if (update.topicDescription != null)
+      update.topicDescription = stripEmbeddedHexIdLinesMultiline(String(update.topicDescription));
+  }
+  next();
+});
 
 /**
  * ==================================================================================
