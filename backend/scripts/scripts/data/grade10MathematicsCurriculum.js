@@ -1,5 +1,5 @@
 /**
- * Grade 10 Mathematics — structure aligned to MoE Ethiopia Grade 10 secondary mathematics
+ * Grade 10 Mathematics — secondary mathematics
  * (rational expressions & equations; inequalities & linear systems; quadratics; relations & functions;
  * right-triangle trigonometry; polygons, similarity & circles; surface area & volume of solids).
  *
@@ -28,14 +28,14 @@ module.exports = {
   subjectName: 'Mathematics',
   stream: 'Natural',
   subjectDescription:
-    'Grade 10 Mathematics (Natural stream) — MoE Ethiopia: algebra extension through solid measurement.',
+    'Grade 10 Mathematics (Natural stream): algebra extension through solid measurement.',
 
   chapters: [
     // ─── Unit 1 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 1: Rational expressions and rational equations',
       chapterDescription:
-        'Simplify rational expressions, operate with them, and solve rational equations with domain awareness (MoE Grade 10).',
+        'Simplify rational expressions, operate with them, and solve rational equations with domain awareness.',
       topics: [
         {
           topicName: 'Rational expressions and domain',
@@ -140,7 +140,7 @@ module.exports = {
     {
       chapterName: 'Unit 2: Linear inequalities and systems of linear equations',
       chapterDescription:
-        'Compound inequalities in one variable; solve 2×2 systems by graphing, substitution, and elimination (MoE Grade 10).',
+        'Compound inequalities in one variable; solve 2×2 systems by graphing, substitution, and elimination.',
       topics: [
         {
           topicName: 'Linear inequalities in one variable',
@@ -244,7 +244,7 @@ module.exports = {
     // ─── Unit 3 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 3: Quadratic equations',
-      chapterDescription: 'Factoring, completing the square, quadratic formula, discriminant, and applications (MoE Grade 10).',
+      chapterDescription: 'Factoring, completing the square, quadratic formula, discriminant, and applications.',
       topics: [
         {
           topicName: 'Solving quadratic equations by factoring',
@@ -333,7 +333,7 @@ module.exports = {
     // ─── Unit 4 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 4: Relations, functions, and graphs',
-      chapterDescription: 'Domain and range, function notation, linear and quadratic graphs, simple transformations (MoE Grade 10).',
+      chapterDescription: 'Domain and range, function notation, linear and quadratic graphs, simple transformations.',
       topics: [
         { topicName: 'Relations and the coordinate plane', topicDescription: 'Ordered pairs; domain and range from sets or graphs.', topicObjectives: ['Read domain and range from a graph or roster.', 'Distinguish relation from function informally.'], },
         { topicName: 'Functions and notation', topicDescription: 'f(x); evaluating and interpreting.', topicObjectives: ['Evaluate f(a) for linear and quadratic f.', 'Interpret f(x) in context.'], },
@@ -402,7 +402,7 @@ module.exports = {
     // ─── Unit 5 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 5: Introduction to trigonometry',
-      chapterDescription: 'Right-triangle ratios; solving for sides and angles; simple applications (MoE Grade 10).',
+      chapterDescription: 'Right-triangle ratios; solving for sides and angles; simple applications.',
       topics: [
         { topicName: 'Angles and right triangles', topicDescription: 'Acute angles; opposite, adjacent, hypotenuse.', topicObjectives: ['Label sides relative to a marked acute angle.', 'Recognize right-triangle Pythagorean relationship.'], },
         { topicName: 'Trigonometric ratios', topicDescription: 'sin, cos, tan for acute angles.', topicObjectives: ['Write ratios from side lengths.', 'Use a calculator when appropriate.'], },
@@ -471,7 +471,7 @@ module.exports = {
     // ─── Unit 6 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 6: Plane geometry — polygons, similarity, and circles',
-      chapterDescription: 'Regular polygons, similarity, circle theorems (MoE Grade 10).',
+      chapterDescription: 'Regular polygons, similarity, circle theorems.',
       topics: [
         { topicName: 'Regular polygons and angle sums', topicDescription: 'Interior and exterior angles; tiling intuition.', topicObjectives: ['Use (n−2)·180° for interior sum.', 'Find each interior angle measure of a regular n-gon.'], },
         { topicName: 'Similar figures', topicDescription: 'Scale factor; ratios of lengths, areas (intro).', topicObjectives: ['Set up proportions for similar triangles.', 'Relate areas of similar figures to scale factor squared (awareness).'], },
@@ -540,7 +540,7 @@ module.exports = {
     // ─── Unit 7 ─────────────────────────────────────────────────────────────
     {
       chapterName: 'Unit 7: Surface area and volume of solid figures',
-      chapterDescription: 'Prisms, cylinders, pyramids, cones, spheres; composite solids (MoE Grade 10).',
+      chapterDescription: 'Prisms, cylinders, pyramids, cones, spheres; composite solids.',
       topics: [
         { topicName: 'Prisms and cylinders', topicDescription: 'Lateral and total surface area; volume.', topicObjectives: ['V = base area × height for right prism.', 'Cylinder V = πr²h; lateral area = 2πrh.'], },
         { topicName: 'Pyramids and cones', topicDescription: 'Slant height; volume formulas.', topicObjectives: ['Cone V = (1/3)πr²h.', 'Pyramid V = (1/3) base area × height.'], },

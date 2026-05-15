@@ -8,6 +8,7 @@ const asyncHandler = require('../middleware/async');
 const ErrorResponse = require('../utils/errors');
 const appCache = require('../services/appCache');
 const { notifyStudentsOfSubjectUpdate } = require('../services/contentNotificationService');
+const { markTopicCompleted, TOPIC_QUIZ_PASS_PERCENT } = require('../services/progressService');
 
 const getRequester = (req) => ({
     id: req.user?.id || req.user?._id?.toString(),
@@ -283,7 +284,7 @@ exports.startQuizAttempt = asyncHandler(async (req, res, next) => {
 
     let score = await QuizScore.findOne({ quiz: quizId, student: studentId });
 
-    if (score && score.status === 'completed' && score.score >= 50) {
+    if (score && score.status === 'completed' && score.score >= TOPIC_QUIZ_PASS_PERCENT) {
         return next(new ErrorResponse('You have already completed this quiz with a passing score.', 400));
     }
 
@@ -420,18 +421,16 @@ exports.submitQuizAttempt = asyncHandler(async (req, res, next) => {
 
     await scoreEntry.save();
 
-    // Auto-complete topic if score >= 50%
     let topicCompleted = false;
-    if (percentage >= 50) {
-        const { markTopicCompleted } = require('../services/progressService');
-        await markTopicCompleted(studentId, quiz.topic);
-        topicCompleted = true;
+    if (percentage >= TOPIC_QUIZ_PASS_PERCENT) {
+        const completionResult = await markTopicCompleted(studentId, quiz.topic);
+        topicCompleted = Boolean(completionResult?.progress);
 
         // Send congratulatory email (Non-blocking)
         const { User } = require('../models');
         const emailService = require('../services/emailService');
         
-        User.findById(studentId).then(user => {
+        if (topicCompleted) User.findById(studentId).then(user => {
             if (user && user.email) {
                 emailService.sendEmail(
                     user.email,
@@ -471,12 +470,16 @@ exports.submitQuizAttempt = asyncHandler(async (req, res, next) => {
 
     const responseData = {
         ...scoreEntry._doc,
-        message: percentage >= 50 
-            ? 'Congratulations! You passed the quiz and completed the topic.' 
-            : 'Score below 50%. You must retry the wrong questions.'
+        topicCompleted,
+        message:
+            percentage >= TOPIC_QUIZ_PASS_PERCENT
+                ? topicCompleted
+                    ? 'Congratulations! You passed the quiz and completed the topic.'
+                    : `You scored ${Math.round(percentage)}%, but topic progress could not be updated. Try again or contact support if this persists.`
+                : `Score below ${TOPIC_QUIZ_PASS_PERCENT}%. You must retry the wrong questions.`,
     };
 
-    if (percentage < 50) {
+    if (percentage < TOPIC_QUIZ_PASS_PERCENT) {
         delete responseData.detailedResults;
         delete responseData.answers;
     }

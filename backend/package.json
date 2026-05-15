@@ -11,7 +11,11 @@
     "seed:grade9math": "node scripts/scripts/seed-new.js",
     "seed:grade9math:reset": "node scripts/scripts/seed-new.js --reset",
     "seed:grade10math": "node scripts/scripts/seed-grade10-math.js",
-    "seed:grade10math:reset": "node scripts/scripts/seed-grade10-math.js --reset"
+    "seed:grade10math:reset": "node scripts/scripts/seed-grade10-math.js --reset",
+    "seed:grade11math": "node scripts/scripts/seed-grade11-math.js",
+    "seed:grade11math:reset": "node scripts/scripts/seed-grade11-math.js --reset",
+    "seed:grade12math": "node scripts/scripts/seed-grade12-math.js",
+    "seed:grade12math:reset": "node scripts/scripts/seed-grade12-math.js --reset"
   },
   "keywords": [
     "learning",

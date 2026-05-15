@@ -1,5 +1,5 @@
 /**
- * MoE Ethiopia–style Grade 9 Mathematics — Units 3–7 (Natural stream).
+ * Grade 9 Mathematics — Units 3–7 (Natural stream).
  * Each unit: 5 topics, curated exercises by topicIndex, 7 quizzes × 7 problems. Seed pads to 7 exercises per topic.
  */
 
@@ -23,7 +23,7 @@ module.exports = [
   {
     chapterName: 'Unit 3: Exponents, radicals, and scientific notation',
     chapterDescription:
-      'Laws of exponents, radicals, simplification, and scientific notation as in MoE Grade 9 mathematics.',
+      'Laws of exponents, radicals, simplification, and scientific notation.',
     topics: [
       {
         topicName: 'Integer exponents and laws',
@@ -196,7 +196,7 @@ module.exports = [
   {
     chapterName: 'Unit 4: Polynomials',
     chapterDescription:
-      'Polynomial vocabulary, operations, special products, and introductory division as in MoE Grade 9.',
+      'Polynomial vocabulary, operations, special products, and introductory division.',
     topics: [
       {
         topicName: 'Terms, degree, and standard form',
@@ -368,7 +368,7 @@ module.exports = [
   {
     chapterName: 'Unit 5: Linear equations and inequalities',
     chapterDescription:
-      'Solving linear equations and inequalities in one variable and simple modeling (MoE Grade 9).',
+      'Solving linear equations and inequalities in one variable and simple modeling.',
     topics: [
       {
         topicName: 'Linear equations in one variable',
@@ -538,7 +538,7 @@ module.exports = [
   {
     chapterName: 'Unit 6: Coordinate geometry',
     chapterDescription:
-      'The Cartesian plane, distance, midpoint, slope, and graphing linear equations (MoE Grade 9).',
+      'The Cartesian plane, distance, midpoint, slope, and graphing linear equations.',
     topics: [
       {
         topicName: 'Plotting points and quadrants',
@@ -706,7 +706,7 @@ module.exports = [
   {
     chapterName: 'Unit 7: Plane geometry',
     chapterDescription:
-      'Angles, triangles, quadrilaterals, and area relationships aligned with MoE Grade 9 geometry outcomes.',
+      'Angles, triangles, quadrilaterals, and area relationships.',
     topics: [
       {
         topicName: 'Angles and parallel lines',

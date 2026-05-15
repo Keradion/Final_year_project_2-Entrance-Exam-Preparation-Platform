@@ -8,10 +8,14 @@ const {
   Progress,
   Quiz,
   QuizProblem,
+  QuizScore,
   Subject,
   SubjectProgress,
   Topic,
 } = require('../models');
+
+/** Topic completion (manual or auto after quiz submit) requires this score or higher on a topic quiz. */
+const TOPIC_QUIZ_PASS_PERCENT = 50;
 const notificationService = require('./notificationService');
 const { calculateProgress, getMilestones } = require('../utils/helpers');
 
@@ -47,6 +51,7 @@ const getTopicQuizCompletionStatus = async (studentId, topicId) => {
       totalQuestions: 0,
       answeredQuestions: 0,
       remainingQuestions: 0,
+      passingScore: null,
       message: 'This topic does not have quiz questions yet, so completion cannot be marked.',
     };
   }
@@ -60,26 +65,60 @@ const getTopicQuizCompletionStatus = async (studentId, topicId) => {
       totalQuestions: 0,
       answeredQuestions: 0,
       remainingQuestions: 0,
+      passingScore: null,
       message: 'This topic does not have quiz questions yet, so completion cannot be marked.',
     };
   }
 
-  const answeredProblemIds = await Answer.distinct('question', {
+  const passingAttempt = await QuizScore.findOne({
     student: studentId,
-    questionModel: 'QuizProblem',
-    question: { $in: problemIds },
-  });
-  const answeredQuestions = answeredProblemIds.length;
-  const remainingQuestions = Math.max(totalQuestions - answeredQuestions, 0);
+    quiz: { $in: quizIds },
+    status: 'completed',
+    score: { $gte: TOPIC_QUIZ_PASS_PERCENT },
+  })
+    .select('score endTime')
+    .sort({ score: -1, endTime: -1 })
+    .lean();
+
+  if (passingAttempt) {
+    return {
+      eligible: true,
+      totalQuestions,
+      answeredQuestions: null,
+      remainingQuestions: 0,
+      passingScore: passingAttempt.score,
+      message: `You passed a topic quiz (${Math.round(passingAttempt.score)}%). You can mark this topic complete or it was completed automatically.`,
+    };
+  }
+
+  const lastFinished = await QuizScore.findOne({
+    student: studentId,
+    quiz: { $in: quizIds },
+    status: 'completed',
+  })
+    .select('score endTime')
+    .sort({ endTime: -1 })
+    .lean();
+
+  if (lastFinished) {
+    return {
+      eligible: false,
+      totalQuestions,
+      answeredQuestions: null,
+      remainingQuestions: null,
+      passingScore: null,
+      lastScore: lastFinished.score,
+      message: `Your last quiz score was ${Math.round(lastFinished.score)}%. Score at least ${TOPIC_QUIZ_PASS_PERCENT}% on a topic quiz to complete this lesson.`,
+    };
+  }
 
   return {
-    eligible: remainingQuestions === 0,
+    eligible: false,
     totalQuestions,
-    answeredQuestions,
-    remainingQuestions,
-    message: remainingQuestions === 0
-      ? 'All quiz questions for this topic are answered.'
-      : `Answer ${remainingQuestions} more quiz question${remainingQuestions === 1 ? '' : 's'} before marking this topic complete.`,
+    answeredQuestions: 0,
+    remainingQuestions: null,
+    passingScore: null,
+    message: `Complete a topic quiz with at least ${TOPIC_QUIZ_PASS_PERCENT}% to mark this lesson complete.`,
   };
 };
 
@@ -443,6 +482,7 @@ const getStudentLearningStreak = async (studentId, { gradeLevel, stream } = {}) 
 };
 
 module.exports = {
+  TOPIC_QUIZ_PASS_PERCENT,
   getAllSubjectProgress,
   getGradeProgress,
   getStudentLearningStreak,

@@ -122,6 +122,27 @@ const MCQ_STOCK = [
   { tags: ['geometry'], title: 'Rectangle area', question: '3 m by 7 m rectangle area:', options: ['20 m²', '21 m²', '10 m²', '49 m²'], correctAnswer: 1, difficulty: 'Easy' },
   { tags: ['geometry'], title: 'Circle intro', question: 'Radius 5 (use π); area =', options: ['10π', '25π', '5π', '50π'], correctAnswer: 1, difficulty: 'Easy' },
   { tags: ['geometry'], title: 'Parallel angles', question: 'Corresponding angles with parallel lines are:', options: ['Supplementary', 'Congruent', 'Complementary', 'Unrelated'], correctAnswer: 1, difficulty: 'Easy' },
+  { tags: ['sets'], title: 'Union size', question: 'If |A| = 12, |B| = 15, and |A ∩ B| = 5, what is |A ∪ B|?', options: ['32', '22', '27', '20'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['sets'], title: 'Complement size', question: 'For U = {1,…,20} and B = {2,4,6,8}, how many elements are in B′?', options: ['16', '4', '20', '12'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['sets'], title: 'Subset count', question: 'A set with 5 distinct elements has how many subsets in total (including ∅)?', options: ['25', '32', '10', '16'], correctAnswer: 1, difficulty: 'Hard' },
+  { tags: ['numbers'], title: 'Irrational sum', question: 'If a is a non-zero rational and b is irrational, which expression is always irrational?', options: ['a + b', 'b + (−b)', 'a · a', '0 · b'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['numbers'], title: 'Nested abs', question: '||−4| − |1|| equals:', options: ['3', '5', '−3', '1'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['numbers'], title: 'Between rationals', question: 'Between any two distinct rational numbers on the number line there exists:', options: ['no other rational', 'another rational number', 'only integers', 'no real number'], correctAnswer: 1, difficulty: 'Hard' },
+  { tags: ['exponents'], title: 'Power of product', question: '(2x³y)² simplifies to:', options: ['4x⁵y²', '4x⁶y²', '2x⁶y²', '4x³y²'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['exponents'], title: 'Negative exponent', question: 'For a,b ≠ 0, (3a⁻²b³)⁻¹ equals:', options: ['a²/(3b³)', '3a²/b³', '−3a²/b³', 'b³/(3a)'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['exponents'], title: 'Radical simplify', question: '√72 in simplest radical form is:', options: ['6√2', '8√2', '36√2', '4√18'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['polynomials'], title: 'Degree product', question: 'The degree of (x³ + 1)(2x² − x + 4) is:', options: ['6', '5', '3', '2'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['polynomials'], title: 'Difference squares', question: '(5r − 4)(5r + 4) equals:', options: ['25r² − 16', '25r² + 16', '10r² − 16', '25r² − 40r + 16'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['polynomials'], title: 'Factor cubic', question: 'For x ≠ 2, (x³ − 8) ÷ (x − 2) simplifies to:', options: ['x² + 2x + 4', 'x² − 2x + 4', 'x² + 4', 'x² − 4'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['linear'], title: 'Clear fractions', question: 'The solution of x/4 + 1/2 = 3 is:', options: ['10', '14', '8', '12'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['linear'], title: 'No solution', question: 'How many real solutions does 2(3x + 1) = 6x + 7 have?', options: ['one', 'none', 'infinitely many', 'two'], correctAnswer: 1, difficulty: 'Hard' },
+  { tags: ['linear'], title: 'Mixed equation', question: 'If 5 − 2(x + 3) = x, then x equals:', options: ['−1/3', '1', '−11/3', '5'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['coordinate'], title: 'Collinear', question: 'Which point lies on the line through (0,0) and (2,4)?', options: ['(3,5)', '(5,10)', '(4,5)', '(1,5)'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['coordinate'], title: 'Perpendicular slope', question: 'A line perpendicular to y = −3x + 1 has slope:', options: ['−3', '1/3', '3', '−1/3'], correctAnswer: 1, difficulty: 'Hard' },
+  { tags: ['coordinate'], title: 'Squared distance', question: 'The squared distance between (−1,2) and (2,6) is:', options: ['25', '5', '16', '34'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['geometry'], title: 'Exterior angle', question: 'An exterior angle of a triangle equals the sum of the:', options: ['two opposite interior angles', 'all three interior angles', 'adjacent interior angle only', 'remote exterior angles'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['geometry'], title: 'Parallelogram angles', question: 'In any parallelogram, two consecutive interior angles are:', options: ['complementary', 'supplementary', 'congruent', 'each 90°'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['geometry'], title: 'Isosceles height', question: 'An isosceles triangle has equal sides 7 and base 5. The altitude from the apex meets the base at its midpoint. The altitude length is:', options: ['(√171)/2', '√24', '6', '√29'], correctAnswer: 0, difficulty: 'Hard' },
 ];
 
 function stripStockForExercise(entry) {
@@ -129,44 +150,85 @@ function stripStockForExercise(entry) {
   return { ...rest };
 }
 
+function normalizeDifficulty(d) {
+  const s = String(d || 'Easy').toLowerCase();
+  if (s.startsWith('med')) return 'Medium';
+  if (s.startsWith('hard')) return 'Hard';
+  return 'Easy';
+}
+
+function difficultyCounts(exercises) {
+  const c = { Easy: 0, Medium: 0, Hard: 0 };
+  for (const e of exercises) {
+    c[normalizeDifficulty(e.difficulty)] += 1;
+  }
+  return c;
+}
+
 /**
  * Merge curated exercises for one topic with stock MCQs until there are exactly targetCount (default 7).
+ * Pads using chapter-tagged stock first, then the full bank. Targets about 3 Easy / 2 Medium / 2 Hard overall.
+ * Does not emit generic “which option is a valid next step” fillers.
  */
 function exercisesForTopic(chapterIndex, topicIndex, topicName, curatedForTopic, targetCount = 7) {
   const tag = CHAPTER_TAGS[chapterIndex] || 'numbers';
-  const pool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
-  const allPool = pool.length ? pool : MCQ_STOCK;
+  const tagPool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
 
-  const out = (curatedForTopic || []).map((e) => ({ ...e }));
+  const wantEasy = 3;
+  const wantMed = 2;
+  const wantHard = 2;
+
+  const topicShort = topicName.split(',')[0].slice(0, 28);
+  const out = (curatedForTopic || []).map((e) => ({ ...e, difficulty: normalizeDifficulty(e.difficulty) }));
   const usedQuestions = new Set(out.map((e) => e.question));
 
-  let h = hashPair(chapterIndex, topicIndex);
-  let guard = 0;
-  while (out.length < targetCount && guard < 500) {
-    guard += 1;
-    const m = allPool[h % allPool.length];
-    h += 1;
-    const stripped = stripStockForExercise(m);
-    if (usedQuestions.has(stripped.question)) continue;
-    usedQuestions.add(stripped.question);
-    stripped.title = `${topicName.split(',')[0].slice(0, 28)} — ${stripped.title}`;
-    out.push(stripped);
+  function preferredTier() {
+    const c = difficultyCounts(out);
+    const defs = [
+      ['Easy', wantEasy - c.Easy],
+      ['Medium', wantMed - c.Medium],
+      ['Hard', wantHard - c.Hard],
+    ]
+      .filter(([, d]) => d > 0)
+      .sort((a, b) => b[1] - a[1]);
+    return defs.length ? defs[0][0] : null;
   }
 
-  while (out.length < targetCount) {
-    const n = out.length + 1;
-    out.push({
-      title: `Skill ${n}`,
-      question: `In this lesson (“${topicName.slice(0, 48)}”), which option states a valid next step after writing the given information in symbols?`,
-      options: [
-        'Apply the definition or formula that matches the givens',
-        'Ignore definitions and guess',
-        'Change the problem to a different unit without reason',
-        'Drop one of the givens to simplify',
-      ],
-      correctAnswer: 0,
-      difficulty: 'Easy',
-    });
+  function tryAdd(tierPref) {
+    const sequences = tierPref
+      ? [
+          tagPool.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          tagPool,
+          MCQ_STOCK.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          MCQ_STOCK,
+        ]
+      : [tagPool, MCQ_STOCK];
+
+    const tier = tierPref || 'Easy';
+    const start = hashPair(chapterIndex, topicIndex) + out.length * 31 + (tierPref ? tier.length : 0);
+    for (const seq of sequences) {
+      if (!seq.length) continue;
+      for (let step = 0; step < seq.length; step += 1) {
+        const m = seq[(start + step) % seq.length];
+        if (usedQuestions.has(m.question)) continue;
+        const stripped = stripStockForExercise(m);
+        stripped.difficulty = normalizeDifficulty(stripped.difficulty);
+        usedQuestions.add(stripped.question);
+        stripped.title = `${topicShort} — ${stripped.title}`;
+        out.push(stripped);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  let guard = 0;
+  while (out.length < targetCount && guard < 8000) {
+    guard += 1;
+    const pref = preferredTier();
+    if (!tryAdd(pref)) {
+      if (!tryAdd(null)) break;
+    }
   }
 
   return out.slice(0, targetCount);

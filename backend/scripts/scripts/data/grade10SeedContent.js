@@ -129,6 +129,26 @@ const MCQ_STOCK = [
   { tags: ['solids'], title: 'Prism', question: 'Volume right prism:', options: ['base area × height', '½bh', 'πr³', '4πr²'], correctAnswer: 0, difficulty: 'Easy' },
   { tags: ['solids'], title: 'Units', question: '1 m³ ≈ often taught as:', options: ['1 L', '100 L', '1000 L', '10 L'], correctAnswer: 2, difficulty: 'Easy' },
   { tags: ['solids'], title: 'Composite', question: 'Volume of composite solid often found by:', options: ['adding/subtracting simpler volumes', 'averaging', 'squaring only', 'angles only'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['rational'], title: 'Sum rational', question: '1/(x+2) + 1/(x−2) simplifies to (one fraction):', options: ['2x/(x²−4)', '2/(x²−4)', '4/(x²−4)', 'x/(x²−4)'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['rational'], title: 'Extraneous', question: 'After solving a rational equation, solutions must be checked because they may be:', options: ['always integers', 'extraneous if they make a denominator zero', 'imaginary only', 'irrational only'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['rational'], title: 'Complex fraction', question: 'Simplify (1/x)/(1/x + 1) for x ≠ 0, x ≠ −1:', options: ['1/(1+x)', '1+x', 'x/(x+1)', 'x+1'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['systems'], title: 'Depend system', question: 'If one equation is a multiple of the other (non-zero), the system has:', options: ['one solution', 'no solution', 'infinitely many solutions', 'two solutions'], correctAnswer: 2, difficulty: 'Medium' },
+  { tags: ['systems'], title: 'Word mixture', question: 'Two acid solutions 20% and 50% are mixed to get 10 L at 35%. If x L is the 20% part, which equation fits?', options: ['0.2x + 0.5(10−x) = 3.5', 'x + (10−x) = 0.35', '0.2x = 0.5(10−x)', '20x + 50(10−x) = 35'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['systems'], title: 'Ineq graph', question: 'The region x ≥ 0, y ≥ 0, x + y ≤ 4 in the first quadrant is:', options: ['a triangular region', 'a full quadrant', 'a circle', 'empty'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['quadratic'], title: 'Vieta product', question: 'For x² − 7x + 12 = 0, the product of the roots is:', options: ['7', '12', '−12', '−7'], correctAnswer: 1, difficulty: 'Medium' },
+  { tags: ['quadratic'], title: 'Param vertex', question: 'The vertex of y = 2x² − 12x + 5 occurs at x =', options: ['3', '−3', '6', '12'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['quadratic'], title: 'Quad from roots', question: 'A quadratic with leading coefficient 1 and roots 2 and −3 is:', options: ['x² + x − 6', 'x² − x − 6', 'x² + 5x + 6', 'x² − 5x + 6'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['functions'], title: 'Composition', question: 'If f(x) = 2x + 1 and g(x) = x², then f(g(3)) equals:', options: ['19', '49', '18', '7'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['functions'], title: 'Inverse idea', question: 'For f(x) = 3x − 6, which x satisfies f(x) = 0?', options: ['2', '−2', '6', '18'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['functions'], title: 'Range interval', question: 'For f(x) = x² on domain [−1, 2], the range is:', options: ['[0, 4]', '[1, 4]', '[−1, 2]', '[0, 1]'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['trigonometry'], title: 'sin cos relation', question: 'If sin θ = 3/5 with θ acute, cos θ equals:', options: ['4/5', '3/4', '2/5', '1/5'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['trigonometry'], title: 'Elevation distance', question: 'From 30 m away, the angle of elevation of the top of a tower is 45°. The tower height is:', options: ['30 m', '30√2 m', '15 m', '60 m'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['trigonometry'], title: 'Cotangent', question: 'For acute θ, cot θ equals:', options: ['cos θ / sin θ', 'sin θ / cos θ', '1/cos θ', 'sin θ · cos θ'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['plane_geo'], title: 'Interior regular', question: 'Each interior angle of a regular octagon is:', options: ['135°', '120°', '108°', '144°'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['plane_geo'], title: 'Arc chord', question: 'A central angle of 80° intercepts an arc of measure:', options: ['80°', '160°', '40°', '360°'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['plane_geo'], title: 'Power chord', question: 'Two chords intersect inside a circle; the product of segments of one chord equals:', options: ['sum of segments of the other', 'the product of segments of the other', 'the radius', 'half the diameter'], correctAnswer: 1, difficulty: 'Hard' },
+  { tags: ['solids'], title: 'Cylinder SA', question: 'A closed cylinder r = 2, h = 5 has total surface area:', options: ['28π', '24π', '14π', '20π'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['solids'], title: 'Cone slant', question: 'A right cone r = 6, h = 8 has slant height:', options: ['10', '14', '12', '100'], correctAnswer: 0, difficulty: 'Medium' },
 ];
 
 function stripStockForExercise(entry) {
@@ -136,41 +156,85 @@ function stripStockForExercise(entry) {
   return { ...rest };
 }
 
+function normalizeDifficulty(d) {
+  const s = String(d || 'Easy').toLowerCase();
+  if (s.startsWith('med')) return 'Medium';
+  if (s.startsWith('hard')) return 'Hard';
+  return 'Easy';
+}
+
+function difficultyCounts(exercises) {
+  const c = { Easy: 0, Medium: 0, Hard: 0 };
+  for (const e of exercises) {
+    c[normalizeDifficulty(e.difficulty)] += 1;
+  }
+  return c;
+}
+
+/**
+ * Merge curated exercises for one topic with stock MCQs until there are exactly targetCount (default 7).
+ * Prefers chapter-tagged items, then the full bank. Targets about 3 Easy / 2 Medium / 2 Hard overall.
+ * Does not emit generic “which option is a valid next step” fillers.
+ */
 function exercisesForTopic(chapterIndex, topicIndex, topicName, curatedForTopic, targetCount = 7) {
   const tag = CHAPTER_TAGS[chapterIndex] || 'rational';
-  const pool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
-  const allPool = pool.length ? pool : MCQ_STOCK;
+  const tagPool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
 
-  const out = (curatedForTopic || []).map((e) => ({ ...e }));
+  const wantEasy = 3;
+  const wantMed = 2;
+  const wantHard = 2;
+
+  const topicShort = topicName.split(',')[0].slice(0, 28);
+  const out = (curatedForTopic || []).map((e) => ({ ...e, difficulty: normalizeDifficulty(e.difficulty) }));
   const usedQuestions = new Set(out.map((e) => e.question));
 
-  let h = hashPair(chapterIndex, topicIndex);
-  let guard = 0;
-  while (out.length < targetCount && guard < 500) {
-    guard += 1;
-    const m = allPool[h % allPool.length];
-    h += 1;
-    const stripped = stripStockForExercise(m);
-    if (usedQuestions.has(stripped.question)) continue;
-    usedQuestions.add(stripped.question);
-    stripped.title = `${topicName.split(',')[0].slice(0, 28)} — ${stripped.title}`;
-    out.push(stripped);
+  function preferredTier() {
+    const c = difficultyCounts(out);
+    const defs = [
+      ['Easy', wantEasy - c.Easy],
+      ['Medium', wantMed - c.Medium],
+      ['Hard', wantHard - c.Hard],
+    ]
+      .filter(([, d]) => d > 0)
+      .sort((a, b) => b[1] - a[1]);
+    return defs.length ? defs[0][0] : null;
   }
 
-  while (out.length < targetCount) {
-    const n = out.length + 1;
-    out.push({
-      title: `Skill ${n}`,
-      question: `In this lesson (“${topicName.slice(0, 48)}”), which option states a valid next step after writing the given information in symbols?`,
-      options: [
-        'Apply the definition or formula that matches the givens',
-        'Ignore definitions and guess',
-        'Change the problem to a different unit without reason',
-        'Drop one of the givens to simplify',
-      ],
-      correctAnswer: 0,
-      difficulty: 'Easy',
-    });
+  function tryAdd(tierPref) {
+    const sequences = tierPref
+      ? [
+          tagPool.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          tagPool,
+          MCQ_STOCK.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          MCQ_STOCK,
+        ]
+      : [tagPool, MCQ_STOCK];
+
+    const tier = tierPref || 'Easy';
+    const start = hashPair(chapterIndex, topicIndex) + out.length * 31 + (tierPref ? tier.length : 0);
+    for (const seq of sequences) {
+      if (!seq.length) continue;
+      for (let step = 0; step < seq.length; step += 1) {
+        const m = seq[(start + step) % seq.length];
+        if (usedQuestions.has(m.question)) continue;
+        const stripped = stripStockForExercise(m);
+        stripped.difficulty = normalizeDifficulty(stripped.difficulty);
+        usedQuestions.add(stripped.question);
+        stripped.title = `${topicShort} — ${stripped.title}`;
+        out.push(stripped);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  let guard = 0;
+  while (out.length < targetCount && guard < 8000) {
+    guard += 1;
+    const pref = preferredTier();
+    if (!tryAdd(pref)) {
+      if (!tryAdd(null)) break;
+    }
   }
 
   return out.slice(0, targetCount);

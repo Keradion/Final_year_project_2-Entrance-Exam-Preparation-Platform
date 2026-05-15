@@ -1,5 +1,5 @@
 /**
- * Grade 9 Mathematics — structure aligned to MoE Ethiopia general secondary mathematics units
+ * Grade 9 Mathematics — general secondary units
  * (sets, real numbers, exponents & radicals, polynomials, linear equations & inequalities,
  * coordinate geometry, plane geometry). Topics and objectives follow textbook-style sequencing.
  *
@@ -18,13 +18,13 @@ module.exports = {
   subjectName: 'Mathematics',
   stream: 'Natural',
   subjectDescription:
-    'Grade 9 Mathematics (Natural stream) — MoE Ethiopia competency-based secondary mathematics: sets through plane geometry.',
+    'Grade 9 Mathematics (Natural stream): sets through plane geometry.',
 
   chapters: [
     {
       chapterName: 'Unit 1: Sets',
       chapterDescription:
-        'Set language, operations, Venn diagrams, and applications following MoE Grade 9 Mathematics outcomes.',
+        'Set language, operations, Venn diagrams, and applications.',
       topics: [
         {
           topicName: 'Concept of a set and representation',
