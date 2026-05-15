@@ -108,6 +108,28 @@ const MCQ_STOCK = [
   { tags: ['vectors'], title: 'Sum', question: '⟨1,2⟩+⟨2,3⟩=', options: ['⟨3,5⟩', '⟨2,6⟩', '⟨1,3⟩', '⟨0,0⟩'], correctAnswer: 0, difficulty: 'Easy' },
   { tags: ['vectors'], title: 'Dot', question: '⟨1,0⟩·⟨0,1⟩=', options: ['0', '1', '−1', 'i'], correctAnswer: 0, difficulty: 'Easy' },
   { tags: ['vectors'], title: 'Parallel', question: 'Which vector is parallel to ⟨2,4⟩?', options: ['⟨1,2⟩', '⟨2,−4⟩', '⟨0,1⟩', '⟨4,2⟩'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['fn_alg'], title: 'f⁻¹ swap', question: 'If (2,5) lies on y=f(x), a point on y=f⁻¹(x) is', options: ['(5,2)', '(2,5)', '(−2,5)', '(2,−5)'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['fn_alg'], title: 'Exp log inverse', question: 'For b>0, b≠1, log_b(b^x) equals', options: ['x', 'b', 'x^b', '1'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['fn_alg'], title: 'Piece rule', question: 'For piecewise f, evaluating f(a) requires', options: ['the formula whose domain interval contains a', 'always the first formula', 'averaging formulas', 'setting a = 0'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['exp_log'], title: 'Log1', question: 'log_b 1 for valid base b equals', options: ['0', '1', 'b', 'undefined'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['exp_log'], title: 'Log power', question: 'log_b (x^k) equals', options: ['k log_b x', '(log_b x)^k', 'log_b x + k', 'x log_b k'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['exp_log'], title: 'Solve ln', question: 'If ln x = 3, then x equals', options: ['e³', '3e', 'ln 3', 'e'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['exp_log'], title: 'Half life', question: 'Amount halving each fixed period follows', options: ['exponential decay', 'linear growth', 'constant sequence', 'quadratic growth'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['adv_trig'], title: 'sin pi/2', question: 'sin(π/2) =', options: ['1', '0', '−1', '1/2'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['adv_trig'], title: 'tan undefined', question: 'tan θ is undefined when', options: ['cos θ = 0', 'sin θ = 0', 'θ = 0 only', 'cos θ = 1'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['adv_trig'], title: 'Amp period', question: 'y = 4 sin(3x) has amplitude', options: ['4', '3', '12', '1'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['adv_trig'], title: 'sec def', question: 'sec θ equals', options: ['1/cos θ', '1/sin θ', 'sin θ/cos θ', 'cos θ/sin θ'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['conics'], title: 'Hyperbola asymp', question: 'For x²/a² − y²/b² = 1 (standard position), asymptotes are typically', options: ['y = ±(b/a)x', 'y = ±(a/b)x', 'y = ±abx', 'x = ±a'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['conics'], title: 'Focus parabola', question: 'y = (1/4p)x² has focus at', options: ['(0, p)', '(p, 0)', '(0, −p)', '(p, p)'], correctAnswer: 0, difficulty: 'Hard' },
+  { tags: ['conics'], title: 'Midpoint', question: 'Midpoint of (−1,3) and (5,7) is', options: ['(2,5)', '(4,10)', '(3,2)', '(2,4)'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['complex'], title: 'i cubed', question: 'i³ equals', options: ['−i', 'i', '1', '−1'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['complex'], title: 'Divide conj', question: '1/(1+i) rationalized equals', options: ['(1−i)/2', '(1+i)/2', '1−i', '2(1−i)'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['complex'], title: 'Polar product', question: 'Multiplying two complex numbers in polar form multiplies their moduli and', options: ['adds their arguments', 'subtracts their arguments', 'multiplies their arguments', 'squares their arguments'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['matrices'], title: 'Scalar mult', question: 'If A = [[1,2],[3,4]], then 2A =', options: ['[[2,4],[6,8]]', '[[1,2],[3,4]]', '[[3,4],[5,6]]', '[[1,4],[9,16]]'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['matrices'], title: '2x2 invert', question: '[[2,0],[0,3]] inverse is', options: ['[[1/2,0],[0,1/3]]', '[[−2,0],[0,−3]]', '[[3,0],[0,2]]', 'does not exist'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['matrices'], title: 'AB size', question: 'If A is 2×3 and B is 3×4, AB is', options: ['2×4', '3×3', '4×2', 'not defined'], correctAnswer: 0, difficulty: 'Easy' },
+  { tags: ['vectors'], title: 'Unit vec', question: 'A unit vector in the direction of ⟨3,4⟩ is', options: ['⟨3/5,4/5⟩', '⟨3,4⟩', '⟨4/5,3/5⟩', '⟨1,1⟩'], correctAnswer: 0, difficulty: 'Medium' },
+  { tags: ['vectors'], title: 'Scalar proj', question: 'The scalar projection of ⟨4,0⟩ onto ⟨1,0⟩ equals', options: ['4', '0', '1', '16'], correctAnswer: 0, difficulty: 'Hard' },
 ];
 
 function stripStockForExercise(entry) {
@@ -115,41 +137,84 @@ function stripStockForExercise(entry) {
   return { ...rest };
 }
 
+function normalizeDifficulty(d) {
+  const s = String(d || 'Easy').toLowerCase();
+  if (s.startsWith('med')) return 'Medium';
+  if (s.startsWith('hard')) return 'Hard';
+  return 'Easy';
+}
+
+function difficultyCounts(exercises) {
+  const c = { Easy: 0, Medium: 0, Hard: 0 };
+  for (const e of exercises) {
+    c[normalizeDifficulty(e.difficulty)] += 1;
+  }
+  return c;
+}
+
+/**
+ * Pad curated items with chapter-tagged stock, then any stock item. Targets ~3 Easy / ~2 Medium / ~2 Hard.
+ * No generic “valid next step” placeholders.
+ */
 function exercisesForTopic(chapterIndex, topicIndex, topicName, curatedForTopic, targetCount = 7) {
   const tag = CHAPTER_TAGS[chapterIndex] || 'fn_alg';
-  const pool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
-  const allPool = pool.length ? pool : MCQ_STOCK;
+  const tagPool = MCQ_STOCK.filter((m) => m.tags.includes(tag));
 
-  const out = (curatedForTopic || []).map((e) => ({ ...e }));
+  const wantEasy = 3;
+  const wantMed = 2;
+  const wantHard = 2;
+
+  const topicShort = topicName.split(',')[0].slice(0, 28);
+  const out = (curatedForTopic || []).map((e) => ({ ...e, difficulty: normalizeDifficulty(e.difficulty) }));
   const usedQuestions = new Set(out.map((e) => e.question));
 
-  let h = hashPair(chapterIndex, topicIndex);
-  let guard = 0;
-  while (out.length < targetCount && guard < 500) {
-    guard += 1;
-    const m = allPool[h % allPool.length];
-    h += 1;
-    const stripped = stripStockForExercise(m);
-    if (usedQuestions.has(stripped.question)) continue;
-    usedQuestions.add(stripped.question);
-    stripped.title = `${topicName.split(',')[0].slice(0, 28)} — ${stripped.title}`;
-    out.push(stripped);
+  function preferredTier() {
+    const c = difficultyCounts(out);
+    const defs = [
+      ['Easy', wantEasy - c.Easy],
+      ['Medium', wantMed - c.Medium],
+      ['Hard', wantHard - c.Hard],
+    ]
+      .filter(([, d]) => d > 0)
+      .sort((a, b) => b[1] - a[1]);
+    return defs.length ? defs[0][0] : null;
   }
 
-  while (out.length < targetCount) {
-    const n = out.length + 1;
-    out.push({
-      title: `Skill ${n}`,
-      question: `In this lesson (“${topicName.slice(0, 48)}”), which option states a valid next step after writing the given information in symbols?`,
-      options: [
-        'Apply the definition or formula that matches the givens',
-        'Ignore definitions and guess',
-        'Change the problem to a different unit without reason',
-        'Drop one of the givens to simplify',
-      ],
-      correctAnswer: 0,
-      difficulty: 'Easy',
-    });
+  function tryAdd(tierPref) {
+    const sequences = tierPref
+      ? [
+          tagPool.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          tagPool,
+          MCQ_STOCK.filter((m) => normalizeDifficulty(m.difficulty) === tierPref),
+          MCQ_STOCK,
+        ]
+      : [tagPool, MCQ_STOCK];
+
+    const tier = tierPref || 'Easy';
+    const start = hashPair(chapterIndex, topicIndex) + out.length * 31 + (tierPref ? tier.length : 0);
+    for (const seq of sequences) {
+      if (!seq.length) continue;
+      for (let step = 0; step < seq.length; step += 1) {
+        const m = seq[(start + step) % seq.length];
+        if (usedQuestions.has(m.question)) continue;
+        const stripped = stripStockForExercise(m);
+        stripped.difficulty = normalizeDifficulty(stripped.difficulty);
+        usedQuestions.add(stripped.question);
+        stripped.title = `${topicShort} — ${stripped.title}`;
+        out.push(stripped);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  let guard = 0;
+  while (out.length < targetCount && guard < 8000) {
+    guard += 1;
+    const pref = preferredTier();
+    if (!tryAdd(pref)) {
+      if (!tryAdd(null)) break;
+    }
   }
 
   return out.slice(0, targetCount);
